@@ -591,140 +591,6 @@
   }
   @keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(8px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
 
-  /* ── Files Me ── */
-  .files-toolbar {
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-    flex-wrap: wrap;
-    margin-bottom: .85rem;
-  }
-  .files-search {
-    flex: 1;
-    min-width: 0;
-    max-width: 380px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    padding: .32rem .75rem;
-    font-size: .8rem;
-    color: var(--text);
-    font-family: var(--font);
-    transition: border-color .15s;
-    outline: none;
-  }
-  .files-search:focus { border-color: var(--accent); }
-  .files-filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .35rem;
-    margin-bottom: .75rem;
-  }
-  .ff-btn {
-    padding: .24rem .65rem;
-    border-radius: 5px;
-    font-size: .72rem;
-    font-weight: 600;
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    color: var(--text-3);
-    cursor: pointer;
-    font-family: var(--font);
-    transition: all .13s;
-  }
-  .ff-btn:hover { color: var(--text); border-color: var(--border-hover); }
-  .ff-btn.active { background: var(--surface3); color: var(--text); border-color: var(--border-hover); }
-
-  .files-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: .65rem;
-  }
-  .file-card {
-    position: relative;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--r);
-    padding: .9rem .85rem .75rem;
-    display: flex;
-    flex-direction: column;
-    gap: .35rem;
-    transition: border-color .15s, box-shadow .15s;
-    cursor: pointer;
-  }
-  .file-card:hover { border-color: var(--border-hover); box-shadow: 0 2px 10px rgba(0,0,0,.15); }
-  .file-icon { font-size: 1.8rem; line-height: 1; }
-  .file-name {
-    font-size: .78rem;
-    font-weight: 600;
-    color: var(--text);
-    word-break: break-word;
-    line-height: 1.4;
-  }
-  .file-detail {
-    font-size: .71rem;
-    color: var(--text-2);
-    line-height: 1.45;
-    word-break: break-word;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .file-meta {
-    font-size: .68rem;
-    color: var(--text-3);
-    line-height: 1.5;
-  }
-  .file-type-badge {
-    display: inline-block;
-    font-size: .6rem;
-    font-weight: 700;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    padding: 1px 6px;
-    border-radius: 4px;
-  }
-  .file-type-badge.img  { background:rgba(52,211,153,.18); color:#34d399; }
-  .file-type-badge.doc  { background:rgba(74,158,255,.18);  color:#4a9eff; }
-  .file-type-badge.xls  { background:rgba(77,186,135,.18);  color:#4dba87; }
-  .file-type-badge.zip  { background:rgba(245,158,11,.18);  color:#f59e0b; }
-  .file-type-badge.pdf  { background:rgba(239,68,68,.18);   color:#ef4444; }
-  .file-type-badge.other{ background:rgba(136,150,165,.18); color:#8896a5; }
-
-  .file-actions {
-    display: none;
-    position: absolute;
-    top: .5rem; right: .5rem;
-    gap: .25rem;
-  }
-  .file-card:hover .file-actions { display: flex; }
-  .file-act-btn {
-    width: 22px; height: 22px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    color: var(--text-3);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    padding: 0;
-    transition: all .13s;
-  }
-  .file-act-btn.edit:hover { background: var(--accent); color:#fff; border-color:var(--accent); }
-  .file-act-btn.del:hover  { background: var(--red);    color:#fff; border-color:var(--red); }
-
-  .files-empty {
-    grid-column: 1/-1;
-    text-align: center;
-    padding: 3rem 1rem;
-    color: var(--text-3);
-    font-size: .85rem;
-    line-height: 2;
-  }
-
   /* ── Priority Filter Bar ── */
   .priority-filter-bar {
     display: flex;
@@ -1221,6 +1087,28 @@
   .dl-ta:focus { outline: none; border-color: var(--accent); }
   .dl-ta::placeholder { color: var(--text-3); }
   @media(max-width:640px){ .dl-grid { grid-template-columns: 1fr; } }
+  .dl-mood-badge { font-size: 1rem; margin-left: .3rem; }
+  .dl-mood-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    margin-bottom: .7rem;
+  }
+  .dl-mood-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .dl-mood-pill:hover { border-color: var(--border-hover); }
+  .dl-mood-pill.active { border-color: var(--accent); background: rgba(74,158,255,.14); }
 
   /* ── Quick Links ── */
   .ql-section {
@@ -1259,8 +1147,43 @@
     font-family: var(--font);
     transition: color .15s, border-color .15s;
   }
-  .ql-add-btn { color: var(--green) !important; border-color: rgba(52,211,99,0.4) !important; }
-  .ql-add-btn:hover { background: rgba(52,211,99,0.12) !important; border-color: var(--green) !important; }
+  .ql-add-btn { background: var(--green) !important; color: #fff !important; border-color: var(--green) !important; }
+  .ql-add-btn:hover { background: #3da876 !important; }
+  .ql-img-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    margin-top: .4rem;
+  }
+  .ql-img-thumb {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .ql-img-thumb-wrap {
+    position: relative;
+    width: 44px;
+    height: 44px;
+  }
+  .ql-img-remove-btn {
+    position: absolute;
+    top: -6px; right: -6px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 10px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
   .ql-chevron {
     display: flex;
     align-items: center;
@@ -1751,10 +1674,6 @@
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       Tool + Note
     </button>
-    <button class="tab-btn" id="tabBtnFiles" onclick="switchTab('files')">
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-      Files Me
-    </button>
     <button class="tab-btn" id="tabBtnFinance" onclick="switchTab('finance')">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.1 1.1-2 3-2s3 .9 3 2-1.3 2-3 2-3 .9-3 2 1.34 2 3 2 3-.9 3-2"/></svg>
       รายรับ-รายจ่าย
@@ -1793,11 +1712,23 @@
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         </span>
         <span class="dl-title">บันทึกประจำวัน</span>
+        <span class="dl-mood-badge" id="dlMoodBadge"></span>
         <span class="dl-chevron" id="dlChevron">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
         </span>
       </div>
       <div class="dl-body" id="dlBody">
+        <div class="dl-field">
+          <label class="dl-label">อารมณ์วันนี้</label>
+          <div class="dl-mood-row" id="dlMoodRow">
+            <button class="dl-mood-pill" data-mood="😄" onclick="event.stopPropagation();dlSetMood('😄')">😄</button>
+            <button class="dl-mood-pill" data-mood="🙂" onclick="event.stopPropagation();dlSetMood('🙂')">🙂</button>
+            <button class="dl-mood-pill" data-mood="😐" onclick="event.stopPropagation();dlSetMood('😐')">😐</button>
+            <button class="dl-mood-pill" data-mood="😔" onclick="event.stopPropagation();dlSetMood('😔')">😔</button>
+            <button class="dl-mood-pill" data-mood="😴" onclick="event.stopPropagation();dlSetMood('😴')">😴</button>
+            <button class="dl-mood-pill" data-mood="😡" onclick="event.stopPropagation();dlSetMood('😡')">😡</button>
+          </div>
+        </div>
         <div class="dl-grid">
           <div class="dl-field">
             <label class="dl-label">
@@ -1853,34 +1784,7 @@
 
   </div>
 
-  <!-- Tab 3: Files Me -->
-  <div class="tab-pane" id="tabFiles" style="display:none">
-
-    <div class="files-toolbar">
-      <button class="btn btn-accent" onclick="filesAdd()">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        เพิ่มไฟล์
-      </button>
-      <input class="files-search" id="filesSearch" type="text" placeholder="🔍 ค้นหาชื่อ หรือ รายละเอียด..." oninput="filesRenderGrid()">
-    </div>
-
-    <div class="files-filter-bar" id="filesFilterBar">
-      <button class="ff-btn active" data-ft="all" onclick="filesSetFilter('all')">ทั้งหมด</button>
-      <button class="ff-btn" data-ft="img"  onclick="filesSetFilter('img')">🖼 รูปภาพ</button>
-      <button class="ff-btn" data-ft="doc"  onclick="filesSetFilter('doc')">📝 เอกสาร</button>
-      <button class="ff-btn" data-ft="xls"  onclick="filesSetFilter('xls')">📊 Spreadsheet</button>
-      <button class="ff-btn" data-ft="zip"  onclick="filesSetFilter('zip')">📦 Archive</button>
-      <button class="ff-btn" data-ft="pdf"  onclick="filesSetFilter('pdf')">📄 PDF</button>
-      <button class="ff-btn" data-ft="other" onclick="filesSetFilter('other')">📎 อื่นๆ</button>
-    </div>
-
-    <div class="files-grid" id="filesGrid">
-      <div class="files-empty">📂 ยังไม่มีไฟล์ — กด <strong>+ เพิ่มไฟล์</strong> เพื่อเริ่มต้น</div>
-    </div>
-
-  </div>
-
-  <!-- Tab 4: Finance (รายรับ-รายจ่าย) -->
+  <!-- Tab 3: Finance (รายรับ-รายจ่าย) -->
   <div class="tab-pane" id="tabFinance" style="display:none">
 
     <div class="stats" id="finStatsGrid"></div>
@@ -2020,6 +1924,11 @@
         <div class="rte-body" id="qlDetailBody" contenteditable="true" data-placeholder="รายละเอียด, หมายเหตุ, หรือ path ที่เกี่ยวข้อง…"></div>
       </div>
     </div>
+    <div class="field">
+      <label>รูปภาพ <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ, เพิ่มได้หลายรูป)</span></label>
+      <input type="file" id="qlImagesInput" accept="image/*" multiple onchange="qlImagesChange(event)">
+      <div class="ql-img-row" id="qlImagesRow"></div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="qlClose()">ยกเลิก</button>
       <button class="btn btn-accent" onclick="qlSave()">
@@ -2062,49 +1971,6 @@
       </button>
       <button class="btn btn-ghost" onclick="colClose()">ยกเลิก</button>
       <button class="btn btn-accent" onclick="colSave()">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-        บันทึก
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- File Add/Edit Modal -->
-<div class="overlay" id="fileModal" style="display:none">
-  <div class="modal" style="max-width:420px">
-    <div class="modal-header">
-      <span class="modal-title" id="fmTitle">+ เพิ่มไฟล์</span>
-      <button class="close-btn" onclick="fileModalClose()">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="field">
-      <label>ชื่อแสดง <span style="color:var(--red)">*</span></label>
-      <input type="text" id="fmNameInput" autocomplete="off" placeholder="ตั้งชื่อให้จำง่าย เช่น สเปค NCR v2" onkeydown="if(event.key==='Enter') fileModalSave()">
-    </div>
-    <div class="field">
-      <label>รายละเอียด</label>
-      <div class="rte-wrap">
-        <div class="rte-toolbar">
-          <button class="rte-btn" onmousedown="event.preventDefault();rteExec('bold')" title="ตัวหนา"><b style="font-size:.82rem">B</b></button>
-          <button class="rte-btn" onmousedown="event.preventDefault();rteExec('italic')" title="ตัวเอียง"><i style="font-size:.82rem">I</i></button>
-          <span class="rte-sep"></span>
-          <button class="rte-btn" onmousedown="event.preventDefault();rteExec('insertOrderedList')" title="เลขลำดับ" style="font-size:.7rem;font-weight:600">1.</button>
-          <button class="rte-btn" onmousedown="event.preventDefault();rteExec('insertUnorderedList')" title="รายการ" style="font-size:.9rem">•</button>
-          <span class="rte-sep"></span>
-          <button class="rte-btn" onmousedown="event.preventDefault();rteExec('fontSize','2')" title="ขนาดเล็ก"><span class="rte-size-label" style="font-size:.6rem">A</span></button>
-          <button class="rte-btn" onmousedown="event.preventDefault();rteExec('fontSize','3')" title="ขนาดปกติ"><span class="rte-size-label">A</span></button>
-          <button class="rte-btn" onmousedown="event.preventDefault();rteExec('fontSize','5')" title="ขนาดใหญ่"><span class="rte-size-label" style="font-size:.98rem">A</span></button>
-          <span class="rte-sep"></span>
-          <button class="rte-btn" onmousedown="event.preventDefault();rteExec('removeFormat')" title="ล้าง format" style="font-size:.75rem;color:var(--text-3)">✕</button>
-        </div>
-        <div class="rte-body" id="fmDetailBody" contenteditable="true" data-placeholder="บันทึกเพิ่มเติม เช่น เป็นไฟล์อะไร ใช้ทำอะไร..."></div>
-      </div>
-    </div>
-    <div id="fmOrigInfo" style="font-size:.74rem;color:var(--text-3);margin-bottom:.5rem;padding:.4rem .6rem;background:var(--surface2);border-radius:6px;border:1px solid var(--border);"></div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="fileModalClose()">ยกเลิก</button>
-      <button class="btn btn-accent" onclick="fileModalSave()">
         <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
         บันทึก
       </button>
@@ -2337,14 +2203,11 @@ try { DB = JSON.parse(localStorage.getItem('dailyTodoPro')||'{}'); } catch(_){}
 function switchTab(tab){
   document.getElementById('tabTask').style.display    = tab==='task'    ? '' : 'none';
   document.getElementById('tabTool').style.display    = tab==='tool'    ? '' : 'none';
-  document.getElementById('tabFiles').style.display   = tab==='files'   ? '' : 'none';
   document.getElementById('tabFinance').style.display = tab==='finance' ? '' : 'none';
   document.getElementById('tabBtnTask').classList.toggle('active',    tab==='task');
   document.getElementById('tabBtnTool').classList.toggle('active',    tab==='tool');
-  document.getElementById('tabBtnFiles').classList.toggle('active',   tab==='files');
   document.getElementById('tabBtnFinance').classList.toggle('active', tab==='finance');
   if(tab==='tool')    renderDL();
-  if(tab==='files')   filesLoad();
   if(tab==='finance') renderFinance();
 }
 
@@ -2589,7 +2452,6 @@ async function afterAuthSuccess(){
     renderDL();
     loadQL();
     renderQL();
-    filesRenderGrid();
   } catch(e){
     console.error('afterAuthSuccess render error:', e);
   }
@@ -3012,8 +2874,14 @@ function render(){
     const filtered = activePriorityFilter
       ? all.filter(t=>(t.priority||'') === activePriorityFilter)
       : all;
-    listEl.innerHTML = filtered.length
-      ? filtered.map(renderCard).join('')
+    const sorted = filtered.slice().sort((a,b)=>{
+      if(!a.timeStart && !b.timeStart) return 0;
+      if(!a.timeStart) return 1;
+      if(!b.timeStart) return -1;
+      return a.timeStart.localeCompare(b.timeStart);
+    });
+    listEl.innerHTML = sorted.length
+      ? sorted.map(renderCard).join('')
       : `<div class="empty">${emptyIcon}<div>${activePriorityFilter ? 'ไม่มีงานใน filter นี้' : 'ยังไม่มีงาน'}</div></div>`;
     // badge: แสดง filtered/total เมื่อ filter active
     if(badgeEl) badgeEl.textContent = activePriorityFilter && filtered.length !== all.length
@@ -3041,7 +2909,7 @@ function render(){
 }
 
 document.addEventListener('keydown', e=>{
-  if(e.key==='Escape'){ closeModal(); qlClose(); colClose(); rschedClose(); fileModalClose(); closeFinanceModal(); closeFinPMModal(); }
+  if(e.key==='Escape'){ closeModal(); qlClose(); colClose(); rschedClose(); closeFinanceModal(); closeFinPMModal(); }
 });
 document.addEventListener('keydown', e=>{
   if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){
@@ -3076,12 +2944,23 @@ function renderDL(){
   document.getElementById('dlHighlight').value = log.highlight || '';
   document.getElementById('dlNote').value      = log.note      || '';
   ['dlBlocker','dlHighlight','dlNote'].forEach(id => dlResize(document.getElementById(id)));
+  document.getElementById('dlMoodBadge').textContent = log.mood || '';
+  document.querySelectorAll('#dlMoodRow .dl-mood-pill').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.mood === log.mood);
+  });
 }
 
 function dlSave(field, val){
   if(!DL[currentDate]) DL[currentDate] = {};
   DL[currentDate][field] = val;
   saveDL();
+}
+
+function dlSetMood(emoji){
+  if(!DL[currentDate]) DL[currentDate] = {};
+  DL[currentDate].mood = DL[currentDate].mood === emoji ? '' : emoji;
+  saveDL();
+  renderDL();
 }
 
 function dlToggle(){
@@ -3161,6 +3040,9 @@ function renderQL(){
     const detailHtml = item.detail
       ? `<div class="ql-card-detail">${/<[a-z][\s\S]*>/i.test(item.detail) ? item.detail : esc(item.detail)}</div>`
       : '';
+    const imagesHtml = (item.images && item.images.length)
+      ? `<div class="ql-img-row">${item.images.map(src=>`<img class="ql-img-thumb" src="${esc(src)}" onclick="window.open('${esc(src)}')">`).join('')}</div>`
+      : '';
     return `
     <div class="ql-card" data-tag="${esc(item.tag||'')}">
       <div class="ql-card-top">
@@ -3175,6 +3057,7 @@ function renderQL(){
       </div>
       ${tagBadge}
       ${detailHtml}
+      ${imagesHtml}
     </div>`;
   }).join('');
 }
@@ -3191,6 +3074,30 @@ function qlDelete(i){
 }
 
 let qlEditIdx = -1;
+let qlPendingImages = [];
+
+function renderQlImagesRow(){
+  const row = document.getElementById('qlImagesRow');
+  row.innerHTML = qlPendingImages.map((src,i)=>`
+    <div class="ql-img-thumb-wrap">
+      <img class="ql-img-thumb" src="${esc(src)}">
+      <button class="ql-img-remove-btn" onclick="qlImageRemove(${i})" title="ลบรูป">✕</button>
+    </div>`).join('');
+}
+
+function qlImagesChange(e){
+  const files = Array.from(e.target.files || []);
+  Promise.all(files.map(file=>compressImageToDataURL(file, 800, 0.7))).then(dataUrls=>{
+    qlPendingImages.push(...dataUrls);
+    renderQlImagesRow();
+  });
+  e.target.value = '';
+}
+
+function qlImageRemove(i){
+  qlPendingImages.splice(i,1);
+  renderQlImagesRow();
+}
 
 function qlOpenAdd(){
   qlEditIdx = -1;
@@ -3200,6 +3107,8 @@ function qlOpenAdd(){
   rteClear('qlDetailBody');
   selectedQlTag = '';
   document.querySelectorAll('#qlTagRow .ql-tag-pill').forEach(btn=>btn.classList.remove('active-tag'));
+  qlPendingImages = [];
+  renderQlImagesRow();
   document.getElementById('qlOverlay').style.display='flex';
   setTimeout(()=>document.getElementById('qlName').focus(),60);
 }
@@ -3216,6 +3125,8 @@ function qlOpenEdit(i){
   document.querySelectorAll('#qlTagRow .ql-tag-pill').forEach(btn=>{
     btn.classList.toggle('active-tag', btn.dataset.tag === selectedQlTag);
   });
+  qlPendingImages = (item.images || []).slice();
+  renderQlImagesRow();
   document.getElementById('qlOverlay').style.display='flex';
   setTimeout(()=>document.getElementById('qlName').focus(),60);
 }
@@ -3234,7 +3145,7 @@ function qlSave(){
   const url    = document.getElementById('qlUrl').value.trim();
   const detail = rteGetHTML('qlDetailBody');
   if(!name){ document.getElementById('qlName').focus(); return; }
-  const entry = {name, url, tag: selectedQlTag, detail};
+  const entry = {name, url, tag: selectedQlTag, detail, images: qlPendingImages.slice()};
   if(qlEditIdx >= 0){
     QL[qlEditIdx] = entry;
   } else {
@@ -3568,304 +3479,6 @@ async function finPMDelete(i){
   renderFinPMRow();
 }
 
-// ── Files Me ─────────────────────────────────────────
-// ไฟล์จริงจะถูกคัดลอกเข้าไปในโฟลเดอร์ "Files-me" ที่ผู้ใช้เลือกไว้ (ผ่าน File System Access API)
-// metadata (ชื่อ, รายละเอียด, ชื่อไฟล์) เก็บใน DB._files และ sync ผ่าน KV
-
-const FILE_TYPES = {
-  img:  ['png','jpg','jpeg','gif','webp','bmp','svg','ico'],
-  doc:  ['doc','docx','txt','rtf','odt'],
-  xls:  ['xls','xlsx','csv','ods'],
-  zip:  ['zip','rar','7z','tar','gz'],
-  pdf:  ['pdf'],
-};
-function getFileType(name){
-  const ext = (name||'').split('.').pop().toLowerCase();
-  for(const [type, exts] of Object.entries(FILE_TYPES)){
-    if(exts.includes(ext)) return type;
-  }
-  return 'other';
-}
-const FILE_ICONS  = { img:'🖼️', doc:'📝', xls:'📊', zip:'📦', pdf:'📄', other:'📎' };
-const FILE_TYPE_LABELS = { img:'IMAGE', doc:'DOC', xls:'SHEET', zip:'ARCHIVE', pdf:'PDF', other:'FILE' };
-
-let filesFilter = 'all';
-let _fileModalMode = 'add';
-let _fileEditId = null;
-let _filePendingFile = null; // File object (จาก showOpenFilePicker) ที่รอบันทึก
-
-// ── IndexedDB: เก็บ directory handle ของโฟลเดอร์ "Files-me" ──
-const IDB_NAME  = 'dailyTodoFilesDB';
-const IDB_STORE = 'handles';
-const FILES_ME_KEY = 'filesMeDir';
-let _filesDirHandle = null;
-
-function openIDB(){
-  return new Promise((res, rej)=>{
-    const req = indexedDB.open(IDB_NAME, 1);
-    req.onupgradeneeded = ()=>{
-      req.result.createObjectStore(IDB_STORE);
-    };
-    req.onsuccess = ()=>res(req.result);
-    req.onerror = ()=>rej(req.error);
-  });
-}
-async function idbGet(key){
-  const db = await openIDB();
-  return new Promise((res, rej)=>{
-    const tx = db.transaction(IDB_STORE,'readonly');
-    const req = tx.objectStore(IDB_STORE).get(key);
-    req.onsuccess = ()=>res(req.result || null);
-    req.onerror = ()=>rej(req.error);
-  });
-}
-async function idbSet(key, val){
-  const db = await openIDB();
-  return new Promise((res, rej)=>{
-    const tx = db.transaction(IDB_STORE,'readwrite');
-    tx.objectStore(IDB_STORE).put(val, key);
-    tx.oncomplete = ()=>res(true);
-    tx.onerror = ()=>rej(tx.error);
-  });
-}
-async function idbDel(key){
-  const db = await openIDB();
-  return new Promise((res, rej)=>{
-    const tx = db.transaction(IDB_STORE,'readwrite');
-    tx.objectStore(IDB_STORE).delete(key);
-    tx.oncomplete = ()=>res(true);
-    tx.onerror = ()=>rej(tx.error);
-  });
-}
-
-// ขอ/ตรวจสิทธิ์เข้าถึงโฟลเดอร์ "Files-me" ที่ผู้ใช้เคยเลือกไว้
-async function getFilesDir(promptIfMissing=true){
-  if(_filesDirHandle){
-    try {
-      const p = await _filesDirHandle.queryPermission({ mode:'readwrite' });
-      if(p === 'granted') return _filesDirHandle;
-      const p2 = await _filesDirHandle.requestPermission({ mode:'readwrite' });
-      if(p2 === 'granted') return _filesDirHandle;
-    } catch(_){}
-  }
-  try {
-    const saved = await idbGet(FILES_ME_KEY);
-    if(saved){
-      const p = await saved.queryPermission({ mode:'readwrite' });
-      if(p === 'granted'){ _filesDirHandle = saved; return saved; }
-      const p2 = await saved.requestPermission({ mode:'readwrite' });
-      if(p2 === 'granted'){ _filesDirHandle = saved; return saved; }
-    }
-  } catch(_){}
-
-  if(!promptIfMissing) return null;
-
-  try {
-    showToast('เลือกโฟลเดอร์ "Files-me" ที่สร้างไว้ 📁');
-    const dir = await window.showDirectoryPicker({ mode:'readwrite' });
-    await idbSet(FILES_ME_KEY, dir);
-    _filesDirHandle = dir;
-    return dir;
-  } catch(_){
-    return null;
-  }
-}
-
-function filesLoad(){
-  filesRenderGrid();
-}
-
-function filesSetFilter(ft){
-  filesFilter = ft;
-  document.querySelectorAll('#filesFilterBar .ff-btn').forEach(b=>{
-    b.classList.toggle('active', b.dataset.ft===ft);
-  });
-  filesRenderGrid();
-}
-
-function filesRenderGrid(){
-  if(!DB._files) DB._files = [];
-  const q = ((document.getElementById('filesSearch')||{}).value||'').toLowerCase();
-  let list = DB._files.slice();
-  if(filesFilter!=='all') list = list.filter(f=>getFileType(f.fileName)===filesFilter);
-  if(q) list = list.filter(f=>(f.name||'').toLowerCase().includes(q)||(f.detail||'').toLowerCase().includes(q));
-  list.sort((a,b)=>new Date(b.addedAt)-new Date(a.addedAt));
-
-  const grid = document.getElementById('filesGrid');
-  if(!list.length){
-    const msg = DB._files.length===0
-      ? '📂 ยังไม่มีไฟล์ — กด <strong>+ เพิ่มไฟล์</strong> เพื่อเริ่มต้น'
-      : '🔍 ไม่พบไฟล์ที่ตรงกับการค้นหา';
-    grid.innerHTML = `<div class="files-empty">${msg}</div>`;
-    return;
-  }
-  grid.innerHTML = list.map(f=>{
-    const type = getFileType(f.fileName);
-    const icon = FILE_ICONS[type];
-    const badge = FILE_TYPE_LABELS[type];
-    const sizeStr = !f.size ? '' : f.size < 1024 ? f.size+'B'
-      : f.size < 1048576 ? (f.size/1024).toFixed(1)+'KB'
-      : (f.size/1048576).toFixed(1)+'MB';
-    const addedDate = new Date(f.addedAt).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
-    const detailHtml = f.detail ? `<div class="file-detail">${esc(f.detail)}</div>` : '';
-    return `
-    <div class="file-card" onclick="filesOpenFile('${f.id}')" title="คลิกเพื่อเปิด ${esc(f.fileName)}">
-      <div class="file-actions" onclick="event.stopPropagation()">
-        <button class="file-act-btn edit" onclick="filesEditOpen('${f.id}')" title="แก้ไข">
-          <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-        <button class="file-act-btn del" onclick="filesDelete('${f.id}')" title="ลบ">
-          <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
-        </button>
-      </div>
-      <div class="file-icon">${icon}</div>
-      <div class="file-name">${esc(f.name)}</div>
-      ${detailHtml}
-      <span class="file-type-badge ${type}">${badge}</span>
-      <div class="file-meta">${sizeStr ? sizeStr+' · ' : ''}${esc(f.fileName)}<br>${addedDate}</div>
-    </div>`;
-  }).join('');
-}
-
-// เลือกไฟล์จากเครื่อง → คัดลอกเข้าโฟลเดอร์ Files-me ทีหลังตอนกดบันทึก
-async function filesAdd(){
-  try {
-    const [handle] = await window.showOpenFilePicker({ multiple: false });
-    const file = await handle.getFile();
-    _filePendingFile = file;
-    _fileModalMode = 'add';
-    _fileEditId = null;
-    document.getElementById('fmTitle').textContent = '+ เพิ่มไฟล์';
-    document.getElementById('fmNameInput').value = file.name.replace(/\.[^.]+$/, '');
-    rteClear('fmDetailBody');
-    document.getElementById('fmOrigInfo').textContent = '📎 ' + file.name;
-    document.getElementById('fileModal').style.display='flex';
-    setTimeout(()=>{ const n=document.getElementById('fmNameInput'); n.focus(); n.select(); }, 60);
-  } catch(_){}
-}
-
-function filesEditOpen(id){
-  if(!DB._files) return;
-  const f = DB._files.find(x=>x.id===id);
-  if(!f) return;
-  _fileModalMode = 'edit';
-  _fileEditId = id;
-  _filePendingFile = null;
-  document.getElementById('fmTitle').textContent = '✏️ แก้ไขข้อมูลไฟล์';
-  document.getElementById('fmNameInput').value = f.name;
-  rteSetHTML('fmDetailBody', f.detail||'');
-  document.getElementById('fmOrigInfo').textContent = '📎 ' + f.fileName;
-  document.getElementById('fileModal').style.display='flex';
-  setTimeout(()=>{ document.getElementById('fmNameInput').focus(); }, 60);
-}
-
-function fileModalClose(){
-  document.getElementById('fileModal').style.display='none';
-  _filePendingFile = null;
-  _fileEditId = null;
-}
-function fileModalCloseOnBg(e){
-  if(e.target===document.getElementById('fileModal')) fileModalClose();
-}
-
-// เขียนไฟล์ลงในโฟลเดอร์ Files-me (สร้างชื่อไม่ซ้ำถ้ามีไฟล์ชื่อเดียวกันอยู่แล้ว)
-async function writeFileToFilesMeDir(file){
-  const dir = await getFilesDir(true);
-  if(!dir) throw new Error('ไม่ได้เลือกโฟลเดอร์ Files-me');
-
-  let targetName = file.name;
-  let i = 1;
-  while(true){
-    try {
-      await dir.getFileHandle(targetName, { create:false });
-      const dot = file.name.lastIndexOf('.');
-      const base = dot>-1 ? file.name.slice(0,dot) : file.name;
-      const ext  = dot>-1 ? file.name.slice(dot) : '';
-      targetName = `${base} (${i})${ext}`;
-      i++;
-    } catch(_){ break; } // ไม่มีไฟล์ชื่อนี้ → ใช้ชื่อนี้ได้
-  }
-
-  const fh = await dir.getFileHandle(targetName, { create:true });
-  const writable = await fh.createWritable();
-  await writable.write(file);
-  await writable.close();
-  return targetName;
-}
-
-async function fileModalSave(){
-  const name = document.getElementById('fmNameInput').value.trim();
-  if(!name){ document.getElementById('fmNameInput').focus(); return; }
-  const detail = rteGetHTML('fmDetailBody');
-
-  if(_fileModalMode==='add'){
-    if(!_filePendingFile) return;
-    let savedFileName;
-    try {
-      savedFileName = await writeFileToFilesMeDir(_filePendingFile);
-    } catch(e){
-      showToast('บันทึกไฟล์ลงโฟลเดอร์ไม่สำเร็จ: '+e.message);
-      return;
-    }
-    const id = Math.random().toString(36).slice(2)+Date.now().toString(36);
-    const entry = { id, name, fileName: savedFileName, detail, size: _filePendingFile.size, addedAt: new Date().toISOString() };
-    if(!DB._files) DB._files = [];
-    DB._files.push(entry);
-    await writeFile();
-    showToast('เพิ่ม "'+name+'" ลงโฟลเดอร์ Files-me แล้ว 📂');
-  } else {
-    if(!DB._files) return;
-    const idx = DB._files.findIndex(x=>x.id===_fileEditId);
-    if(idx<0) return;
-    DB._files[idx].name = name;
-    DB._files[idx].detail = detail;
-    await writeFile();
-    showToast('บันทึกแล้ว ✔');
-  }
-  fileModalClose();
-  filesRenderGrid();
-}
-
-// เปิดไฟล์จากโฟลเดอร์ Files-me
-async function filesOpenFile(id){
-  if(!DB._files) return;
-  const f = DB._files.find(x=>x.id===id);
-  if(!f){ showToast('ไม่พบข้อมูลไฟล์'); return; }
-  try {
-    const dir = await getFilesDir(true);
-    if(!dir){ showToast('ไม่ได้เลือกโฟลเดอร์ Files-me'); return; }
-    const fh = await dir.getFileHandle(f.fileName, { create:false });
-    const file = await fh.getFile();
-    const url = URL.createObjectURL(file);
-    const a = document.createElement('a');
-    a.href = url;
-    const type = getFileType(f.fileName);
-    if(type==='img'||type==='pdf'){ a.target='_blank'; }
-    else { a.download = f.fileName; }
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(()=>URL.revokeObjectURL(url), 8000);
-  } catch(e){
-    showToast('ไม่สามารถเปิดไฟล์ได้ (อาจถูกย้าย/ลบจากโฟลเดอร์): '+e.message);
-  }
-}
-
-async function filesDelete(id){
-  if(!DB._files) return;
-  const f = DB._files.find(x=>x.id===id);
-  if(!f) return;
-  if(!confirm(`ลบ "${f.name}" ออกจากรายการ และลบไฟล์ "${f.fileName}" จากโฟลเดอร์ Files-me ด้วยหรือไม่?`)) return;
-  try {
-    const dir = await getFilesDir(false);
-    if(dir) await dir.removeEntry(f.fileName);
-  } catch(_){}
-  DB._files = DB._files.filter(x=>x.id!==id);
-  await writeFile();
-  showToast('ลบ "'+f.name+'" แล้ว');
-  filesRenderGrid();
-}
-
 // ── Initial render (ต้องอยู่ท้ายสุด เพื่อให้ const ทุกตัวถูก initialize ก่อน) ──
 loadCols();
 renderBoard();
@@ -3875,7 +3488,6 @@ loadFile().then(() => {
   renderDL();
   loadQL();
   renderQL();
-  filesRenderGrid();
   loadFinPM();
   renderFinance();
 });
