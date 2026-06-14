@@ -934,6 +934,32 @@
     gap: .45rem;
     margin-top: .35rem;
   }
+  /* ── Time Range ── */
+  .time-range-row {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .time-range-row input[type="time"] {
+    flex: 1;
+  }
+  .time-range-sep {
+    color: var(--text-3);
+    font-size: .8rem;
+    flex-shrink: 0;
+  }
+  .card-time-range {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: .7rem;
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+    background: var(--surface3);
+    border-radius: 5px;
+    padding: 1px 7px;
+    margin-bottom: .35rem;
+  }
   .priority-pill {
     display: inline-flex;
     align-items: center;
@@ -1690,6 +1716,14 @@
       </div>
     </div>
     <div class="field">
+      <label>ช่วงเวลา <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
+      <div class="time-range-row">
+        <input type="time" id="taskTimeStart">
+        <span class="time-range-sep">—</span>
+        <input type="time" id="taskTimeEnd">
+      </div>
+    </div>
+    <div class="field">
       <label>Priority</label>
       <div class="priority-row" id="priorityRow">
         <button class="priority-pill" data-p="critical" onclick="selectPriority('critical')">🔴 Critical</button>
@@ -2025,12 +2059,16 @@ function openModal(status, id=null){
     document.getElementById('modalTitle').textContent = 'แก้ไขงาน';
     document.getElementById('taskTitle').value = t.title;
     rteSetHTML('taskNoteBody', t.note||'');
+    document.getElementById('taskTimeStart').value = t.timeStart || '';
+    document.getElementById('taskTimeEnd').value   = t.timeEnd   || '';
     selectStatus(t.status);
     t.priority ? selectPriority(t.priority) : clearPriority();
   } else {
     document.getElementById('modalTitle').textContent = 'เพิ่มงานใหม่';
     document.getElementById('taskTitle').value = '';
     rteClear('taskNoteBody');
+    document.getElementById('taskTimeStart').value = '';
+    document.getElementById('taskTimeEnd').value   = '';
     selectStatus(status || COLS[0]?.id || 'todo');
     clearPriority();
   }
@@ -2116,6 +2154,8 @@ function colDelete(){
 async function saveTask(){
   const title = document.getElementById('taskTitle').value.trim();
   if(!title){ document.getElementById('taskTitle').focus(); return; }
+  const timeStart = document.getElementById('taskTimeStart').value || '';
+  const timeEnd   = document.getElementById('taskTimeEnd').value || '';
   const tasks = getTasks(currentDate);
   if(editId){
     const idx = tasks.findIndex(x=>x.id===editId);
@@ -2124,6 +2164,8 @@ async function saveTask(){
       tasks[idx].note      = rteGetHTML('taskNoteBody');
       tasks[idx].status    = selectedStatus;
       tasks[idx].priority  = selectedPriority || '';
+      tasks[idx].timeStart = timeStart;
+      tasks[idx].timeEnd   = timeEnd;
       tasks[idx].updatedAt = new Date().toISOString();
     }
   } else {
@@ -2133,6 +2175,8 @@ async function saveTask(){
       note:      rteGetHTML('taskNoteBody'),
       status:    selectedStatus,
       priority:  selectedPriority || '',
+      timeStart,
+      timeEnd,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     });
@@ -2537,8 +2581,14 @@ function renderCard(t){
     ? `<span class="priority-badge ${t.priority}">${priorityLabels[t.priority]}</span>`
     : '';
 
+  const clockSvg = `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+  const timeRangeHtml = (t.timeStart || t.timeEnd)
+    ? `<div class="card-time-range">${clockSvg} ${esc(t.timeStart||'?')} - ${esc(t.timeEnd||'?')}</div>`
+    : '';
+
   return `<div class="card ${c}"${last?' data-done="1"':''} onclick="openModal('${esc(t.status)}','${t.id}')">
     <div class="card-title">${priorityBadge} ${esc(t.title)}</div>
+    ${timeRangeHtml}
     ${noteHtml}
     ${linksHtml}
     <div class="card-footer">
