@@ -2278,13 +2278,17 @@ function lockApp(){
 
 async function afterAuthSuccess(){
   lockHide();
-  await loadFile();
-  render();
-  loadDL();
-  renderDL();
-  loadQL();
-  renderQL();
-  filesRenderGrid();
+  try {
+    await loadFile();
+    render();
+    loadDL();
+    renderDL();
+    loadQL();
+    renderQL();
+    filesRenderGrid();
+  } catch(e){
+    console.error('afterAuthSuccess render error:', e);
+  }
 }
 
 async function lockSubmit(){
