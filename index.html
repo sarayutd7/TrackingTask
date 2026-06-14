@@ -1337,11 +1337,37 @@
     letter-spacing: .03em;
   }
   .ql-tag-pill:hover { color: var(--text); border-color: var(--border-hover); }
-  .ql-tag-pill.active-tag { color: #fff; border-color: transparent; }
-  .ql-tag-pill[data-tag="system"].active-tag           { background: #2dd4c4; }
-  .ql-tag-pill[data-tag="document"].active-tag         { background: #7c6ff7; }
-  .ql-tag-pill[data-tag="knowledge"].active-tag        { background: #34d399; }
-  .ql-tag-pill[data-tag="other"].active-tag            { background: #8896a5; }
+  .ql-tag-pill.active-tag { color: #fff; border-color: transparent; background: var(--tag-color, var(--accent)); }
+  .ql-tag-remove {
+    margin-left: .35rem;
+    border: none;
+    background: transparent;
+    color: inherit;
+    opacity: .6;
+    cursor: pointer;
+    font-size: .8rem;
+    line-height: 1;
+    padding: 0;
+  }
+  .ql-tag-remove:hover { opacity: 1; }
+  .ql-tag-add-row {
+    display: flex;
+    gap: .4rem;
+    margin-top: .5rem;
+  }
+  .ql-tag-add-row input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .35rem .6rem;
+    font-size: .78rem;
+    color: var(--text);
+    font-family: var(--font);
+    outline: none;
+  }
+  .ql-tag-add-row input:focus { border-color: var(--accent); }
+  .ql-tag-add-row .btn { font-size: .72rem; padding: .35rem .7rem; }
 
   /* ── QL Tag badge (card) ── */
   .ql-tag-badge {
@@ -1354,14 +1380,12 @@
     text-transform: uppercase;
     padding: .18rem .6rem;
     border-radius: 99px;
-    border: 1px solid;
+    border: 1px solid var(--tag-color, var(--border-hover));
+    color: var(--tag-color, var(--text-3));
+    background: var(--tag-bg, transparent);
     line-height: 1;
     width: fit-content;
   }
-  .ql-tag-badge.system    { background: rgba(45,212,196,.12);  color: #2dd4c4; border-color: rgba(45,212,196,.45); }
-  .ql-tag-badge.document  { background: rgba(124,111,247,.12); color: #a99fff; border-color: rgba(124,111,247,.45); }
-  .ql-tag-badge.knowledge { background: rgba(52,211,153,.12);  color: #34d399; border-color: rgba(52,211,153,.45); }
-  .ql-tag-badge.other     { background: rgba(136,150,165,.12); color: #8896a5; border-color: rgba(136,150,165,.45); }
 
   /* ── QL Filter bar ── */
   .ql-filter-bar {
@@ -1672,7 +1696,7 @@
     </button>
     <button class="tab-btn" id="tabBtnTool" onclick="switchTab('tool')">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      Tool + Note
+      Note
     </button>
     <button class="tab-btn" id="tabBtnFinance" onclick="switchTab('finance')">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.1 1.1-2 3-2s3 .9 3 2-1.3 2-3 2-3 .9-3 2 1.34 2 3 2 3-.9 3-2"/></svg>
@@ -1756,7 +1780,7 @@
     </div>
   </div>
 
-  <!-- Tab 2: Tool + Note -->
+  <!-- Tab 2: Note -->
   <div class="tab-pane" id="tabTool" style="display:none">
 
     <!-- Tool Links -->
@@ -1773,11 +1797,7 @@
         </span>
       </div>
       <div class="ql-filter-bar" id="qlFilterBar">
-        <button class="ql-filter-btn active" data-filter="all"       onclick="qlSetFilter('all')">ทั้งหมด</button>
-        <button class="ql-filter-btn"        data-filter="system"    onclick="qlSetFilter('system')">System</button>
-        <button class="ql-filter-btn"        data-filter="document"  onclick="qlSetFilter('document')">Document</button>
-        <button class="ql-filter-btn"        data-filter="knowledge" onclick="qlSetFilter('knowledge')">Knowledge Sharing</button>
-        <button class="ql-filter-btn"        data-filter="other"     onclick="qlSetFilter('other')">Other</button>
+        <button class="ql-filter-btn active" data-filter="all" onclick="qlSetFilter('all')">ทั้งหมด</button>
       </div>
       <div class="ql-body" id="qlBody"></div>
     </div>
@@ -1880,7 +1900,7 @@
 <div class="overlay" id="qlOverlay" style="display:none">
   <div class="modal" style="max-width:440px">
     <div class="modal-header">
-      <span class="modal-title" id="qlModalTitle">เพิ่ม Tool Link</span>
+      <span class="modal-title" id="qlModalTitle">เพิ่ม Note</span>
       <button class="close-btn" onclick="qlClose()">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -1895,11 +1915,10 @@
     </div>
     <div class="field">
       <label>Tag <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
-      <div class="ql-tag-row" id="qlTagRow">
-        <button class="ql-tag-pill" data-tag="system"    onclick="selectQlTag('system')">🖥 System</button>
-        <button class="ql-tag-pill" data-tag="document"  onclick="selectQlTag('document')">📄 Document</button>
-        <button class="ql-tag-pill" data-tag="knowledge" onclick="selectQlTag('knowledge')">📚 Knowledge Sharing</button>
-        <button class="ql-tag-pill" data-tag="other"     onclick="selectQlTag('other')">📌 Other</button>
+      <div class="ql-tag-row" id="qlTagRow"></div>
+      <div class="ql-tag-add-row">
+        <input type="text" id="qlNewTagInput" placeholder="เพิ่ม tag ใหม่…" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();qlTagAdd();}">
+        <button type="button" class="btn btn-ghost" onclick="qlTagAdd()">+ เพิ่ม tag</button>
       </div>
     </div>
     <div class="field">
@@ -2091,7 +2110,13 @@
 <script>
 let editId = null;
 let selectedStatus = 'todo';
-const today = new Date().toISOString().split('T')[0];
+function localDateStr(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+const today = localDateStr(new Date());
 let currentDate = today;
 let DB = {};
 
@@ -2450,7 +2475,9 @@ async function afterAuthSuccess(){
     render();
     loadDL();
     renderDL();
+    loadQLTags();
     loadQL();
+    renderQlFilterBar();
     renderQL();
   } catch(e){
     console.error('afterAuthSuccess render error:', e);
@@ -2533,7 +2560,7 @@ function openReschedule(id){
   // default = tomorrow
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate()+1);
-  document.getElementById('rschedDate').value = tomorrow.toISOString().slice(0,10);
+  document.getElementById('rschedDate').value = localDateStr(tomorrow);
   document.getElementById('rschedOverlay').style.display='flex';
 }
 
@@ -2995,24 +3022,85 @@ function saveQL(){
   writeFile();
 }
 
+// ── QL Tags (เพิ่ม/ลบได้) ──────────────────────────────
+const QL_TAGS_KEY = 'dailyTodoQLTags';
+const QL_TAG_PALETTE = ['#2dd4c4','#7c6ff7','#34d399','#8896a5','#f59e0b','#ef4444','#4a9eff','#ec4899'];
+let QL_TAGS = [];
+
+function loadQLTags(){
+  let fromLS = null;
+  try { fromLS = JSON.parse(localStorage.getItem(QL_TAGS_KEY)||'null'); } catch(_){}
+  const fromFile = Array.isArray(DB._qlTags) ? DB._qlTags : null;
+  QL_TAGS = fromFile || fromLS || [
+    {id:'system',    label:'System'},
+    {id:'document',  label:'Document'},
+    {id:'knowledge', label:'Knowledge Sharing'},
+    {id:'other',     label:'Other'}
+  ];
+}
+function saveQLTags(){
+  DB._qlTags = QL_TAGS;
+  localStorage.setItem(QL_TAGS_KEY, JSON.stringify(QL_TAGS));
+  writeFile();
+}
+function qlTagColor(id){
+  const idx = QL_TAGS.findIndex(t=>t.id===id);
+  return QL_TAG_PALETTE[idx >= 0 ? idx % QL_TAG_PALETTE.length : 0];
+}
+function qlTagLabel(id){
+  const tag = QL_TAGS.find(t=>t.id===id);
+  return tag ? tag.label : '';
+}
+
+function renderQlTagRow(){
+  const row = document.getElementById('qlTagRow');
+  row.innerHTML = QL_TAGS.map(tag=>{
+    const color = qlTagColor(tag.id);
+    const active = selectedQlTag === tag.id ? 'active-tag' : '';
+    return `<button type="button" class="ql-tag-pill ${active}" data-tag="${esc(tag.id)}" style="--tag-color:${color}" onclick="selectQlTag('${tag.id}')">${esc(tag.label)}<button type="button" class="ql-tag-remove" onclick="event.stopPropagation();qlTagRemove('${tag.id}')" title="ลบ tag">✕</button></button>`;
+  }).join('');
+}
+
+function qlTagAdd(){
+  const input = document.getElementById('qlNewTagInput');
+  const label = input.value.trim();
+  if(!label) return;
+  const id = 'tag_' + Date.now().toString(36);
+  QL_TAGS.push({id, label});
+  saveQLTags();
+  renderQlTagRow();
+  renderQlFilterBar();
+  input.value = '';
+}
+
+function qlTagRemove(id){
+  QL_TAGS = QL_TAGS.filter(t=>t.id!==id);
+  saveQLTags();
+  if(selectedQlTag === id) selectedQlTag = '';
+  renderQlTagRow();
+  if(qlActiveFilter === id) qlSetFilter('all');
+  else renderQlFilterBar();
+}
+
+function renderQlFilterBar(){
+  const bar = document.getElementById('qlFilterBar');
+  const allBtn = `<button class="ql-filter-btn${qlActiveFilter==='all'?' active':''}" data-filter="all" onclick="qlSetFilter('all')">ทั้งหมด</button>`;
+  const tagBtns = QL_TAGS.map(tag=>`<button class="ql-filter-btn${qlActiveFilter===tag.id?' active':''}" data-filter="${esc(tag.id)}" onclick="qlSetFilter('${tag.id}')">${esc(tag.label)}</button>`).join('');
+  bar.innerHTML = allBtn + tagBtns;
+}
+
 function selectQlTag(tag){
   selectedQlTag = (selectedQlTag === tag) ? '' : tag; // toggle off if same
-  document.querySelectorAll('#qlTagRow .ql-tag-pill').forEach(btn=>{
-    btn.classList.toggle('active-tag', btn.dataset.tag === selectedQlTag);
-  });
+  renderQlTagRow();
 }
 
 function qlSetFilter(filter){
   qlActiveFilter = filter;
-  document.querySelectorAll('#qlFilterBar .ql-filter-btn').forEach(btn=>{
-    btn.classList.toggle('active', btn.dataset.filter === filter);
-  });
+  renderQlFilterBar();
   renderQL();
 }
 
 const qlLinkSvg = `<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`;
-
-const qlTagLabels = {system:'System', document:'Document', knowledge:'Knowledge Sharing', other:'Other'};
 
 const qlEditSvg = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
 const qlDelSvg  = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
@@ -3026,12 +3114,13 @@ function renderQL(){
   if(!list.length){
     body.innerHTML = QL.length
       ? '<span class="ql-empty">ไม่มี link ใน tag นี้</span>'
-      : '<span class="ql-empty">ยังไม่มี link — กด + เพิ่ม เพื่อเพิ่ม tool link</span>';
+      : '<span class="ql-empty">ยังไม่มี link — กด + เพิ่ม เพื่อเพิ่ม Note</span>';
     return;
   }
   body.innerHTML = list.map(({item,i})=>{
-    const tagBadge = item.tag && qlTagLabels[item.tag]
-      ? `<span class="ql-tag-badge ${item.tag}">● ${qlTagLabels[item.tag]}</span>`
+    const tagLabel = item.tag ? qlTagLabel(item.tag) : '';
+    const tagBadge = tagLabel
+      ? `<span class="ql-tag-badge" style="--tag-color:${qlTagColor(item.tag)};--tag-bg:${qlTagColor(item.tag)}1F">● ${esc(tagLabel)}</span>`
       : '';
     const hasUrl = item.url && item.url.trim();
     const openBtn = hasUrl
@@ -3101,12 +3190,12 @@ function qlImageRemove(i){
 
 function qlOpenAdd(){
   qlEditIdx = -1;
-  document.getElementById('qlModalTitle').textContent = 'เพิ่ม Tool Link';
+  document.getElementById('qlModalTitle').textContent = 'เพิ่ม Note';
   document.getElementById('qlName').value='';
   document.getElementById('qlUrl').value='';
   rteClear('qlDetailBody');
   selectedQlTag = '';
-  document.querySelectorAll('#qlTagRow .ql-tag-pill').forEach(btn=>btn.classList.remove('active-tag'));
+  renderQlTagRow();
   qlPendingImages = [];
   renderQlImagesRow();
   document.getElementById('qlOverlay').style.display='flex';
@@ -3117,14 +3206,12 @@ function qlOpenEdit(i){
   const item = QL[i];
   if(!item) return;
   qlEditIdx = i;
-  document.getElementById('qlModalTitle').textContent = 'แก้ไข Tool Link';
+  document.getElementById('qlModalTitle').textContent = 'แก้ไข Note';
   document.getElementById('qlName').value   = item.name   || '';
   document.getElementById('qlUrl').value    = item.url    || '';
   rteSetHTML('qlDetailBody', item.detail || '');
   selectedQlTag = item.tag || '';
-  document.querySelectorAll('#qlTagRow .ql-tag-pill').forEach(btn=>{
-    btn.classList.toggle('active-tag', btn.dataset.tag === selectedQlTag);
-  });
+  renderQlTagRow();
   qlPendingImages = (item.images || []).slice();
   renderQlImagesRow();
   document.getElementById('qlOverlay').style.display='flex';
@@ -3486,7 +3573,9 @@ loadFile().then(() => {
   render();
   loadDL();
   renderDL();
+  loadQLTags();
   loadQL();
+  renderQlFilterBar();
   renderQL();
   loadFinPM();
   renderFinance();
