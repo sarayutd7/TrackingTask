@@ -1141,7 +1141,13 @@
   }
 
   @media (max-width: 480px) {
-    .stats { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr !important; gap: .6rem; }
+    .stat-card { padding: .75rem 1rem; justify-content: space-between; }
+    .stat-icon { width: 36px; height: 36px; }
+    .stat-icon svg { width: 18px; height: 18px; }
+    .stat-body { display: flex; align-items: center; gap: .6rem; flex: 1; justify-content: space-between; }
+    .stat-num { font-size: 1.25rem; order: 2; }
+    .stat-label { font-size: .8rem; margin-top: 0; order: 1; }
     header { flex-direction: column; }
     .header-right { width: 100%; }
     input[type="date"], .btn { flex: 1; justify-content: center; }
@@ -2759,10 +2765,16 @@ let qlActiveFilter = 'all';
 let selectedQlTag  = '';
 
 function loadQL(){
-  try { QL = JSON.parse(localStorage.getItem(QL_KEY)||'[]'); } catch(_){ QL=[]; }
+  // Merge localStorage (fallback) with file (_ql), file takes precedence
+  let fromLS = [];
+  try { fromLS = JSON.parse(localStorage.getItem(QL_KEY)||'[]'); } catch(_){}
+  const fromFile = Array.isArray(DB._ql) ? DB._ql : null;
+  QL = fromFile !== null ? fromFile : fromLS;
 }
 function saveQL(){
+  DB._ql = QL;
   localStorage.setItem(QL_KEY, JSON.stringify(QL));
+  writeFile();
 }
 
 function selectQlTag(tag){
@@ -2894,12 +2906,11 @@ function qlSave(){
   qlClose();
 }
 
-loadQL();
-renderQL();
+// (loadQL/renderQL called after loadFile resolves, below)
 
 // ── Files Me ─────────────────────────────────────────
-// approach: individual file handles in IDB (key = fh_${id})
-// metadata in DB._files array inside daily-todo.json
+// ไฟล์จริงจะถูกคัดลอกเข้าไปในโฟลเดอร์ "Files-me" ที่ผู้ใช้เลือกไว้ (ผ่าน File System Access API)
+// metadata (ชื่อ, รายละเอียด, ชื่อไฟล์) เก็บใน DB._files และ sync ผ่าน KV
 
 const FILE_TYPES = {
   img:  ['png','jpg','jpeg','gif','webp','bmp','svg','ico'],
@@ -2921,33 +2932,83 @@ const FILE_TYPE_LABELS = { img:'IMAGE', doc:'DOC', xls:'SHEET', zip:'ARCHIVE', p
 let filesFilter = 'all';
 let _fileModalMode = 'add';
 let _fileEditId = null;
-let _filePendingHandle = null;
+let _filePendingFile = null; // File object (จาก showOpenFilePicker) ที่รอบันทึก
 
-// IDB per-file handle helpers
-async function saveFileHandle(id, handle){
-  const db = await openIDB();
-  return new Promise((res,rej)=>{
-    const tx = db.transaction(IDB_STORE,'readwrite');
-    tx.objectStore(IDB_STORE).put(handle, 'fh_'+id);
-    tx.oncomplete=res; tx.onerror=rej;
+// ── IndexedDB: เก็บ directory handle ของโฟลเดอร์ "Files-me" ──
+const IDB_NAME  = 'dailyTodoFilesDB';
+const IDB_STORE = 'handles';
+const FILES_ME_KEY = 'filesMeDir';
+let _filesDirHandle = null;
+
+function openIDB(){
+  return new Promise((res, rej)=>{
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = ()=>{
+      req.result.createObjectStore(IDB_STORE);
+    };
+    req.onsuccess = ()=>res(req.result);
+    req.onerror = ()=>rej(req.error);
   });
 }
-async function loadFileHandle(id){
+async function idbGet(key){
   const db = await openIDB();
-  return new Promise((res,rej)=>{
+  return new Promise((res, rej)=>{
     const tx = db.transaction(IDB_STORE,'readonly');
-    const req = tx.objectStore(IDB_STORE).get('fh_'+id);
-    req.onsuccess = e=>res(e.target.result||null);
-    req.onerror = rej;
+    const req = tx.objectStore(IDB_STORE).get(key);
+    req.onsuccess = ()=>res(req.result || null);
+    req.onerror = ()=>rej(req.error);
   });
 }
-async function deleteFileHandle(id){
+async function idbSet(key, val){
   const db = await openIDB();
-  return new Promise((res,rej)=>{
+  return new Promise((res, rej)=>{
     const tx = db.transaction(IDB_STORE,'readwrite');
-    tx.objectStore(IDB_STORE).delete('fh_'+id);
-    tx.oncomplete=res; tx.onerror=rej;
+    tx.objectStore(IDB_STORE).put(val, key);
+    tx.oncomplete = ()=>res(true);
+    tx.onerror = ()=>rej(tx.error);
   });
+}
+async function idbDel(key){
+  const db = await openIDB();
+  return new Promise((res, rej)=>{
+    const tx = db.transaction(IDB_STORE,'readwrite');
+    tx.objectStore(IDB_STORE).delete(key);
+    tx.oncomplete = ()=>res(true);
+    tx.onerror = ()=>rej(tx.error);
+  });
+}
+
+// ขอ/ตรวจสิทธิ์เข้าถึงโฟลเดอร์ "Files-me" ที่ผู้ใช้เคยเลือกไว้
+async function getFilesDir(promptIfMissing=true){
+  if(_filesDirHandle){
+    try {
+      const p = await _filesDirHandle.queryPermission({ mode:'readwrite' });
+      if(p === 'granted') return _filesDirHandle;
+      const p2 = await _filesDirHandle.requestPermission({ mode:'readwrite' });
+      if(p2 === 'granted') return _filesDirHandle;
+    } catch(_){}
+  }
+  try {
+    const saved = await idbGet(FILES_ME_KEY);
+    if(saved){
+      const p = await saved.queryPermission({ mode:'readwrite' });
+      if(p === 'granted'){ _filesDirHandle = saved; return saved; }
+      const p2 = await saved.requestPermission({ mode:'readwrite' });
+      if(p2 === 'granted'){ _filesDirHandle = saved; return saved; }
+    }
+  } catch(_){}
+
+  if(!promptIfMissing) return null;
+
+  try {
+    showToast('เลือกโฟลเดอร์ "Files-me" ที่สร้างไว้ 📁');
+    const dir = await window.showDirectoryPicker({ mode:'readwrite' });
+    await idbSet(FILES_ME_KEY, dir);
+    _filesDirHandle = dir;
+    return dir;
+  } catch(_){
+    return null;
+  }
 }
 
 function filesLoad(){
@@ -3006,11 +3067,12 @@ function filesRenderGrid(){
   }).join('');
 }
 
+// เลือกไฟล์จากเครื่อง → คัดลอกเข้าโฟลเดอร์ Files-me ทีหลังตอนกดบันทึก
 async function filesAdd(){
   try {
     const [handle] = await window.showOpenFilePicker({ multiple: false });
     const file = await handle.getFile();
-    _filePendingHandle = handle;
+    _filePendingFile = file;
     _fileModalMode = 'add';
     _fileEditId = null;
     document.getElementById('fmTitle').textContent = '+ เพิ่มไฟล์';
@@ -3028,7 +3090,7 @@ function filesEditOpen(id){
   if(!f) return;
   _fileModalMode = 'edit';
   _fileEditId = id;
-  _filePendingHandle = null;
+  _filePendingFile = null;
   document.getElementById('fmTitle').textContent = '✏️ แก้ไขข้อมูลไฟล์';
   document.getElementById('fmNameInput').value = f.name;
   rteSetHTML('fmDetailBody', f.detail||'');
@@ -3039,11 +3101,36 @@ function filesEditOpen(id){
 
 function fileModalClose(){
   document.getElementById('fileModal').style.display='none';
-  _filePendingHandle = null;
+  _filePendingFile = null;
   _fileEditId = null;
 }
 function fileModalCloseOnBg(e){
   if(e.target===document.getElementById('fileModal')) fileModalClose();
+}
+
+// เขียนไฟล์ลงในโฟลเดอร์ Files-me (สร้างชื่อไม่ซ้ำถ้ามีไฟล์ชื่อเดียวกันอยู่แล้ว)
+async function writeFileToFilesMeDir(file){
+  const dir = await getFilesDir(true);
+  if(!dir) throw new Error('ไม่ได้เลือกโฟลเดอร์ Files-me');
+
+  let targetName = file.name;
+  let i = 1;
+  while(true){
+    try {
+      await dir.getFileHandle(targetName, { create:false });
+      const dot = file.name.lastIndexOf('.');
+      const base = dot>-1 ? file.name.slice(0,dot) : file.name;
+      const ext  = dot>-1 ? file.name.slice(dot) : '';
+      targetName = `${base} (${i})${ext}`;
+      i++;
+    } catch(_){ break; } // ไม่มีไฟล์ชื่อนี้ → ใช้ชื่อนี้ได้
+  }
+
+  const fh = await dir.getFileHandle(targetName, { create:true });
+  const writable = await fh.createWritable();
+  await writable.write(file);
+  await writable.close();
+  return targetName;
 }
 
 async function fileModalSave(){
@@ -3052,15 +3139,20 @@ async function fileModalSave(){
   const detail = rteGetHTML('fmDetailBody');
 
   if(_fileModalMode==='add'){
-    if(!_filePendingHandle) return;
-    const file = await _filePendingHandle.getFile();
+    if(!_filePendingFile) return;
+    let savedFileName;
+    try {
+      savedFileName = await writeFileToFilesMeDir(_filePendingFile);
+    } catch(e){
+      showToast('บันทึกไฟล์ลงโฟลเดอร์ไม่สำเร็จ: '+e.message);
+      return;
+    }
     const id = Math.random().toString(36).slice(2)+Date.now().toString(36);
-    const entry = { id, name, fileName: file.name, detail, size: file.size, addedAt: new Date().toISOString() };
+    const entry = { id, name, fileName: savedFileName, detail, size: _filePendingFile.size, addedAt: new Date().toISOString() };
     if(!DB._files) DB._files = [];
     DB._files.push(entry);
-    await saveFileHandle(id, _filePendingHandle);
     await writeFile();
-    showToast('เพิ่ม "'+name+'" แล้ว 📂');
+    showToast('เพิ่ม "'+name+'" ลงโฟลเดอร์ Files-me แล้ว 📂');
   } else {
     if(!DB._files) return;
     const idx = DB._files.findIndex(x=>x.id===_fileEditId);
@@ -3074,16 +3166,16 @@ async function fileModalSave(){
   filesRenderGrid();
 }
 
+// เปิดไฟล์จากโฟลเดอร์ Files-me
 async function filesOpenFile(id){
   if(!DB._files) return;
   const f = DB._files.find(x=>x.id===id);
   if(!f){ showToast('ไม่พบข้อมูลไฟล์'); return; }
   try {
-    const handle = await loadFileHandle(id);
-    if(!handle){ showToast('ไม่พบ handle — ลองลบแล้วเพิ่มไฟล์ใหม่อีกครั้ง'); return; }
-    const perm = await handle.requestPermission({ mode:'read' });
-    if(perm!=='granted'){ showToast('ไม่ได้รับสิทธิ์เปิดไฟล์'); return; }
-    const file = await handle.getFile();
+    const dir = await getFilesDir(true);
+    if(!dir){ showToast('ไม่ได้เลือกโฟลเดอร์ Files-me'); return; }
+    const fh = await dir.getFileHandle(f.fileName, { create:false });
+    const file = await fh.getFile();
     const url = URL.createObjectURL(file);
     const a = document.createElement('a');
     a.href = url;
@@ -3095,7 +3187,7 @@ async function filesOpenFile(id){
     document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 8000);
   } catch(e){
-    showToast('ไม่สามารถเปิดไฟล์ได้: '+e.message);
+    showToast('ไม่สามารถเปิดไฟล์ได้ (อาจถูกย้าย/ลบจากโฟลเดอร์): '+e.message);
   }
 }
 
@@ -3103,9 +3195,12 @@ async function filesDelete(id){
   if(!DB._files) return;
   const f = DB._files.find(x=>x.id===id);
   if(!f) return;
-  if(!confirm(`ลบ "${f.name}" ออกจากรายการ?\n(ไฟล์จริงในเครื่องยังอยู่)`)) return;
+  if(!confirm(`ลบ "${f.name}" ออกจากรายการ และลบไฟล์ "${f.fileName}" จากโฟลเดอร์ Files-me ด้วยหรือไม่?`)) return;
+  try {
+    const dir = await getFilesDir(false);
+    if(dir) await dir.removeEntry(f.fileName);
+  } catch(_){}
   DB._files = DB._files.filter(x=>x.id!==id);
-  await deleteFileHandle(id);
   await writeFile();
   showToast('ลบ "'+f.name+'" แล้ว');
   filesRenderGrid();
@@ -3118,6 +3213,9 @@ loadFile().then(() => {
   render();
   loadDL();
   renderDL();
+  loadQL();
+  renderQL();
+  filesRenderGrid();
 });
 </script>
 </body>
