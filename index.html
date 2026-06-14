@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daily Todo</title>
+<title>TrackingTask Today</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -1511,9 +1511,10 @@
   <div class="lock-screen" id="lockScreen" style="display:none">
     <div class="lock-box" id="lockBox">
       <div class="lock-icon" id="lockIcon">🔒</div>
-      <div class="lock-title">Daily Todo</div>
+      <div class="lock-title">TrackingTask Today</div>
       <div class="lock-sub" id="lockSub">ใส่รหัสผ่านเพื่อเข้าใช้งาน</div>
       <div class="lock-fields">
+        <input class="lock-input" type="text" id="lockUser" placeholder="ชื่อผู้ใช้ (username)" autocomplete="username" onkeydown="if(event.key==='Enter') lockSubmit()">
         <input class="lock-input" type="password" id="lockPw" placeholder="รหัสผ่าน" autocomplete="current-password" onkeydown="if(event.key==='Enter') lockSubmit()">
         <input class="lock-input" type="password" id="lockPwConfirm" placeholder="ยืนยันรหัสผ่าน" style="display:none" autocomplete="new-password" onkeydown="if(event.key==='Enter') lockSubmit()">
         <div class="lock-error" id="lockError"></div>
@@ -1526,11 +1527,11 @@
   <header>
     <div class="brand">
       <div class="brand-dot"></div>
-      <h1>Daily Todo</h1>
+      <h1>TrackingTask Today</h1>
     </div>
     <div class="header-right">
       <button class="lock-btn" id="themeToggleBtn" onclick="toggleTheme()" title="สลับ Light/Dark"></button>
-      <button class="lock-btn" id="headerLockBtn" onclick="lockApp()" title="ล็อคหน้าจอ" style="display:none">
+      <button class="lock-btn" id="headerLockBtn" onclick="lockApp()" title="ออกจากระบบ" style="display:none">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       </button>
       <button class="btn" id="btnExport" onclick="exportJSON()">
@@ -1932,9 +1933,15 @@ let DB = {};
 const API = 'https://trackingtask.sarayutd7.workers.dev';
 
 // ── Read/Write JSON via Cloudflare Workers ────────────
+function authHeaders(){
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+  return token ? { 'Authorization': 'Bearer ' + token } : {};
+}
+
 async function loadFile(){
   try {
-    const r = await fetch(API + '/data');
+    const r = await fetch(API + '/data', { headers: authHeaders() });
+    if(r.status === 401){ sessionExpired(); return; }
     if(r.ok) DB = await r.json();
     else DB = {};
     localStorage.setItem('dailyTodoPro', JSON.stringify(DB)); // local backup
@@ -1948,9 +1955,10 @@ async function writeFile(){
   try {
     const r = await fetch(API + '/data', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: {'Content-Type':'application/json', ...authHeaders()},
       body: JSON.stringify(DB)
     });
+    if(r.status === 401){ sessionExpired(); return; }
     if(!r.ok) throw new Error('status '+r.status);
     localStorage.setItem('dailyTodoPro', JSON.stringify(DB));
     showStatus('✓ บันทึกแล้ว', 'ok');
@@ -1958,6 +1966,13 @@ async function writeFile(){
     localStorage.setItem('dailyTodoPro', JSON.stringify(DB));
     showStatus('⚠️ บันทึกใน browser เท่านั้น', 'warn');
   }
+}
+
+function sessionExpired(){
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem(AUTH_USER_KEY);
+  DB = {};
+  lockShow();
 }
 
 function getTasks(d){ return DB[d]||[]; }
@@ -2209,66 +2224,82 @@ async function moveTask(id, newStatus){
 }
 
 // ── Auth / Lock Screen ───────────────────────────────
-const AUTH_KEY = 'dailyTodoAuthHash';
+const AUTH_TOKEN_KEY = 'trackingTaskToken';
+const AUTH_USER_KEY = 'trackingTaskUser';
 
-async function hashPw(pw){
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
-function lockSetupMode(){
+function lockRegisterMode(){
   document.getElementById('lockIcon').textContent = '🔐';
-  document.getElementById('lockSub').textContent = 'ตั้งรหัสผ่านสำหรับการเข้าใช้งาน';
-  document.getElementById('lockSubmitBtn').textContent = 'ตั้งรหัสผ่าน';
+  document.getElementById('lockSub').textContent = 'สมัครสมาชิกเพื่อเริ่มใช้งาน';
+  document.getElementById('lockSubmitBtn').textContent = 'สมัครสมาชิก';
   document.getElementById('lockPwConfirm').style.display = '';
-  document.getElementById('lockFooter').innerHTML = '';
-  document.getElementById('lockPw').placeholder = 'รหัสผ่านใหม่';
+  document.getElementById('lockPw').placeholder = 'รหัสผ่านใหม่ (อย่างน้อย 4 ตัว)';
   document.getElementById('lockPw').autocomplete = 'new-password';
+  document.getElementById('lockError').textContent = '';
+  document.getElementById('lockFooter').innerHTML =
+    '<a onclick="lockLoginMode()">มีบัญชีอยู่แล้ว? เข้าสู่ระบบ</a>';
 }
 
-function lockUnlockMode(){
+function lockLoginMode(){
   document.getElementById('lockIcon').textContent = '🔒';
-  document.getElementById('lockSub').textContent = 'ใส่รหัสผ่านเพื่อเข้าใช้งาน';
+  document.getElementById('lockSub').textContent = 'เข้าสู่ระบบเพื่อใช้งาน';
   document.getElementById('lockSubmitBtn').textContent = 'เข้าสู่ระบบ';
   document.getElementById('lockPwConfirm').style.display = 'none';
   document.getElementById('lockPw').placeholder = 'รหัสผ่าน';
   document.getElementById('lockPw').autocomplete = 'current-password';
+  document.getElementById('lockError').textContent = '';
   document.getElementById('lockFooter').innerHTML =
-    '<a onclick="lockForgot()">ลืมรหัสผ่าน / รีเซ็ต</a>';
+    '<a onclick="lockRegisterMode()">ยังไม่มีบัญชี? สมัครสมาชิก</a>';
 }
 
 function lockShow(){
+  document.getElementById('lockUser').value = '';
   document.getElementById('lockPw').value = '';
   document.getElementById('lockPwConfirm').value = '';
   document.getElementById('lockError').textContent = '';
-  const hasHash = !!localStorage.getItem(AUTH_KEY);
-  hasHash ? lockUnlockMode() : lockSetupMode();
+  lockLoginMode();
   document.getElementById('lockScreen').style.display = 'flex';
   document.getElementById('headerLockBtn').style.display = 'none';
-  setTimeout(()=>document.getElementById('lockPw').focus(), 80);
+  setTimeout(()=>document.getElementById('lockUser').focus(), 80);
 }
 
 function lockHide(){
   document.getElementById('lockScreen').style.display = 'none';
-  document.getElementById('headerLockBtn').style.display = !!localStorage.getItem(AUTH_KEY) ? '' : 'none';
+  document.getElementById('headerLockBtn').style.display = !!localStorage.getItem(AUTH_TOKEN_KEY) ? '' : 'none';
 }
 
 function lockApp(){
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem(AUTH_USER_KEY);
+  DB = {};
+  render();
+  renderDL();
   lockShow();
 }
 
+async function afterAuthSuccess(){
+  lockHide();
+  await loadFile();
+  render();
+  loadDL();
+  renderDL();
+  loadQL();
+  renderQL();
+  filesRenderGrid();
+}
+
 async function lockSubmit(){
+  const username = document.getElementById('lockUser').value.trim();
   const pw = document.getElementById('lockPw').value;
   const confirmEl = document.getElementById('lockPwConfirm');
   const errorEl = document.getElementById('lockError');
   const box = document.getElementById('lockBox');
-  const isSetup = confirmEl.style.display !== 'none';
+  const isRegister = confirmEl.style.display !== 'none';
 
+  if(!username){ errorEl.textContent='กรุณาใส่ชื่อผู้ใช้'; return; }
   if(!pw){ errorEl.textContent='กรุณาใส่รหัสผ่าน'; return; }
   if(pw.length < 4){ errorEl.textContent='รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร'; return; }
 
-  if(isSetup){
-    // Setup new password
+  if(isRegister){
     const confirm = confirmEl.value;
     if(!confirm){ errorEl.textContent='กรุณายืนยันรหัสผ่าน'; return; }
     if(pw !== confirm){
@@ -2278,40 +2309,39 @@ async function lockSubmit(){
       box.classList.add('lock-shake');
       return;
     }
-    const h = await hashPw(pw);
-    localStorage.setItem(AUTH_KEY, h);
-    errorEl.textContent='';
-    showToast('ตั้งรหัสผ่านสำเร็จ 🔓');
-    lockHide();
-  } else {
-    // Verify password
-    const saved = localStorage.getItem(AUTH_KEY);
-    const h = await hashPw(pw);
-    if(h === saved){
-      errorEl.textContent='';
-      lockHide();
-    } else {
-      errorEl.textContent='รหัสผ่านไม่ถูกต้อง';
-      document.getElementById('lockPw').value='';
+  }
+
+  const endpoint = isRegister ? '/register' : '/login';
+  try {
+    const r = await fetch(API + endpoint, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ username, password: pw })
+    });
+    const data = await r.json();
+    if(!r.ok){
+      errorEl.textContent = data.error || (isRegister ? 'สมัครสมาชิกไม่สำเร็จ' : 'เข้าสู่ระบบไม่สำเร็จ');
       box.classList.remove('lock-shake');
       void box.offsetWidth;
       box.classList.add('lock-shake');
-      setTimeout(()=>document.getElementById('lockPw').focus(), 50);
+      return;
     }
+    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+    localStorage.setItem(AUTH_USER_KEY, data.username);
+    errorEl.textContent='';
+    if(isRegister) showToast('สมัครสมาชิกสำเร็จ 🔓');
+    await afterAuthSuccess();
+  } catch(e){
+    errorEl.textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง';
   }
 }
 
-function lockForgot(){
-  if(!confirm('ยืนยันรีเซ็ตรหัสผ่าน?\n(ข้อมูล task จะยังอยู่ครบ)')) return;
-  localStorage.removeItem(AUTH_KEY);
-  lockSetupMode();
-  document.getElementById('lockError').textContent = '';
-  document.getElementById('lockPw').value = '';
-  showToast('รีเซ็ตรหัสผ่านแล้ว ตั้งใหม่ได้เลย');
-}
-
 // เรียกตอน app โหลด
-lockShow();
+if(localStorage.getItem(AUTH_TOKEN_KEY)){
+  lockHide();
+} else {
+  lockShow();
+}
 
 // ── Toast ────────────────────────────────────────────
 function showToast(msg, ms=2400){
