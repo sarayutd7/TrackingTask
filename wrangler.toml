@@ -1,0 +1,7 @@
+name = "trackingtask"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "TRACKING_TASK_KV"
+id = "fd739e4dea724bf48c19bd36230de733"
