@@ -1324,6 +1324,8 @@
     margin-top: .35rem;
   }
   .ql-tag-pill {
+    display: inline-flex;
+    align-items: center;
     padding: .28rem .7rem;
     border-radius: 6px;
     font-size: .74rem;
@@ -3057,7 +3059,7 @@ function renderQlTagRow(){
   row.innerHTML = QL_TAGS.map(tag=>{
     const color = qlTagColor(tag.id);
     const active = selectedQlTag === tag.id ? 'active-tag' : '';
-    return `<button type="button" class="ql-tag-pill ${active}" data-tag="${esc(tag.id)}" style="--tag-color:${color}" onclick="selectQlTag('${tag.id}')">${esc(tag.label)}<button type="button" class="ql-tag-remove" onclick="event.stopPropagation();qlTagRemove('${tag.id}')" title="ลบ tag">✕</button></button>`;
+    return `<span class="ql-tag-pill ${active}" data-tag="${esc(tag.id)}" style="--tag-color:${color}" onclick="selectQlTag('${tag.id}')">${esc(tag.label)}<button type="button" class="ql-tag-remove" onclick="event.stopPropagation();qlTagRemove('${tag.id}')" title="ลบ tag">✕</button></span>`;
   }).join('');
 }
 
