@@ -346,6 +346,9 @@
     transition: border-color .18s, background .18s;
     position: relative;
     overflow: hidden;
+    max-width: 100%;
+    box-sizing: border-box;
+    word-break: break-word;
   }
   .card::before {
     content: '';
@@ -691,11 +694,20 @@
     background: var(--surface);
     border: 1px solid var(--border-hover);
     border-radius: var(--r-lg);
-    padding: 1.5rem;
+    padding: 0;
     width: 100%;
     max-width: 540px;
+    max-height: calc(100dvh - 2rem);
+    display: flex;
+    flex-direction: column;
     box-shadow: 0 24px 64px rgba(0,0,0,.6);
     animation: modalIn .22s cubic-bezier(.4,0,.2,1);
+  }
+  .modal-body {
+    padding: 0 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
   }
 
   @keyframes modalIn {
@@ -705,7 +717,8 @@
 
   .modal-header {
     display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 1.25rem;
+    padding: 1.25rem 1.5rem 1rem;
+    flex-shrink: 0;
   }
   .modal-title { font-size: 1rem; font-weight: 600; }
 
@@ -943,7 +956,7 @@
   .swatch-teal   { background: var(--teal); }
   .swatch-gray   { background: var(--gray); }
 
-  .modal-actions { display: flex; gap: .6rem; justify-content: flex-end; margin-top: 1.25rem; }
+  .modal-actions { display: flex; gap: .6rem; justify-content: flex-end; margin-top: 0; padding: .75rem 1.5rem 1.25rem; flex-shrink: 0; }
 
   .btn-ghost { color: var(--text-3); }
   .btn-accent {
@@ -1800,7 +1813,7 @@
     <div class="ql-section">
       <div class="ql-header" onclick="qlToggle()">
         <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-        <span class="ql-title">Tool Links</span>
+        <span class="ql-title">Notes</span>
         <button class="ql-add-btn" onclick="event.stopPropagation();qlOpenAdd()">
           <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           เพิ่ม
@@ -1849,7 +1862,7 @@
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-
+    <div class="modal-body">
     <div class="field">
       <label>ชื่องาน</label>
       <input type="text" id="taskTitle" placeholder="ระบุชื่องาน...">
@@ -1900,7 +1913,7 @@
       <label>สถานะ</label>
       <div class="status-row" id="statusRow"></div>
     </div>
-
+    </div><!-- /modal-body -->
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">ยกเลิก</button>
       <button class="btn btn-accent" onclick="saveTask()">
@@ -1920,6 +1933,7 @@
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
+    <div class="modal-body">
     <div class="field">
       <label>ชื่อ</label>
       <input type="text" id="qlName" placeholder="เช่น Jira, SharePoint, Figma…" autocomplete="off">
@@ -1965,6 +1979,7 @@
       <input type="file" id="qlImagesInput" accept="image/*" multiple onchange="qlImagesChange(event)">
       <div class="ql-img-row" id="qlImagesRow"></div>
     </div>
+    </div><!-- /modal-body -->
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="qlClose()">ยกเลิก</button>
       <button class="btn btn-accent" onclick="qlSave()">
@@ -1984,6 +1999,7 @@
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
+    <div class="modal-body">
     <div class="field">
       <label>ชื่อ Column</label>
       <input type="text" id="colName" placeholder="เช่น Review, Testing, Blocked…" autocomplete="off">
@@ -2000,6 +2016,7 @@
         <div class="col-color-swatch swatch-gray"   data-color="gray"   onclick="colSelectColor('gray')"></div>
       </div>
     </div>
+    </div><!-- /modal-body -->
     <div class="modal-actions">
       <button class="btn btn-ghost" id="colDeleteBtn" onclick="colDelete()" style="display:none;color:var(--red);margin-right:auto">
         <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
@@ -2023,6 +2040,7 @@
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
+    <div class="modal-body">
     <div class="field">
       <label>งาน</label>
       <div class="rsched-task-name" id="rschedTaskName"></div>
@@ -2031,6 +2049,7 @@
       <label>ย้ายไปวันที่</label>
       <input type="date" id="rschedDate">
     </div>
+    </div><!-- /modal-body -->
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="rschedClose()">ยกเลิก</button>
       <button class="btn btn-accent" onclick="rschedConfirm()">
@@ -2050,7 +2069,7 @@
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-
+    <div class="modal-body">
     <div class="field">
       <label>ประเภท</label>
       <div class="fin-type-row" id="finTypeRow">
@@ -2093,7 +2112,7 @@
         <button class="btn btn-ghost" id="finSlipRemoveBtn" style="display:none" onclick="finRemoveSlip()">ลบรูป</button>
       </div>
     </div>
-
+    </div><!-- /modal-body -->
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeFinanceModal()">ยกเลิก</button>
       <button class="btn btn-accent" onclick="saveFinance()">
@@ -2113,11 +2132,13 @@
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
+    <div class="modal-body">
     <div class="fin-pm-manage-list" id="finPMManageList"></div>
     <div class="fin-pm-manage-add">
       <input type="text" id="finPMNewName" placeholder="เพิ่มรูปแบบใหม่..." autocomplete="off" onkeydown="if(event.key==='Enter') finPMAdd()">
       <button class="btn btn-accent" onclick="finPMAdd()">เพิ่ม</button>
     </div>
+    </div><!-- /modal-body -->
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeFinPMModal()">ปิด</button>
     </div>
