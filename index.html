@@ -2481,20 +2481,31 @@ function authHeaders(){
   return token ? { 'Authorization': 'Bearer ' + token } : {};
 }
 
+// แคช DB ใน localStorage ต้องผูกกับ username เสมอ ห้ามใช้ key เดียวกันข้าม account
+// (ไม่งั้น account อื่นบนเครื่อง/เบราว์เซอร์เดียวกันจะเห็นข้อมูลของ account ก่อนหน้าตอน fetch ล้มเหลว)
+function dbCacheKey(){
+  const u = localStorage.getItem('trackingTaskUser');
+  return u ? ('dailyTodoPro:' + u) : null;
+}
+localStorage.removeItem('dailyTodoPro'); // ลบแคชเก่าที่ไม่ผูกกับ account ทิ้ง (ของ bug เดิม)
+
 async function loadFile(){
   try {
     const r = await fetch(API + '/data', { headers: authHeaders() });
     if(r.status === 401){ sessionExpired(); return; }
     if(r.ok) DB = await r.json();
     else DB = {};
-    localStorage.setItem('dailyTodoPro', JSON.stringify(DB)); // local backup
+    const key = dbCacheKey();
+    if(key) localStorage.setItem(key, JSON.stringify(DB)); // local backup เฉพาะ account นี้
   } catch(_){
-    try { DB = JSON.parse(localStorage.getItem('dailyTodoPro')||'{}'); } catch(_){}
+    const key = dbCacheKey();
+    try { DB = key ? JSON.parse(localStorage.getItem(key)||'{}') : {}; } catch(_){ DB = {}; }
     showStatus('⚠️ โหลดจาก browser (offline)', 'warn');
   }
 }
 
 async function writeFile(){
+  const key = dbCacheKey();
   try {
     const r = await fetch(API + '/data', {
       method: 'POST',
@@ -2503,10 +2514,10 @@ async function writeFile(){
     });
     if(r.status === 401){ sessionExpired(); return; }
     if(!r.ok) throw new Error('status '+r.status);
-    localStorage.setItem('dailyTodoPro', JSON.stringify(DB));
+    if(key) localStorage.setItem(key, JSON.stringify(DB));
     showStatus('✓ บันทึกแล้ว', 'ok');
   } catch(e){
-    localStorage.setItem('dailyTodoPro', JSON.stringify(DB));
+    if(key) localStorage.setItem(key, JSON.stringify(DB));
     showStatus('⚠️ บันทึกใน browser เท่านั้น', 'warn');
   }
 }
@@ -2572,8 +2583,11 @@ const dp = document.getElementById('datePicker');
 dp.value = today;
 dp.addEventListener('change', e => { currentDate = e.target.value; render(); renderDL(); renderFinance(); });
 
-// โหลด localStorage ไว้ก่อน จนกว่า server จะตอบ
-try { DB = JSON.parse(localStorage.getItem('dailyTodoPro')||'{}'); } catch(_){}
+// โหลด localStorage ไว้ก่อน จนกว่า server จะตอบ (เฉพาะของ account ที่ login อยู่เท่านั้น)
+try {
+  const cacheKey = dbCacheKey();
+  DB = cacheKey ? JSON.parse(localStorage.getItem(cacheKey)||'{}') : {};
+} catch(_){ DB = {}; }
 // render() ถูกย้ายไปท้าย script เพื่อให้ const declarations ทั้งหมดถูก initialize ก่อน
 
 // ── Tab switching ────────────────────────────────────
@@ -3032,6 +3046,46 @@ function fmtTime(iso){
 }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// ── Rich-text sanitizer (whitelist tags/attrs, strip script vectors) ──
+const RTE_ALLOWED_TAGS = new Set(['B','STRONG','I','EM','U','S','STRIKE','BR','DIV','SPAN','P','UL','OL','LI','A','IMG','BLOCKQUOTE','H1','H2','H3','SUB','SUP','FONT']);
+const RTE_ALLOWED_ATTRS = { A: ['href','target','rel'], IMG: ['src','alt'], FONT: ['color'], '*': ['style'] };
+function rteSanitizeStyle(value){
+  if(/url\s*\(|expression\s*\(|javascript:/i.test(value)) return '';
+  return value;
+}
+function sanitizeRichHTML(html){
+  const tpl = document.createElement('template');
+  tpl.innerHTML = String(html || '');
+  const walk = (node)=>{
+    [...node.childNodes].forEach(child=>{
+      if(child.nodeType === Node.ELEMENT_NODE){
+        if(!RTE_ALLOWED_TAGS.has(child.tagName)){
+          child.replaceWith(...child.childNodes);
+          return;
+        }
+        [...child.attributes].forEach(attr=>{
+          const name = attr.name.toLowerCase();
+          const allowed = (RTE_ALLOWED_ATTRS[child.tagName]||[]).includes(name) || RTE_ALLOWED_ATTRS['*'].includes(name);
+          if(!allowed){ child.removeAttribute(attr.name); return; }
+          if(name === 'href' || name === 'src'){
+            if(/^\s*(javascript:|data:text\/html)/i.test(attr.value)) child.removeAttribute(attr.name);
+          }
+          if(name === 'style'){
+            const safe = rteSanitizeStyle(attr.value);
+            if(safe) child.setAttribute('style', safe); else child.removeAttribute('style');
+          }
+        });
+        if(child.tagName === 'A') child.setAttribute('rel', 'noopener noreferrer');
+        walk(child);
+      } else if(child.nodeType !== Node.TEXT_NODE){
+        child.remove();
+      }
+    });
+  };
+  walk(tpl.content);
+  return tpl.innerHTML;
+}
+
 // ── Columns ───────────────────────────────────────────
 const COLS_KEY = 'dailyTodoCols';
 const DEFAULT_COLS = [
@@ -3072,7 +3126,7 @@ function rteGetHTML(id){
 }
 function rteSetHTML(id, html){
   const el = document.getElementById(id);
-  if(el) el.innerHTML = html || '';
+  if(el) el.innerHTML = sanitizeRichHTML(html || '');
 }
 function rteClear(id){
   const el = document.getElementById(id);
@@ -3176,7 +3230,7 @@ function renderCard(t){
     : '';
 
   const noteHtml = noteIsHtml
-    ? `<div class="card-note">${t.note}</div>`
+    ? `<div class="card-note">${sanitizeRichHTML(t.note)}</div>`
     : plainNote
       ? `<div class="card-note">${renderNote(plainNote)}</div>`
       : '';
@@ -3510,7 +3564,7 @@ function renderQL(){
       ? `<a class="ql-open-btn" href="${esc(item.url)}" target="_blank" rel="noopener" title="${esc(item.url)}">${qlLinkSvg} เปิด Link</a>`
       : '';
     const detailHtml = item.detail
-      ? `<div class="ql-card-detail">${/<[a-z][\s\S]*>/i.test(item.detail) ? item.detail : esc(item.detail)}</div>`
+      ? `<div class="ql-card-detail">${/<[a-z][\s\S]*>/i.test(item.detail) ? sanitizeRichHTML(item.detail) : esc(item.detail)}</div>`
       : '';
     const imagesHtml = (item.images && item.images.length)
       ? `<div class="ql-img-row">${item.images.map(src=>`<img class="ql-img-thumb" src="${esc(src)}" onclick="window.open('${esc(src)}')">`).join('')}</div>`
@@ -3559,7 +3613,7 @@ function qlOpenRead(i){
   // detail
   const detail = document.getElementById('qlReadDetail');
   detail.innerHTML = item.detail
-    ? (/<[a-z][\s\S]*>/i.test(item.detail) ? item.detail : esc(item.detail))
+    ? (/<[a-z][\s\S]*>/i.test(item.detail) ? sanitizeRichHTML(item.detail) : esc(item.detail))
     : '<span style="color:var(--text-3)">ไม่มีรายละเอียด</span>';
   // images
   const imgs = document.getElementById('qlReadImages');
