@@ -3788,7 +3788,7 @@ function renderBills(){
   const monthLabelEl = document.getElementById('billMonthLabel');
   if(monthLabelEl) monthLabelEl.textContent = monthLabelTH(billsViewMonth);
 
-  const bills = getBills();
+  const bills = getBills().filter(b=>!b.startMonth || b.startMonth <= billsViewMonth);
   const activeBills = bills.filter(b=>b.active);
   const payments = getBillPayments(billsViewMonth);
 
@@ -3818,7 +3818,8 @@ function renderBills(){
   }
 
   const nextMonth = shiftMonth(billsViewMonth, 1);
-  const nextMonthForecast = activeBills.reduce((s,b)=>s+(Number(getBillMonthAmount(b, nextMonth))||0),0);
+  const nextMonthBills = getBills().filter(b=>b.active && (!b.startMonth || b.startMonth <= nextMonth));
+  const nextMonthForecast = nextMonthBills.reduce((s,b)=>s+(Number(getBillMonthAmount(b, nextMonth))||0),0);
 
   const statsEl = document.getElementById('billStatsGrid');
   if(statsEl){
@@ -3948,6 +3949,7 @@ async function saveBill(){
     bills.push({
       id: Date.now().toString(36)+Math.random().toString(36).slice(2,6),
       name, amount, dueDay, active: isActive,
+      startMonth: billsViewMonth,
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
     });
   }
