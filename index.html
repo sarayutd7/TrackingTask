@@ -4367,7 +4367,7 @@ function openFinanceModal(id=null){
     selectFinType(e.type || 'income');
     selectedFinPM = e.paymentMethod || '';
     renderFinPMRow();
-    finSlipData = e.slip || '';
+    finSlipData = e.slip || ''; 
     const preview = document.getElementById('finSlipPreview');
     if(finSlipData){
       preview.src = finSlipData;
