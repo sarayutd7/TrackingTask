@@ -2325,8 +2325,9 @@
         <input type="text" id="billName" placeholder="เช่น ค่าเช่า, ค่าไฟ, Netflix..." autocomplete="off">
       </div>
       <div class="field">
-        <label>จำนวนเงิน (บาท)</label>
+        <label id="billAmountLabel">จำนวนเงิน (บาท)</label>
         <input type="number" id="billAmount" placeholder="0.00" min="0" step="0.01" inputmode="decimal">
+        <span id="billAmountHint" style="font-size:.72rem;color:var(--text-3);display:none">จำนวนเงินนี้จะใช้เฉพาะเดือนที่กำลังดูอยู่ เดือนอื่นไม่เปลี่ยน</span>
       </div>
       <div class="field">
         <label>วันที่ครบกำหนดของทุกเดือน</label>
@@ -3622,6 +3623,11 @@ function getBills(){ return Array.isArray(DB._bills) ? DB._bills : (DB._bills = 
 function setBills(arr){ DB._bills = arr; }
 function getBillPayments(month){ return (DB._billPayments && DB._billPayments[month]) || []; }
 function setBillPayments(month, arr){ if(!DB._billPayments) DB._billPayments = {}; DB._billPayments[month] = arr; }
+function findBillPayment(month, billId){ return getBillPayments(month).find(p=>p.billId===billId) || null; }
+function getBillMonthAmount(bill, month){
+  const p = findBillPayment(month, bill.id);
+  return (p && p.amount != null) ? p.amount : bill.amount;
+}
 
 function loadFinPM(){
   let fromLS = [];
@@ -3744,7 +3750,7 @@ function billsChangeMonth(delta){
   renderBills();
 }
 
-function billRowHtml(bill, payment, dueDateStr, isOverdue, isDueSoon){
+function billRowHtml(bill, payment, dueDateStr, isOverdue, isDueSoon, amount){
   const paid = !!(payment && payment.paid);
   const statusBadge = paid
     ? `<span class="bill-status-badge paid">จ่ายแล้ว</span>`
@@ -3762,7 +3768,7 @@ function billRowHtml(bill, payment, dueDateStr, isOverdue, isDueSoon){
           <div class="fin-card-item">${esc(bill.name)}</div>
           <span class="fin-card-time">ครบกำหนดวันที่ ${dueDateStr.slice(-2)}</span>
         </div>
-        <div class="fin-card-amount expense">-${finFmtMoney(bill.amount)}</div>
+        <div class="fin-card-amount expense">-${finFmtMoney(amount)}</div>
       </div>
       <div class="fin-card-meta">${statusBadge}${inactiveBadge}</div>
     </div>
@@ -3786,12 +3792,12 @@ function renderBills(){
   const activeBills = bills.filter(b=>b.active);
   const payments = getBillPayments(billsViewMonth);
 
-  const totalMonthly = activeBills.reduce((s,b)=>s+(Number(b.amount)||0),0);
+  const totalMonthly = activeBills.reduce((s,b)=>s+(Number(getBillMonthAmount(b, billsViewMonth))||0),0);
 
   let paidSoFar = 0;
   activeBills.forEach(b=>{
     const p = payments.find(x=>x.billId===b.id);
-    if(p && p.paid) paidSoFar += Number(p.paidAmount ?? b.amount ?? 0);
+    if(p && p.paid) paidSoFar += Number(p.paidAmount ?? getBillMonthAmount(b, billsViewMonth) ?? 0);
   });
   const remaining = totalMonthly - paidSoFar;
 
@@ -3811,7 +3817,8 @@ function renderBills(){
     });
   }
 
-  const nextMonthForecast = totalMonthly;
+  const nextMonth = shiftMonth(billsViewMonth, 1);
+  const nextMonthForecast = activeBills.reduce((s,b)=>s+(Number(getBillMonthAmount(b, nextMonth))||0),0);
 
   const statsEl = document.getElementById('billStatsGrid');
   if(statsEl){
@@ -3849,7 +3856,7 @@ function renderBills(){
 
   const forecastEl = document.getElementById('billForecastNote');
   if(forecastEl){
-    forecastEl.innerHTML = `<div class="bill-forecast-note">คาดการณ์เดือนหน้า (${monthLabelTH(shiftMonth(billsViewMonth,1))}): ประมาณ ${finFmtMoney(nextMonthForecast)} บาท</div>`;
+    forecastEl.innerHTML = `<div class="bill-forecast-note">คาดการณ์เดือนหน้า (${monthLabelTH(nextMonth)}): ประมาณ ${finFmtMoney(nextMonthForecast)} บาท</div>`;
   }
 
   const dueSoonEl = document.getElementById('billDueSoonSection');
@@ -3860,7 +3867,7 @@ function renderBills(){
       dueSoonEl.innerHTML = `<div class="bill-section-title">ใกล้ถึงกำหนด / เกินกำหนด</div>` +
         dueSoonList.map(({bill, dueStr, state})=>{
           const p = payments.find(x=>x.billId===bill.id);
-          return billRowHtml(bill, p, dueStr, state==='overdue', state==='duesoon');
+          return billRowHtml(bill, p, dueStr, state==='overdue', state==='duesoon', getBillMonthAmount(bill, billsViewMonth));
         }).join('');
     }
   }
@@ -3878,7 +3885,7 @@ function renderBills(){
     const diffDays = isCurrentMonth ? Math.round((dueD - todayD)/86400000) : null;
     const overdue = isCurrentMonth && diffDays!==null && diffDays<0 && !(p&&p.paid);
     const dueSoon = isCurrentMonth && diffDays!==null && diffDays>=0 && diffDays<=BILL_DUE_SOON_DAYS && !(p&&p.paid);
-    return billRowHtml(b, p, dueStr, overdue, dueSoon);
+    return billRowHtml(b, p, dueStr, overdue, dueSoon, getBillMonthAmount(b, billsViewMonth));
   }).join('');
 }
 
@@ -3889,15 +3896,19 @@ function openBillModal(id=null){
     if(!b) return;
     document.getElementById('billModalTitle').textContent = 'แก้ไขรายจ่ายประจำ';
     document.getElementById('billName').value = b.name;
-    document.getElementById('billAmount').value = b.amount;
+    document.getElementById('billAmount').value = getBillMonthAmount(b, billsViewMonth);
     document.getElementById('billDueDay').value = b.dueDay;
     selectBillActive(b.active);
+    document.getElementById('billAmountLabel').textContent = `จำนวนเงิน (บาท) — ${monthLabelTH(billsViewMonth)}`;
+    document.getElementById('billAmountHint').style.display = '';
   } else {
     document.getElementById('billModalTitle').textContent = 'เพิ่มรายจ่ายประจำ';
     document.getElementById('billName').value = '';
     document.getElementById('billAmount').value = '';
     document.getElementById('billDueDay').value = '';
     selectBillActive(true);
+    document.getElementById('billAmountLabel').textContent = 'จำนวนเงิน (บาท)';
+    document.getElementById('billAmountHint').style.display = 'none';
   }
   document.getElementById('billOverlay').style.display = 'flex';
   setTimeout(()=>document.getElementById('billName').focus(), 60);
@@ -3926,7 +3937,13 @@ async function saveBill(){
   const bills = getBills();
   if(billEditId){
     const idx = bills.findIndex(x=>x.id===billEditId);
-    if(idx>-1) bills[idx] = { ...bills[idx], name, amount, dueDay, active: isActive, updatedAt: new Date().toISOString() };
+    if(idx>-1) bills[idx] = { ...bills[idx], name, dueDay, active: isActive, updatedAt: new Date().toISOString() };
+    // จำนวนเงินแก้ไขเฉพาะเดือนที่กำลังดูอยู่ (override) ไม่กระทบเดือนอื่น
+    const payments = getBillPayments(billsViewMonth);
+    let p = payments.find(x=>x.billId===billEditId);
+    if(p){ p.amount = amount; }
+    else { payments.push({ billId: billEditId, paid: false, paidDate: null, paidAmount: null, financeEntryId: null, amount }); }
+    setBillPayments(billsViewMonth, payments);
   } else {
     bills.push({
       id: Date.now().toString(36)+Math.random().toString(36).slice(2,6),
@@ -3966,6 +3983,7 @@ async function toggleBillPaid(billId){
     }
     p.paid = false; p.paidDate = null; p.paidAmount = null; p.financeEntryId = null;
   } else {
+    const monthAmount = getBillMonthAmount(bill, billsViewMonth);
     const paidDate = today;
     const financeId = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
     const entries = getFinance(paidDate);
@@ -3974,7 +3992,7 @@ async function toggleBillPaid(billId){
       id: financeId,
       type: 'expense',
       item: bill.name,
-      amount: bill.amount,
+      amount: monthAmount,
       time: `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
       paymentMethod: '',
       note: `รายจ่ายประจำ (auto) — ${monthLabelTH(billsViewMonth)}`,
@@ -3986,10 +4004,10 @@ async function toggleBillPaid(billId){
     setFinance(paidDate, entries);
 
     if(!p){
-      p = { billId, paid: true, paidDate, paidAmount: bill.amount, financeEntryId: financeId };
+      p = { billId, paid: true, paidDate, paidAmount: monthAmount, financeEntryId: financeId };
       payments.push(p);
     } else {
-      p.paid = true; p.paidDate = paidDate; p.paidAmount = bill.amount; p.financeEntryId = financeId;
+      p.paid = true; p.paidDate = paidDate; p.paidAmount = monthAmount; p.financeEntryId = financeId;
     }
   }
   setBillPayments(billsViewMonth, payments);
