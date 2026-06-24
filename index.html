@@ -1639,6 +1639,49 @@
   .fin-card-btn.edit:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
   .fin-card-btn.del:hover  { background: var(--red);    color: #fff; border-color: var(--red); }
 
+  /* Recurring bills */
+  .bill-month-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .9rem;
+    margin-bottom: .7rem;
+  }
+  .bill-month-label { font-size: .88rem; font-weight: 700; color: var(--text); min-width: 110px; text-align: center; }
+  .bill-section { margin-bottom: .8rem; }
+  .bill-section-title {
+    font-size: .76rem;
+    font-weight: 700;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    margin-bottom: .4rem;
+  }
+  .bill-forecast-note {
+    font-size: .78rem;
+    color: var(--text-2);
+    margin: -.2rem 0 .8rem;
+    padding: .5rem .7rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+  }
+  .bill-card.paid { opacity: .6; }
+  .bill-card.overdue { border-left-color: var(--red); background: var(--red-dim); }
+  .bill-status-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: .68rem;
+    font-weight: 600;
+    padding: .15rem .55rem;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+  }
+  .bill-status-badge.paid    { color: var(--green); background: var(--green-dim); border-color: var(--green); }
+  .bill-status-badge.pending { color: var(--text-2); background: var(--surface3); }
+  .bill-status-badge.duesoon { color: var(--amber); background: var(--amber-dim); border-color: var(--amber); }
+  .bill-status-badge.overdue { color: var(--red); background: var(--red-dim); border-color: var(--red); }
+
   /* Type pills (income/expense) in modal */
   .fin-type-row { display: flex; gap: .5rem; }
   .fin-type-pill {
@@ -1920,21 +1963,55 @@
   <!-- Tab 3: Finance (รายรับ-รายจ่าย) -->
   <div class="tab-pane" id="tabFinance" style="display:none">
 
-    <div class="stats" id="finStatsGrid"></div>
-
-    <div class="fin-toolbar">
-      <button class="btn btn-accent" onclick="openFinanceModal()">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        เพิ่มรายการ
-      </button>
-      <div class="ql-filter-bar" id="finFilterBar">
-        <button class="ql-filter-btn active" data-filter="all"     onclick="finSetFilter('all')">ทั้งหมด</button>
-        <button class="ql-filter-btn"        data-filter="income"  onclick="finSetFilter('income')">รายรับ</button>
-        <button class="ql-filter-btn"        data-filter="expense" onclick="finSetFilter('expense')">รายจ่าย</button>
-      </div>
+    <div class="ql-filter-bar fin-subtab-bar" id="finSubTabBar">
+      <button class="ql-filter-btn active" data-subtab="list"  onclick="finSetSubTab('list')">รายการ</button>
+      <button class="ql-filter-btn"        data-subtab="bills" onclick="finSetSubTab('bills')">รายจ่ายประจำ</button>
     </div>
 
-    <div class="fin-list" id="finBody"></div>
+    <div id="finListPane">
+
+      <div class="stats" id="finStatsGrid"></div>
+
+      <div class="fin-toolbar">
+        <button class="btn btn-accent" onclick="openFinanceModal()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          เพิ่มรายการ
+        </button>
+        <div class="ql-filter-bar" id="finFilterBar">
+          <button class="ql-filter-btn active" data-filter="all"     onclick="finSetFilter('all')">ทั้งหมด</button>
+          <button class="ql-filter-btn"        data-filter="income"  onclick="finSetFilter('income')">รายรับ</button>
+          <button class="ql-filter-btn"        data-filter="expense" onclick="finSetFilter('expense')">รายจ่าย</button>
+        </div>
+      </div>
+
+      <div class="fin-list" id="finBody"></div>
+
+    </div>
+
+    <div id="finBillsPane" style="display:none">
+
+      <div class="bill-month-nav">
+        <button class="btn btn-ghost" onclick="billsChangeMonth(-1)">‹</button>
+        <span class="bill-month-label" id="billMonthLabel"></span>
+        <button class="btn btn-ghost" onclick="billsChangeMonth(1)">›</button>
+      </div>
+
+      <div class="stats" id="billStatsGrid"></div>
+
+      <div id="billForecastNote"></div>
+
+      <div class="fin-toolbar">
+        <button class="btn btn-accent" onclick="openBillModal()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          เพิ่มรายจ่ายประจำ
+        </button>
+      </div>
+
+      <div class="bill-section" id="billDueSoonSection"></div>
+
+      <div class="fin-list" id="billListBody"></div>
+
+    </div>
 
   </div>
 
@@ -2232,6 +2309,44 @@
   </div>
 </div>
 
+<!-- Bill Modal -->
+<div class="overlay" id="billOverlay" style="display:none" onclick="billCloseOnBg(event)">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <span class="modal-title" id="billModalTitle">เพิ่มรายจ่ายประจำ</span>
+      <button class="close-btn" onclick="closeBillModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>ชื่อรายการ</label>
+        <input type="text" id="billName" placeholder="เช่น ค่าเช่า, ค่าไฟ, Netflix..." autocomplete="off">
+      </div>
+      <div class="field">
+        <label>จำนวนเงิน (บาท)</label>
+        <input type="number" id="billAmount" placeholder="0.00" min="0" step="0.01" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label>วันที่ครบกำหนดของทุกเดือน</label>
+        <input type="number" id="billDueDay" min="1" max="31" placeholder="1-31">
+        <span style="font-size:.72rem;color:var(--text-3)">ถ้าเดือนนั้นมีวันน้อยกว่า จะใช้วันสุดท้ายของเดือนแทน</span>
+      </div>
+      <div class="field">
+        <label>สถานะ</label>
+        <div class="fin-type-row" id="billActiveRow">
+          <button class="fin-type-pill income" data-active="true"  onclick="selectBillActive(true)">ใช้งานอยู่</button>
+          <button class="fin-type-pill expense" data-active="false" onclick="selectBillActive(false)">หยุดใช้งาน</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeBillModal()">ยกเลิก</button>
+      <button class="btn btn-accent" onclick="saveBill()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
 <!-- Note Read Overlay -->
 <div class="ql-read-overlay" id="qlReadOverlay" style="display:none" onclick="if(event.target===this)qlReadClose()">
   <div class="ql-read-modal">
@@ -2263,6 +2378,25 @@ function localDateStr(d){
 const today = localDateStr(new Date());
 let currentDate = today;
 let DB = {};
+
+function daysInMonth(year, month /*1-12*/){ return new Date(year, month, 0).getDate(); }
+function clampDueDate(monthKey, dueDay){
+  const [y,m] = monthKey.split('-').map(Number);
+  const d = Math.min(dueDay, daysInMonth(y,m));
+  return `${monthKey}-${String(d).padStart(2,'0')}`;
+}
+function shiftMonth(monthKey, delta){
+  let [y,m] = monthKey.split('-').map(Number);
+  m += delta;
+  while(m>12){ m-=12; y++; }
+  while(m<1){ m+=12; y--; }
+  return `${y}-${String(m).padStart(2,'0')}`;
+}
+function monthLabelTH(monthKey){
+  const [y,m] = monthKey.split('-').map(Number);
+  const names = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return `${names[m]} ${y}`;
+}
 
 // ── เปลี่ยน URL นี้เป็น Workers URL ของคุณ ──────────
 const API = 'https://trackingtask.sarayutd7.workers.dev';
@@ -2377,7 +2511,7 @@ function switchTab(tab){
   document.getElementById('tabBtnTool').classList.toggle('active',    tab==='tool');
   document.getElementById('tabBtnFinance').classList.toggle('active', tab==='finance');
   if(tab==='tool')    renderDL();
-  if(tab==='finance') renderFinance();
+  if(tab==='finance'){ renderFinance(); if(finSubTab==='bills') renderBills(); }
 }
 
 // ── Status selector ─────────────────────────────────
@@ -3477,6 +3611,17 @@ let finSlipData = '';
 function getFinance(d){ return (DB._finance && DB._finance[d]) || []; }
 function setFinance(d, arr){ if(!DB._finance) DB._finance = {}; DB._finance[d] = arr; }
 
+// ── Recurring bills (รายจ่ายประจำ) ────────────────────
+let finSubTab = 'list';
+let billsViewMonth = today.slice(0,7);
+let billEditId = null;
+const BILL_DUE_SOON_DAYS = 4;
+
+function getBills(){ return Array.isArray(DB._bills) ? DB._bills : (DB._bills = []); }
+function setBills(arr){ DB._bills = arr; }
+function getBillPayments(month){ return (DB._billPayments && DB._billPayments[month]) || []; }
+function setBillPayments(month, arr){ if(!DB._billPayments) DB._billPayments = {}; DB._billPayments[month] = arr; }
+
 function loadFinPM(){
   let fromLS = [];
   try { fromLS = JSON.parse(localStorage.getItem(FINPM_KEY)||'[]'); } catch(_){}
@@ -3499,6 +3644,16 @@ function finSetFilter(filter){
     btn.classList.toggle('active', btn.dataset.filter === filter);
   });
   renderFinance();
+}
+
+function finSetSubTab(tab){
+  finSubTab = tab;
+  document.querySelectorAll('#finSubTabBar .ql-filter-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.subtab === tab);
+  });
+  document.getElementById('finListPane').style.display  = tab==='list'  ? '' : 'none';
+  document.getElementById('finBillsPane').style.display = tab==='bills' ? '' : 'none';
+  if(tab==='bills') renderBills();
 }
 
 const finEditSvg = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
@@ -3581,6 +3736,265 @@ function renderFinance(){
       </div>
     </div>`;
   }).join('');
+}
+
+function billsChangeMonth(delta){
+  billsViewMonth = shiftMonth(billsViewMonth, delta);
+  renderBills();
+}
+
+function billRowHtml(bill, payment, dueDateStr, isOverdue, isDueSoon){
+  const paid = !!(payment && payment.paid);
+  const statusBadge = paid
+    ? `<span class="bill-status-badge paid">จ่ายแล้ว</span>`
+    : isOverdue
+      ? `<span class="bill-status-badge overdue">เกินกำหนด</span>`
+      : isDueSoon
+        ? `<span class="bill-status-badge duesoon">ใกล้ถึงกำหนด</span>`
+        : `<span class="bill-status-badge pending">ยังไม่จ่าย</span>`;
+  const inactiveBadge = bill.active ? '' : `<span class="fin-pm-badge">หยุดใช้งาน</span>`;
+  return `
+  <div class="fin-card bill-card ${paid?'paid':isOverdue?'overdue':''}">
+    <div class="fin-card-main">
+      <div class="fin-card-top">
+        <div>
+          <div class="fin-card-item">${esc(bill.name)}</div>
+          <span class="fin-card-time">ครบกำหนดวันที่ ${dueDateStr.slice(-2)}</span>
+        </div>
+        <div class="fin-card-amount expense">-${finFmtMoney(bill.amount)}</div>
+      </div>
+      <div class="fin-card-meta">${statusBadge}${inactiveBadge}</div>
+    </div>
+    <div class="fin-card-actions">
+      <button class="fin-card-btn" onclick="toggleBillPaid('${esc(bill.id)}')" title="${paid?'ยกเลิกจ่าย':'มาร์คว่าจ่ายแล้ว'}">
+        ${paid
+          ? `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
+          : `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`}
+      </button>
+      <button class="fin-card-btn edit" onclick="openBillModal('${esc(bill.id)}')" title="แก้ไข">${finEditSvg}</button>
+      <button class="fin-card-btn del"  onclick="deleteBill('${esc(bill.id)}')" title="ลบ">${finDelSvg}</button>
+    </div>
+  </div>`;
+}
+
+function renderBills(){
+  const monthLabelEl = document.getElementById('billMonthLabel');
+  if(monthLabelEl) monthLabelEl.textContent = monthLabelTH(billsViewMonth);
+
+  const bills = getBills();
+  const activeBills = bills.filter(b=>b.active);
+  const payments = getBillPayments(billsViewMonth);
+
+  const totalMonthly = activeBills.reduce((s,b)=>s+(Number(b.amount)||0),0);
+
+  let paidSoFar = 0;
+  activeBills.forEach(b=>{
+    const p = payments.find(x=>x.billId===b.id);
+    if(p && p.paid) paidSoFar += Number(p.paidAmount ?? b.amount ?? 0);
+  });
+  const remaining = totalMonthly - paidSoFar;
+
+  const isCurrentMonth = billsViewMonth === today.slice(0,7);
+  const todayD = new Date(today+'T00:00:00');
+  let dueSoonCount = 0;
+  const dueSoonList = [];
+  if(isCurrentMonth){
+    activeBills.forEach(b=>{
+      const p = payments.find(x=>x.billId===b.id);
+      if(p && p.paid) return;
+      const dueStr = clampDueDate(billsViewMonth, b.dueDay);
+      const dueD = new Date(dueStr+'T00:00:00');
+      const diffDays = Math.round((dueD - todayD) / 86400000);
+      if(diffDays < 0){ dueSoonList.push({bill:b, dueStr, state:'overdue'}); dueSoonCount++; }
+      else if(diffDays <= BILL_DUE_SOON_DAYS){ dueSoonList.push({bill:b, dueStr, state:'duesoon'}); dueSoonCount++; }
+    });
+  }
+
+  const nextMonthForecast = totalMonthly;
+
+  const statsEl = document.getElementById('billStatsGrid');
+  if(statsEl){
+    statsEl.style.gridTemplateColumns = 'repeat(4, 1fr)';
+    statsEl.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-icon blue"><svg width="18" height="18" fill="none" stroke="var(--blue)" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+      <div class="stat-body">
+        <div class="stat-num blue">${finFmtMoney(totalMonthly)}</div>
+        <div class="stat-label">ค่าใช้จ่ายประจำ/เดือน</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green"><svg width="18" height="18" fill="none" stroke="var(--green)" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="stat-body">
+        <div class="stat-num green">${finFmtMoney(paidSoFar)}</div>
+        <div class="stat-label">จ่ายไปแล้ว</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon ${remaining>0?'amber':'green'}"><svg width="18" height="18" fill="none" stroke="${remaining>0?'var(--amber)':'var(--green)'}" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+      <div class="stat-body">
+        <div class="stat-num ${remaining>0?'amber':'green'}">${finFmtMoney(remaining)}</div>
+        <div class="stat-label">เหลืออีก</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon ${dueSoonCount>0?'red':'green'}"><svg width="18" height="18" fill="none" stroke="${dueSoonCount>0?'var(--red)':'var(--green)'}" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <div class="stat-body">
+        <div class="stat-num ${dueSoonCount>0?'red':'green'}">${dueSoonCount}</div>
+        <div class="stat-label">ใกล้/เกินกำหนด</div>
+      </div>
+    </div>`;
+  }
+
+  const forecastEl = document.getElementById('billForecastNote');
+  if(forecastEl){
+    forecastEl.innerHTML = `<div class="bill-forecast-note">คาดการณ์เดือนหน้า (${monthLabelTH(shiftMonth(billsViewMonth,1))}): ประมาณ ${finFmtMoney(nextMonthForecast)} บาท</div>`;
+  }
+
+  const dueSoonEl = document.getElementById('billDueSoonSection');
+  if(dueSoonEl){
+    if(!isCurrentMonth || !dueSoonList.length){
+      dueSoonEl.innerHTML = '';
+    } else {
+      dueSoonEl.innerHTML = `<div class="bill-section-title">ใกล้ถึงกำหนด / เกินกำหนด</div>` +
+        dueSoonList.map(({bill, dueStr, state})=>{
+          const p = payments.find(x=>x.billId===bill.id);
+          return billRowHtml(bill, p, dueStr, state==='overdue', state==='duesoon');
+        }).join('');
+    }
+  }
+
+  const listEl = document.getElementById('billListBody');
+  if(!listEl) return;
+  if(!bills.length){
+    listEl.innerHTML = '<span class="ql-empty">ยังไม่มีรายจ่ายประจำ — กด + เพิ่มรายจ่ายประจำ</span>';
+    return;
+  }
+  listEl.innerHTML = bills.map(b=>{
+    const p = payments.find(x=>x.billId===b.id);
+    const dueStr = clampDueDate(billsViewMonth, b.dueDay);
+    const dueD = new Date(dueStr+'T00:00:00');
+    const diffDays = isCurrentMonth ? Math.round((dueD - todayD)/86400000) : null;
+    const overdue = isCurrentMonth && diffDays!==null && diffDays<0 && !(p&&p.paid);
+    const dueSoon = isCurrentMonth && diffDays!==null && diffDays>=0 && diffDays<=BILL_DUE_SOON_DAYS && !(p&&p.paid);
+    return billRowHtml(b, p, dueStr, overdue, dueSoon);
+  }).join('');
+}
+
+function openBillModal(id=null){
+  billEditId = id;
+  if(id){
+    const b = getBills().find(x=>x.id===id);
+    if(!b) return;
+    document.getElementById('billModalTitle').textContent = 'แก้ไขรายจ่ายประจำ';
+    document.getElementById('billName').value = b.name;
+    document.getElementById('billAmount').value = b.amount;
+    document.getElementById('billDueDay').value = b.dueDay;
+    selectBillActive(b.active);
+  } else {
+    document.getElementById('billModalTitle').textContent = 'เพิ่มรายจ่ายประจำ';
+    document.getElementById('billName').value = '';
+    document.getElementById('billAmount').value = '';
+    document.getElementById('billDueDay').value = '';
+    selectBillActive(true);
+  }
+  document.getElementById('billOverlay').style.display = 'flex';
+  setTimeout(()=>document.getElementById('billName').focus(), 60);
+}
+function closeBillModal(){
+  const el = document.getElementById('billOverlay');
+  if(el) el.style.display = 'none';
+  billEditId = null;
+}
+function billCloseOnBg(e){ if(e.target===document.getElementById('billOverlay')) closeBillModal(); }
+function selectBillActive(isActive){
+  document.querySelectorAll('#billActiveRow .fin-type-pill').forEach(btn=>{
+    btn.classList.toggle('active', (btn.dataset.active==='true') === isActive);
+  });
+  document.getElementById('billActiveRow').dataset.value = isActive ? 'true' : 'false';
+}
+
+async function saveBill(){
+  const name = document.getElementById('billName').value.trim();
+  const amount = parseFloat(document.getElementById('billAmount').value);
+  const dueDay = parseInt(document.getElementById('billDueDay').value, 10);
+  if(!name){ document.getElementById('billName').focus(); return; }
+  if(!amount || amount<=0){ document.getElementById('billAmount').focus(); return; }
+  if(!dueDay || dueDay<1 || dueDay>31){ document.getElementById('billDueDay').focus(); return; }
+  const isActive = document.getElementById('billActiveRow').dataset.value !== 'false';
+  const bills = getBills();
+  if(billEditId){
+    const idx = bills.findIndex(x=>x.id===billEditId);
+    if(idx>-1) bills[idx] = { ...bills[idx], name, amount, dueDay, active: isActive, updatedAt: new Date().toISOString() };
+  } else {
+    bills.push({
+      id: Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+      name, amount, dueDay, active: isActive,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+    });
+  }
+  setBills(bills);
+  closeBillModal();
+  await writeFile();
+  renderBills();
+}
+
+async function deleteBill(id){
+  const bills = getBills();
+  const hasHistory = Object.values(DB._billPayments||{}).some(arr=>arr.some(p=>p.billId===id && p.paid));
+  if(hasHistory){
+    const idx = bills.findIndex(x=>x.id===id);
+    if(idx>-1){ bills[idx].active = false; bills[idx].updatedAt = new Date().toISOString(); }
+    setBills(bills);
+  } else {
+    setBills(bills.filter(x=>x.id!==id));
+  }
+  await writeFile();
+  renderBills();
+}
+
+async function toggleBillPaid(billId){
+  const bill = getBills().find(b=>b.id===billId);
+  if(!bill) return;
+  const payments = getBillPayments(billsViewMonth);
+  let p = payments.find(x=>x.billId===billId);
+
+  if(p && p.paid){
+    if(p.financeEntryId && p.paidDate){
+      setFinance(p.paidDate, getFinance(p.paidDate).filter(e=>e.id!==p.financeEntryId));
+    }
+    p.paid = false; p.paidDate = null; p.paidAmount = null; p.financeEntryId = null;
+  } else {
+    const paidDate = today;
+    const financeId = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    const entries = getFinance(paidDate);
+    const now = new Date();
+    entries.push({
+      id: financeId,
+      type: 'expense',
+      item: bill.name,
+      amount: bill.amount,
+      time: `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
+      paymentMethod: '',
+      note: `รายจ่ายประจำ (auto) — ${monthLabelTH(billsViewMonth)}`,
+      slip: '',
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+      billId: bill.id
+    });
+    setFinance(paidDate, entries);
+
+    if(!p){
+      p = { billId, paid: true, paidDate, paidAmount: bill.amount, financeEntryId: financeId };
+      payments.push(p);
+    } else {
+      p.paid = true; p.paidDate = paidDate; p.paidAmount = bill.amount; p.financeEntryId = financeId;
+    }
+  }
+  setBillPayments(billsViewMonth, payments);
+  await writeFile();
+  renderBills();
+  if(typeof renderFinance === 'function') renderFinance();
 }
 
 function selectFinType(type){
