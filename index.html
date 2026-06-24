@@ -2481,13 +2481,16 @@ function authHeaders(){
   return token ? { 'Authorization': 'Bearer ' + token } : {};
 }
 
-// แคช DB ใน localStorage ต้องผูกกับ username เสมอ ห้ามใช้ key เดียวกันข้าม account
-// (ไม่งั้น account อื่นบนเครื่อง/เบราว์เซอร์เดียวกันจะเห็นข้อมูลของ account ก่อนหน้าตอน fetch ล้มเหลว)
-function dbCacheKey(){
+// แคชทุกอย่างใน localStorage (DB, Note/QuickLink, ช่องทางจ่าย, คอลัมน์บอร์ด, daily log ฯลฯ)
+// ต้องผูกกับ username เสมอ ห้ามใช้ key เดียวกันข้าม account
+// (ไม่งั้น account อื่นบนเครื่อง/เบราว์เซอร์เดียวกันจะเห็นข้อมูลของ account ก่อนหน้า)
+function userKey(base){
   const u = localStorage.getItem('trackingTaskUser');
-  return u ? ('dailyTodoPro:' + u) : null;
+  return u ? (base + ':' + u) : null;
 }
-localStorage.removeItem('dailyTodoPro'); // ลบแคชเก่าที่ไม่ผูกกับ account ทิ้ง (ของ bug เดิม)
+function dbCacheKey(){ return userKey('dailyTodoPro'); }
+// ลบแคชเก่าที่ไม่ผูกกับ account ทิ้งทั้งหมด (ของ bug เดิม ก่อนแก้)
+['dailyTodoPro','dailyTodoCols','dailyTodoLog','dailyTodoQL','dailyTodoQLTags','dailyTodoFinPM'].forEach(k=>localStorage.removeItem(k));
 
 async function loadFile(){
   try {
@@ -3097,12 +3100,13 @@ let COLS = [];
 
 function loadCols(){
   try {
-    const saved = JSON.parse(localStorage.getItem(COLS_KEY));
+    const key = userKey(COLS_KEY);
+    const saved = key ? JSON.parse(localStorage.getItem(key)) : null;
     COLS = (Array.isArray(saved) && saved.length) ? saved : DEFAULT_COLS.map(c=>({...c}));
   } catch(_){ COLS = DEFAULT_COLS.map(c=>({...c})); }
 }
 
-function saveCols(){ localStorage.setItem(COLS_KEY, JSON.stringify(COLS)); }
+function saveCols(){ const key = userKey(COLS_KEY); if(key) localStorage.setItem(key, JSON.stringify(COLS)); }
 
 function getColById(id){ return COLS.find(c=>c.id===id); }
 function getColColor(id){ return (getColById(id)||{}).color||'gray'; }
@@ -3387,16 +3391,16 @@ const DL_KEY = 'dailyTodoLog';
 let DL = {};
 
 function loadDL(){
-  // Merge localStorage (fallback) with file (_logs), file takes precedence
+  // Merge localStorage (fallback, เฉพาะของ account นี้) กับ file (_logs), file takes precedence
   const fromLS = {};
-  try { Object.assign(fromLS, JSON.parse(localStorage.getItem(DL_KEY)||'{}')); } catch(_){}
+  try { const key = userKey(DL_KEY); if(key) Object.assign(fromLS, JSON.parse(localStorage.getItem(key)||'{}')); } catch(_){}
   const fromFile = (DB._logs && typeof DB._logs==='object') ? DB._logs : {};
   DL = Object.assign({}, fromLS, fromFile);
 }
 function saveDL(){
   if(!DB._logs) DB._logs = {};
   Object.assign(DB._logs, DL);
-  localStorage.setItem(DL_KEY, JSON.stringify(DL));
+  const key = userKey(DL_KEY); if(key) localStorage.setItem(key, JSON.stringify(DL));
   writeFile();
 }
 
@@ -3445,15 +3449,15 @@ let qlActiveFilter = 'all';
 let selectedQlTag  = '';
 
 function loadQL(){
-  // Merge localStorage (fallback) with file (_ql), file takes precedence
+  // Merge localStorage (fallback เฉพาะของ account นี้) with file (_ql), file takes precedence
   let fromLS = [];
-  try { fromLS = JSON.parse(localStorage.getItem(QL_KEY)||'[]'); } catch(_){}
+  try { const key = userKey(QL_KEY); if(key) fromLS = JSON.parse(localStorage.getItem(key)||'[]'); } catch(_){}
   const fromFile = Array.isArray(DB._ql) ? DB._ql : null;
   QL = fromFile !== null ? fromFile : fromLS;
 }
 function saveQL(){
   DB._ql = QL;
-  localStorage.setItem(QL_KEY, JSON.stringify(QL));
+  const key = userKey(QL_KEY); if(key) localStorage.setItem(key, JSON.stringify(QL));
   writeFile();
 }
 
@@ -3464,7 +3468,7 @@ let QL_TAGS = [];
 
 function loadQLTags(){
   let fromLS = null;
-  try { fromLS = JSON.parse(localStorage.getItem(QL_TAGS_KEY)||'null'); } catch(_){}
+  try { const key = userKey(QL_TAGS_KEY); if(key) fromLS = JSON.parse(localStorage.getItem(key)||'null'); } catch(_){}
   const fromFile = Array.isArray(DB._qlTags) ? DB._qlTags : null;
   QL_TAGS = fromFile || fromLS || [
     {id:'system',    label:'System'},
@@ -3475,7 +3479,7 @@ function loadQLTags(){
 }
 function saveQLTags(){
   DB._qlTags = QL_TAGS;
-  localStorage.setItem(QL_TAGS_KEY, JSON.stringify(QL_TAGS));
+  const key = userKey(QL_TAGS_KEY); if(key) localStorage.setItem(key, JSON.stringify(QL_TAGS));
   writeFile();
 }
 function qlTagColor(id){
@@ -3757,13 +3761,13 @@ function getBillMonthAmount(bill, month){
 
 function loadFinPM(){
   let fromLS = [];
-  try { fromLS = JSON.parse(localStorage.getItem(FINPM_KEY)||'[]'); } catch(_){}
+  try { const key = userKey(FINPM_KEY); if(key) fromLS = JSON.parse(localStorage.getItem(key)||'[]'); } catch(_){}
   const fromFile = Array.isArray(DB._finPM) ? DB._finPM : null;
   FINPM = fromFile !== null ? fromFile : (fromLS.length ? fromLS : FINPM_DEFAULT.slice());
 }
 function saveFinPM(){
   DB._finPM = FINPM;
-  localStorage.setItem(FINPM_KEY, JSON.stringify(FINPM));
+  const key = userKey(FINPM_KEY); if(key) localStorage.setItem(key, JSON.stringify(FINPM));
   writeFile();
 }
 
