@@ -1647,6 +1647,7 @@
     justify-content: center;
     gap: .9rem;
     margin-bottom: .7rem;
+    margin-top: .5rem;
   }
   .bill-month-label { font-size: .88rem; font-weight: 700; color: var(--text); min-width: 110px; text-align: center; }
   .bill-section { margin-bottom: .8rem; }
@@ -3960,14 +3961,18 @@ async function saveBill(){
 }
 
 async function deleteBill(id){
-  const bills = getBills();
+  const bill = getBills().find(x=>x.id===id);
+  if(!bill) return;
   const hasHistory = Object.values(DB._billPayments||{}).some(arr=>arr.some(p=>p.billId===id && p.paid));
   if(hasHistory){
-    const idx = bills.findIndex(x=>x.id===id);
-    if(idx>-1){ bills[idx].active = false; bills[idx].updatedAt = new Date().toISOString(); }
-    setBills(bills);
-  } else {
-    setBills(bills.filter(x=>x.id!==id));
+    const ok = confirm(`"${bill.name}" มีประวัติจ่ายเงินแล้ว การลบจะเอารายการรายจ่ายประจำนี้ออกทั้งหมด (รายการที่บันทึกไปแล้วในแท็บ "รายการ" จะยังอยู่เหมือนเดิม) ต้องการลบหรือไม่?`);
+    if(!ok) return;
+  }
+  setBills(getBills().filter(x=>x.id!==id));
+  if(DB._billPayments){
+    Object.keys(DB._billPayments).forEach(month=>{
+      DB._billPayments[month] = DB._billPayments[month].filter(p=>p.billId!==id);
+    });
   }
   await writeFile();
   renderBills();
