@@ -1883,8 +1883,9 @@
       <div class="lock-sub" id="lockSub">ใส่รหัสผ่านเพื่อเข้าใช้งาน</div>
       <div class="lock-fields">
         <input class="lock-input" type="text" id="lockUser" placeholder="ชื่อผู้ใช้ (username)" autocomplete="username" onkeydown="if(event.key==='Enter') lockSubmit()">
-        <input class="lock-input" type="password" id="lockPw" placeholder="รหัสผ่าน" autocomplete="current-password" onkeydown="if(event.key==='Enter') lockSubmit()">
-        <input class="lock-input" type="password" id="lockPwConfirm" placeholder="ยืนยันรหัสผ่าน" style="display:none" autocomplete="new-password" onkeydown="if(event.key==='Enter') lockSubmit()">
+        <input class="lock-input" type="email" id="lockEmail" placeholder="อีเมล (สำหรับลืมรหัส/แจ้งเตือน)" style="display:none" autocomplete="email" onkeydown="if(event.key==='Enter') lockSubmit()">
+        <input class="lock-input" type="password" inputmode="numeric" pattern="\d*" maxlength="6" id="lockPw" placeholder="PIN 6 หลัก" autocomplete="current-password" onkeydown="if(event.key==='Enter') lockSubmit()">
+        <input class="lock-input" type="password" inputmode="numeric" pattern="\d*" maxlength="6" id="lockPwConfirm" placeholder="ยืนยัน PIN 6 หลัก" style="display:none" autocomplete="new-password" onkeydown="if(event.key==='Enter') lockSubmit()">
         <div class="lock-error" id="lockError"></div>
         <button class="lock-submit" id="lockSubmitBtn" onclick="lockSubmit()">เข้าสู่ระบบ</button>
       </div>
@@ -1892,10 +1893,26 @@
     </div>
   </div>
 
+  <!-- Forced PIN reset (บัญชีเก่า / ครั้งแรกหลังเปลี่ยนมาใช้ PIN) -->
+  <div class="lock-screen" id="resetPinScreen" style="display:none">
+    <div class="lock-box" id="resetPinBox">
+      <div class="lock-icon">🔑</div>
+      <div class="lock-title">ตั้งค่า PIN ใหม่</div>
+      <div class="lock-sub">ระบบเปลี่ยนมาใช้ PIN 6 หลัก กรุณาตั้งค่า PIN ใหม่ก่อนใช้งานต่อ</div>
+      <div class="lock-fields">
+        <input class="lock-input" type="password" inputmode="numeric" pattern="\d*" maxlength="6" id="resetPinNew" placeholder="PIN ใหม่ 6 หลัก" onkeydown="if(event.key==='Enter') submitResetPin()">
+        <input class="lock-input" type="password" inputmode="numeric" pattern="\d*" maxlength="6" id="resetPinConfirm" placeholder="ยืนยัน PIN ใหม่" onkeydown="if(event.key==='Enter') submitResetPin()">
+        <div class="lock-error" id="resetPinError"></div>
+        <button class="lock-submit" onclick="submitResetPin()">บันทึก PIN ใหม่</button>
+      </div>
+    </div>
+  </div>
+
   <header>
     <div class="brand">
       <div class="brand-dot"></div>
       <h1>TrackingTask Today</h1>
+      <span id="userGreeting" style="display:none;margin-left:.6rem;font-size:.85rem;color:var(--text-2);font-weight:500"></span>
     </div>
     <div class="header-right">
       <button class="lock-btn" id="themeToggleBtn" onclick="toggleTheme()" title="สลับ Light/Dark"></button>
@@ -2496,6 +2513,10 @@ async function loadFile(){
   try {
     const r = await fetch(API + '/data', { headers: authHeaders() });
     if(r.status === 401){ sessionExpired(); return; }
+    if(r.status === 403){
+      const data = await r.json().catch(()=>({}));
+      if(data.error === 'PIN_RESET_REQUIRED'){ showResetPinScreen(); return; }
+    }
     if(r.ok) DB = await r.json();
     else DB = {};
     const key = dbCacheKey();
@@ -2792,8 +2813,9 @@ function lockRegisterMode(){
   document.getElementById('lockIcon').textContent = '🔐';
   document.getElementById('lockSub').textContent = 'สมัครสมาชิกเพื่อเริ่มใช้งาน';
   document.getElementById('lockSubmitBtn').textContent = 'สมัครสมาชิก';
+  document.getElementById('lockEmail').style.display = '';
   document.getElementById('lockPwConfirm').style.display = '';
-  document.getElementById('lockPw').placeholder = 'รหัสผ่านใหม่ (อย่างน้อย 4 ตัว)';
+  document.getElementById('lockPw').placeholder = 'PIN ใหม่ 6 หลัก';
   document.getElementById('lockPw').autocomplete = 'new-password';
   document.getElementById('lockError').textContent = '';
   document.getElementById('lockFooter').innerHTML =
@@ -2804,8 +2826,9 @@ function lockLoginMode(){
   document.getElementById('lockIcon').textContent = '🔒';
   document.getElementById('lockSub').textContent = 'เข้าสู่ระบบเพื่อใช้งาน';
   document.getElementById('lockSubmitBtn').textContent = 'เข้าสู่ระบบ';
+  document.getElementById('lockEmail').style.display = 'none';
   document.getElementById('lockPwConfirm').style.display = 'none';
-  document.getElementById('lockPw').placeholder = 'รหัสผ่าน';
+  document.getElementById('lockPw').placeholder = 'PIN 6 หลัก';
   document.getElementById('lockPw').autocomplete = 'current-password';
   document.getElementById('lockError').textContent = '';
   document.getElementById('lockFooter').innerHTML =
@@ -2814,18 +2837,29 @@ function lockLoginMode(){
 
 function lockShow(){
   document.getElementById('lockUser').value = '';
+  document.getElementById('lockEmail').value = '';
   document.getElementById('lockPw').value = '';
   document.getElementById('lockPwConfirm').value = '';
   document.getElementById('lockError').textContent = '';
   lockLoginMode();
   document.getElementById('lockScreen').style.display = 'flex';
   document.getElementById('headerLockBtn').style.display = 'none';
+  document.getElementById('userGreeting').style.display = 'none';
   setTimeout(()=>document.getElementById('lockUser').focus(), 80);
 }
 
 function lockHide(){
   document.getElementById('lockScreen').style.display = 'none';
-  document.getElementById('headerLockBtn').style.display = !!localStorage.getItem(AUTH_TOKEN_KEY) ? '' : 'none';
+  const loggedIn = !!localStorage.getItem(AUTH_TOKEN_KEY);
+  document.getElementById('headerLockBtn').style.display = loggedIn ? '' : 'none';
+  const greetingEl = document.getElementById('userGreeting');
+  const uname = localStorage.getItem(AUTH_USER_KEY);
+  if(loggedIn && uname){
+    greetingEl.textContent = `Hi, ${uname} วันนี้เป็นอย่างไรบ้าง`;
+    greetingEl.style.display = '';
+  } else {
+    greetingEl.style.display = 'none';
+  }
 }
 
 function lockApp(){
@@ -2853,8 +2887,11 @@ async function afterAuthSuccess(){
   }
 }
 
+const PIN_RE = /^\d{6}$/;
+
 async function lockSubmit(){
   const username = document.getElementById('lockUser').value.trim();
+  const email = document.getElementById('lockEmail').value.trim();
   const pw = document.getElementById('lockPw').value;
   const confirmEl = document.getElementById('lockPwConfirm');
   const errorEl = document.getElementById('lockError');
@@ -2862,14 +2899,15 @@ async function lockSubmit(){
   const isRegister = confirmEl.style.display !== 'none';
 
   if(!username){ errorEl.textContent='กรุณาใส่ชื่อผู้ใช้'; return; }
-  if(!pw){ errorEl.textContent='กรุณาใส่รหัสผ่าน'; return; }
-  if(pw.length < 4){ errorEl.textContent='รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร'; return; }
+  if(isRegister && !email){ errorEl.textContent='กรุณาใส่อีเมล (ใช้สำหรับลืมรหัส/แจ้งเตือน)'; return; }
+  if(!pw){ errorEl.textContent='กรุณาใส่ PIN'; return; }
+  if(!PIN_RE.test(pw)){ errorEl.textContent='PIN ต้องเป็นตัวเลข 6 หลักเท่านั้น'; return; }
 
   if(isRegister){
     const confirm = confirmEl.value;
-    if(!confirm){ errorEl.textContent='กรุณายืนยันรหัสผ่าน'; return; }
+    if(!confirm){ errorEl.textContent='กรุณายืนยัน PIN'; return; }
     if(pw !== confirm){
-      errorEl.textContent='รหัสผ่านไม่ตรงกัน';
+      errorEl.textContent='PIN ไม่ตรงกัน';
       box.classList.remove('lock-shake');
       void box.offsetWidth;
       box.classList.add('lock-shake');
@@ -2878,11 +2916,12 @@ async function lockSubmit(){
   }
 
   const endpoint = isRegister ? '/register' : '/login';
+  const payload = isRegister ? { username, password: pw, email } : { username, password: pw };
   try {
     const r = await fetch(API + endpoint, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ username, password: pw })
+      body: JSON.stringify(payload)
     });
     const data = await r.json();
     if(!r.ok){
@@ -2896,6 +2935,50 @@ async function lockSubmit(){
     localStorage.setItem(AUTH_USER_KEY, data.username);
     errorEl.textContent='';
     if(isRegister) showToast('สมัครสมาชิกสำเร็จ 🔓');
+    if(data.mustResetPin){
+      document.getElementById('lockScreen').style.display = 'none';
+      showResetPinScreen();
+      return;
+    }
+    await afterAuthSuccess();
+  } catch(e){
+    errorEl.textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง';
+  }
+}
+
+function showResetPinScreen(){
+  document.getElementById('resetPinNew').value = '';
+  document.getElementById('resetPinConfirm').value = '';
+  document.getElementById('resetPinError').textContent = '';
+  document.getElementById('resetPinScreen').style.display = 'flex';
+  setTimeout(()=>document.getElementById('resetPinNew').focus(), 80);
+}
+
+async function submitResetPin(){
+  const newPin = document.getElementById('resetPinNew').value;
+  const confirmPin = document.getElementById('resetPinConfirm').value;
+  const errorEl = document.getElementById('resetPinError');
+  const box = document.getElementById('resetPinBox');
+  if(!PIN_RE.test(newPin)){ errorEl.textContent='PIN ต้องเป็นตัวเลข 6 หลักเท่านั้น'; return; }
+  if(newPin !== confirmPin){
+    errorEl.textContent='PIN ไม่ตรงกัน';
+    box.classList.remove('lock-shake'); void box.offsetWidth; box.classList.add('lock-shake');
+    return;
+  }
+  try {
+    const r = await fetch(API + '/reset-pin', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', ...authHeaders()},
+      body: JSON.stringify({ newPin })
+    });
+    const data = await r.json();
+    if(!r.ok){
+      errorEl.textContent = data.error || 'ตั้งค่า PIN ใหม่ไม่สำเร็จ';
+      box.classList.remove('lock-shake'); void box.offsetWidth; box.classList.add('lock-shake');
+      return;
+    }
+    document.getElementById('resetPinScreen').style.display = 'none';
+    showToast('ตั้งค่า PIN ใหม่สำเร็จ 🔑');
     await afterAuthSuccess();
   } catch(e){
     errorEl.textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง';

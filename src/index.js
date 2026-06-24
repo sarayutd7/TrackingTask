@@ -1,6 +1,9 @@
 const LEGACY_KV_KEY = "daily-todo-data";
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
+const PIN_RE = /^\d{6}$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
+const MAX_FAILED_ATTEMPTS = 5; // ครั้งที่ 6 จะถูกล็อกและ "ส่งอีเมล" แจ้งเตือน
 
 const ALLOWED_ORIGINS = new Set([
   "https://sarayutd7.github.io",
@@ -131,6 +134,15 @@ async function getAuthUser(request, env) {
   return payload ? payload.sub : null;
 }
 
+// ── Email (stub) ──────────────────────────────────────
+// ยังไม่มี domain ที่ onboard กับ Cloudflare Email Sending จึงยังส่งอีเมลจริงไม่ได้
+// TODO: เมื่อมี domain แล้ว ให้เปลี่ยนเนื้อ function นี้เป็น env.EMAIL.send({...})
+// (ดู skill cloudflare-email-service) ตอนนี้แค่ log ไว้ใน wrangler tail ก่อน
+async function sendEmail(env, { to, subject, text }) {
+  console.log(`[EMAIL STUB] to=${to} subject="${subject}" body="${text}"`);
+  return true;
+}
+
 // ── Migration of legacy single-blob data ─────────────
 async function migrateLegacyDataTo(username, env) {
   const migrated = await env.TRACKING_TASK_KV.get("migrated");
@@ -159,12 +171,15 @@ export default {
       } catch (e) {
         return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
       }
-      const { username, password } = body || {};
+      const { username, password, email } = body || {};
       if (typeof username !== "string" || !USERNAME_RE.test(username)) {
         return jsonResponse({ error: "Username must be 3-20 characters (letters, numbers, underscore)" }, 400, CORS_HEADERS);
       }
-      if (typeof password !== "string" || password.length < 4) {
-        return jsonResponse({ error: "Password must be at least 4 characters" }, 400, CORS_HEADERS);
+      if (typeof password !== "string" || !PIN_RE.test(password)) {
+        return jsonResponse({ error: "PIN ต้องเป็นตัวเลข 6 หลักเท่านั้น" }, 400, CORS_HEADERS);
+      }
+      if (typeof email !== "string" || !EMAIL_RE.test(email)) {
+        return jsonResponse({ error: "กรุณาใส่อีเมลให้ถูกต้อง" }, 400, CORS_HEADERS);
       }
 
       const existing = await env.TRACKING_TASK_KV.get(`user:${username}`);
@@ -173,8 +188,16 @@ export default {
       }
 
       const { salt, hash } = await hashPassword(password);
-      await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify({ salt, hash }));
+      await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify({
+        salt, hash, email,
+        mustResetPin: false,
+        failedAttempts: 0,
+        locked: false,
+      }));
       await migrateLegacyDataTo(username, env);
+
+      // TODO: ส่งอีเมลยืนยันการสมัครจริง เมื่อมี domain onboard กับ Cloudflare Email Sending แล้ว
+      await sendEmail(env, { to: email, subject: "ยืนยันการสมัครสมาชิก TrackingTask", text: `สมัครสมาชิกด้วยชื่อผู้ใช้ ${username} สำเร็จแล้ว` });
 
       const now = Math.floor(Date.now() / 1000);
       const token = await signJWT({ sub: username, iat: now, exp: now + TOKEN_TTL_SECONDS }, env.JWT_SECRET);
@@ -193,25 +216,107 @@ export default {
         return jsonResponse({ error: "Invalid credentials" }, 401, CORS_HEADERS);
       }
 
-      const record = await env.TRACKING_TASK_KV.get(`user:${username}`);
-      if (!record) {
+      const recordRaw = await env.TRACKING_TASK_KV.get(`user:${username}`);
+      if (!recordRaw) {
         return jsonResponse({ error: "Invalid credentials" }, 401, CORS_HEADERS);
       }
-      const { salt, hash } = JSON.parse(record);
-      const ok = await verifyPassword(password, salt, hash);
+      const userRec = JSON.parse(recordRaw);
+
+      if (userRec.locked) {
+        return jsonResponse({ error: "บัญชีถูกล็อกเนื่องจากพยายามเข้าระบบผิดหลายครั้ง กรุณารีเซ็ต PIN ผ่านอีเมลที่แจ้งไว้" }, 423, CORS_HEADERS);
+      }
+
+      const ok = await verifyPassword(password, userRec.salt, userRec.hash);
       if (!ok) {
+        userRec.failedAttempts = (userRec.failedAttempts || 0) + 1;
+        if (userRec.failedAttempts > MAX_FAILED_ATTEMPTS) {
+          userRec.locked = true;
+          await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
+          // TODO: ส่งอีเมลจริงเมื่อมี domain onboard กับ Cloudflare Email Sending แล้ว
+          await sendEmail(env, {
+            to: userRec.email,
+            subject: "แจ้งเตือน: มีการพยายามเข้าระบบผิดหลายครั้ง",
+            text: `บัญชี ${username} ถูกล็อกเนื่องจากพยายามเข้าระบบผิด ${userRec.failedAttempts} ครั้ง กรุณารีเซ็ต PIN`,
+          });
+          return jsonResponse({ error: "พยายามเข้าระบบผิดเกินกำหนด บัญชีถูกล็อกและส่งอีเมลแจ้งเตือนแล้ว" }, 423, CORS_HEADERS);
+        }
+        await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
         return jsonResponse({ error: "Invalid credentials" }, 401, CORS_HEADERS);
       }
 
+      userRec.failedAttempts = 0;
+      await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
+
       const now = Math.floor(Date.now() / 1000);
       const token = await signJWT({ sub: username, iat: now, exp: now + TOKEN_TTL_SECONDS }, env.JWT_SECRET);
-      return jsonResponse({ token, username }, 200, CORS_HEADERS);
+      // record เก่าก่อนมีฟีเจอร์นี้จะไม่มี field mustResetPin เลย -> ถือว่าต้อง reset เป็น PIN 6 หลักก่อนใช้งานต่อ
+      const mustResetPin = userRec.mustResetPin !== false;
+      return jsonResponse({ token, username, mustResetPin }, 200, CORS_HEADERS);
+    }
+
+    if (url.pathname === "/reset-pin" && request.method === "POST") {
+      const username = await getAuthUser(request, env);
+      if (!username) {
+        return jsonResponse({ error: "Unauthorized" }, 401, CORS_HEADERS);
+      }
+      let body;
+      try {
+        body = await request.json();
+      } catch (e) {
+        return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
+      }
+      const { newPin } = body || {};
+      if (typeof newPin !== "string" || !PIN_RE.test(newPin)) {
+        return jsonResponse({ error: "PIN ต้องเป็นตัวเลข 6 หลักเท่านั้น" }, 400, CORS_HEADERS);
+      }
+      const recordRaw = await env.TRACKING_TASK_KV.get(`user:${username}`);
+      if (!recordRaw) {
+        return jsonResponse({ error: "Unauthorized" }, 401, CORS_HEADERS);
+      }
+      const userRec = JSON.parse(recordRaw);
+      const { salt, hash } = await hashPassword(newPin);
+      userRec.salt = salt;
+      userRec.hash = hash;
+      userRec.mustResetPin = false;
+      userRec.failedAttempts = 0;
+      userRec.locked = false;
+      await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
+      return jsonResponse({ ok: true }, 200, CORS_HEADERS);
+    }
+
+    if (url.pathname === "/admin/unlock" && request.method === "POST") {
+      // ช่องทางปลดล็อกชั่วคราวระหว่างที่ยังไม่มีระบบอีเมลจริง (ใช้ ADMIN_SECRET เป็น Worker secret)
+      const adminSecret = request.headers.get("X-Admin-Secret") || "";
+      if (!env.ADMIN_SECRET || adminSecret !== env.ADMIN_SECRET) {
+        return jsonResponse({ error: "Unauthorized" }, 401, CORS_HEADERS);
+      }
+      let body;
+      try {
+        body = await request.json();
+      } catch (e) {
+        return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
+      }
+      const { username } = body || {};
+      const recordRaw = await env.TRACKING_TASK_KV.get(`user:${username}`);
+      if (!recordRaw) {
+        return jsonResponse({ error: "User not found" }, 404, CORS_HEADERS);
+      }
+      const userRec = JSON.parse(recordRaw);
+      userRec.locked = false;
+      userRec.failedAttempts = 0;
+      await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
+      return jsonResponse({ ok: true }, 200, CORS_HEADERS);
     }
 
     if (url.pathname === "/data") {
       const username = await getAuthUser(request, env);
       if (!username) {
         return jsonResponse({ error: "Unauthorized" }, 401, CORS_HEADERS);
+      }
+      const userRecRaw = await env.TRACKING_TASK_KV.get(`user:${username}`);
+      const userRec = userRecRaw ? JSON.parse(userRecRaw) : null;
+      if (userRec && userRec.mustResetPin !== false) {
+        return jsonResponse({ error: "PIN_RESET_REQUIRED" }, 403, CORS_HEADERS);
       }
 
       if (request.method === "GET") {
