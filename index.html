@@ -1627,6 +1627,18 @@
     cursor: pointer;
     flex-shrink: 0;
   }
+  .image-preview-box {
+    position: relative;
+    max-width: min(90vw, 640px);
+    max-height: 90vh;
+  }
+  .image-preview-box img {
+    display: block;
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: var(--r-lg);
+    box-shadow: 0 24px 64px rgba(0,0,0,.6);
+  }
   .fin-card-actions {
     display: flex;
     align-items: center;
@@ -1916,6 +1928,9 @@
     </div>
     <div class="header-right">
       <button class="lock-btn" id="themeToggleBtn" onclick="toggleTheme()" title="สลับ Light/Dark"></button>
+      <button class="lock-btn" id="headerAccountBtn" onclick="openAccountModal()" title="จัดการบัญชี" style="display:none">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+      </button>
       <button class="lock-btn" id="headerLockBtn" onclick="lockApp()" title="ออกจากระบบ" style="display:none">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       </button>
@@ -2447,6 +2462,51 @@
   </div>
 </div>
 
+<!-- Account Modal -->
+<div class="overlay" id="accountOverlay" style="display:none" onclick="if(event.target===this) closeAccountModal()">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <span class="modal-title">จัดการบัญชี</span>
+      <button class="close-btn" onclick="closeAccountModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>ชื่อผู้ใช้</label>
+        <input type="text" id="accountUsername" disabled>
+      </div>
+      <div class="field">
+        <label>อีเมล</label>
+        <input type="email" id="accountEmail" placeholder="อีเมล" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>PIN ใหม่ <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ — กรอกถ้าต้องการเปลี่ยน)</span></label>
+        <input type="password" inputmode="numeric" pattern="\d*" maxlength="6" id="accountNewPin" placeholder="PIN ใหม่ 6 หลัก" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label>ยืนยัน PIN ปัจจุบัน <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ใส่เพื่อยืนยันการเปลี่ยนแปลงทุกครั้ง)</span></label>
+        <input type="password" inputmode="numeric" pattern="\d*" maxlength="6" id="accountCurrentPin" placeholder="PIN ปัจจุบัน 6 หลัก" autocomplete="current-password">
+      </div>
+      <div class="lock-error" id="accountError" style="margin-top:.3rem"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeAccountModal()">ยกเลิก</button>
+      <button class="btn btn-accent" onclick="saveAccount()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Image Preview Overlay -->
+<div class="overlay" id="imagePreviewOverlay" style="display:none" onclick="if(event.target===this) closeImagePreview()">
+  <div class="image-preview-box">
+    <button class="close-btn" onclick="closeImagePreview()" style="position:absolute;top:-14px;right:-14px;z-index:1">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <img id="imagePreviewImg" src="" alt="image preview">
+  </div>
+</div>
+
 <!-- Note Read Overlay -->
 <div class="ql-read-overlay" id="qlReadOverlay" style="display:none" onclick="if(event.target===this)qlReadClose()">
   <div class="ql-read-modal">
@@ -2853,6 +2913,7 @@ function lockShow(){
   lockLoginMode();
   document.getElementById('lockScreen').style.display = 'flex';
   document.getElementById('headerLockBtn').style.display = 'none';
+  document.getElementById('headerAccountBtn').style.display = 'none';
   document.getElementById('userGreeting').style.display = 'none';
   setTimeout(()=>document.getElementById('lockUser').focus(), 80);
 }
@@ -2861,6 +2922,7 @@ function lockHide(){
   document.getElementById('lockScreen').style.display = 'none';
   const loggedIn = !!localStorage.getItem(AUTH_TOKEN_KEY);
   document.getElementById('headerLockBtn').style.display = loggedIn ? '' : 'none';
+  document.getElementById('headerAccountBtn').style.display = loggedIn ? '' : 'none';
   const greetingEl = document.getElementById('userGreeting');
   const uname = localStorage.getItem(AUTH_USER_KEY);
   if(loggedIn && uname){
@@ -2993,6 +3055,60 @@ async function submitResetPin(){
     errorEl.textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง';
   }
 }
+
+async function openAccountModal(){
+  document.getElementById('accountError').textContent = '';
+  document.getElementById('accountNewPin').value = '';
+  document.getElementById('accountCurrentPin').value = '';
+  document.getElementById('accountUsername').value = localStorage.getItem(AUTH_USER_KEY) || '';
+  document.getElementById('accountEmail').value = '';
+  document.getElementById('accountOverlay').style.display = 'flex';
+  try {
+    const r = await fetch(API + '/account', { headers: authHeaders() });
+    if(r.status === 401){ closeAccountModal(); sessionExpired(); return; }
+    const data = await r.json();
+    if(r.ok){
+      document.getElementById('accountUsername').value = data.username;
+      document.getElementById('accountEmail').value = data.email || '';
+    }
+  } catch(e){
+    document.getElementById('accountError').textContent = 'โหลดข้อมูลบัญชีไม่สำเร็จ ลองใหม่อีกครั้ง';
+  }
+}
+
+function closeAccountModal(){
+  document.getElementById('accountOverlay').style.display = 'none';
+}
+
+async function saveAccount(){
+  const newEmail = document.getElementById('accountEmail').value.trim();
+  const newPin = document.getElementById('accountNewPin').value;
+  const currentPin = document.getElementById('accountCurrentPin').value;
+  const errorEl = document.getElementById('accountError');
+
+  if(!EMAIL_RE.test(newEmail)){ errorEl.textContent = 'กรุณาใส่อีเมลให้ถูกต้อง'; return; }
+  if(newPin && !PIN_RE.test(newPin)){ errorEl.textContent = 'PIN ใหม่ต้องเป็นตัวเลข 6 หลักเท่านั้น'; return; }
+  if(!PIN_RE.test(currentPin)){ errorEl.textContent = 'กรุณายืนยัน PIN ปัจจุบัน (6 หลัก)'; return; }
+
+  try {
+    const r = await fetch(API + '/account', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', ...authHeaders()},
+      body: JSON.stringify({ currentPin, newEmail, newPin: newPin || null })
+    });
+    const data = await r.json();
+    if(!r.ok){
+      errorEl.textContent = data.error || 'บันทึกไม่สำเร็จ';
+      return;
+    }
+    closeAccountModal();
+    showToast('บันทึกข้อมูลบัญชีสำเร็จ ✅');
+  } catch(e){
+    errorEl.textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง';
+  }
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // เรียกตอน app โหลด
 if(localStorage.getItem(AUTH_TOKEN_KEY)){
@@ -3140,6 +3256,15 @@ function fmtTime(iso){
   return new Date(iso).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
 }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function showImagePreview(src){
+  document.getElementById('imagePreviewImg').src = src;
+  document.getElementById('imagePreviewOverlay').style.display = 'flex';
+}
+function closeImagePreview(){
+  document.getElementById('imagePreviewOverlay').style.display = 'none';
+  document.getElementById('imagePreviewImg').src = '';
+}
 
 // ── Rich-text sanitizer (whitelist tags/attrs, strip script vectors) ──
 const RTE_ALLOWED_TAGS = new Set(['B','STRONG','I','EM','U','S','STRIKE','BR','DIV','SPAN','P','UL','OL','LI','A','IMG','BLOCKQUOTE','H1','H2','H3','SUB','SUP','FONT']);
@@ -3948,7 +4073,7 @@ function renderFinance(){
     const pmBadge = e.paymentMethod ? `<span class="fin-pm-badge">${esc(e.paymentMethod)}</span>` : '';
     const timeBadge = e.time ? `<span class="fin-card-time">${esc(e.time)}</span>` : '';
     const noteHtml = e.note ? `<div class="fin-card-note">${esc(e.note)}</div>` : '';
-    const slipImg = e.slip ? `<img class="fin-slip-thumb" src="${e.slip}" onclick="window.open(this.src)" title="คลิกเพื่อดูรูปขนาดเต็ม">` : '';
+    const slipImg = e.slip ? `<img class="fin-slip-thumb" src="${e.slip}" onclick="showImagePreview(this.src)" title="คลิกเพื่อดูรูปขนาดเต็ม">` : '';
     const sign = e.type==='income' ? '+' : '-';
     return `
     <div class="fin-card ${esc(e.type)}">
@@ -3987,7 +4112,7 @@ function billRowHtml(bill, payment, dueDateStr, isOverdue, isDueSoon, amount, im
         ? `<span class="bill-status-badge duesoon">ใกล้ถึงกำหนด</span>`
         : `<span class="bill-status-badge pending">ยังไม่จ่าย</span>`;
   const inactiveBadge = bill.active ? '' : `<span class="fin-pm-badge">หยุดใช้งาน</span>`;
-  const imageThumb = image ? `<img class="fin-slip-thumb" src="${image}" onclick="window.open(this.src)" title="คลิกเพื่อดูรูปขนาดเต็ม">` : '';
+  const imageThumb = image ? `<img class="fin-slip-thumb" src="${image}" onclick="showImagePreview(this.src)" title="คลิกเพื่อดูรูปขนาดเต็ม">` : '';
   return `
   <div class="fin-card bill-card ${paid?'paid':isOverdue?'overdue':isDueSoon?'duesoon':''}">
     ${imageThumb}

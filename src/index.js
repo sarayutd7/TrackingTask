@@ -284,6 +284,61 @@ export default {
       return jsonResponse({ ok: true }, 200, CORS_HEADERS);
     }
 
+    if (url.pathname === "/account" && request.method === "GET") {
+      const username = await getAuthUser(request, env);
+      if (!username) {
+        return jsonResponse({ error: "Unauthorized" }, 401, CORS_HEADERS);
+      }
+      const recordRaw = await env.TRACKING_TASK_KV.get(`user:${username}`);
+      if (!recordRaw) {
+        return jsonResponse({ error: "Unauthorized" }, 401, CORS_HEADERS);
+      }
+      const userRec = JSON.parse(recordRaw);
+      return jsonResponse({ username, email: userRec.email || "" }, 200, CORS_HEADERS);
+    }
+
+    if (url.pathname === "/account" && request.method === "POST") {
+      const username = await getAuthUser(request, env);
+      if (!username) {
+        return jsonResponse({ error: "Unauthorized" }, 401, CORS_HEADERS);
+      }
+      let body;
+      try {
+        body = await request.json();
+      } catch (e) {
+        return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
+      }
+      const { currentPin, newEmail, newPin } = body || {};
+      if (typeof currentPin !== "string" || !PIN_RE.test(currentPin)) {
+        return jsonResponse({ error: "กรุณายืนยัน PIN ปัจจุบัน (6 หลัก)" }, 400, CORS_HEADERS);
+      }
+      if (newEmail != null && !EMAIL_RE.test(newEmail)) {
+        return jsonResponse({ error: "กรุณาใส่อีเมลให้ถูกต้อง" }, 400, CORS_HEADERS);
+      }
+      if (newPin != null && !PIN_RE.test(newPin)) {
+        return jsonResponse({ error: "PIN ใหม่ต้องเป็นตัวเลข 6 หลักเท่านั้น" }, 400, CORS_HEADERS);
+      }
+      const recordRaw = await env.TRACKING_TASK_KV.get(`user:${username}`);
+      if (!recordRaw) {
+        return jsonResponse({ error: "Unauthorized" }, 401, CORS_HEADERS);
+      }
+      const userRec = JSON.parse(recordRaw);
+      const ok = await verifyPassword(currentPin, userRec.salt, userRec.hash);
+      if (!ok) {
+        return jsonResponse({ error: "PIN ปัจจุบันไม่ถูกต้อง" }, 401, CORS_HEADERS);
+      }
+      if (newEmail != null) {
+        userRec.email = newEmail;
+      }
+      if (newPin != null) {
+        const { salt, hash } = await hashPassword(newPin);
+        userRec.salt = salt;
+        userRec.hash = hash;
+      }
+      await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
+      return jsonResponse({ ok: true }, 200, CORS_HEADERS);
+    }
+
     if (url.pathname === "/admin/unlock" && request.method === "POST") {
       // ช่องทางปลดล็อกชั่วคราวระหว่างที่ยังไม่มีระบบอีเมลจริง (ใช้ ADMIN_SECRET เป็น Worker secret)
       const adminSecret = request.headers.get("X-Admin-Secret") || "";
