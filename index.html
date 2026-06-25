@@ -207,6 +207,10 @@
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
         </span>
       </div>
+      <div class="ql-search-wrap">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="ql-search-input" id="qlSearchInput" placeholder="ค้นหา note (ชื่อ, รายละเอียด, tag)…" oninput="qlSetSearch(this.value)">
+      </div>
       <div class="ql-filter-bar" id="qlFilterBar">
         <button class="ql-filter-btn active" data-filter="all" onclick="qlSetFilter('all')">ทั้งหมด</button>
       </div>

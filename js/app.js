@@ -895,6 +895,26 @@ let qlActiveFilter = 'all';
 let selectedQlTag  = '';
 let selectedQlType = 'fleeting';
 let selectedQlRelated = [];
+let qlSearchQuery = '';
+
+function qlSetSearch(value){
+  qlSearchQuery = value.trim().toLowerCase();
+  renderQL();
+}
+
+function qlStripHTML(html){
+  if(!html) return '';
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || '';
+}
+
+function qlMatchesSearch(item){
+  if(!qlSearchQuery) return true;
+  const tagLabel = item.tag ? qlTagLabel(item.tag) : '';
+  const haystack = [item.name, qlStripHTML(item.detail), tagLabel].join(' ').toLowerCase();
+  return haystack.includes(qlSearchQuery);
+}
 
 function loadQL(){
   // Merge localStorage (fallback เฉพาะของ account นี้) with file (_ql), file takes precedence
@@ -1031,15 +1051,17 @@ const qlPinSvg  = `<svg width="9" height="9" fill="currentColor" viewBox="0 0 24
 
 function qlIndexById(id){ return QL.findIndex(x=>x.id===id); }
 
-function qlRelatedChipsHtml(item){
-  const ids = item.relatedIds || [];
+function qlRelatedChipsHtml(item, max=Infinity){
+  const ids = (item.relatedIds || []).filter(id=>qlIndexById(id)>=0);
   if(!ids.length) return '';
-  const chips = ids.map(id=>{
+  const shown = ids.slice(0, max);
+  const chips = shown.map(id=>{
     const idx = qlIndexById(id);
-    if(idx<0) return '';
-    return `<span class="ql-related-chip" onclick="qlOpenRead(${idx})" title="เปิดโน้ตที่เกี่ยวข้อง">🔗 ${esc(QL[idx].name)}</span>`;
-  }).filter(Boolean).join('');
-  return chips ? `<div class="ql-related-row">${chips}</div>` : '';
+    return `<span class="ql-related-chip" onclick="qlOpenRead(${idx})" title="${esc(QL[idx].name)}">🔗 ${esc(QL[idx].name)}</span>`;
+  }).join('');
+  const moreCount = ids.length - shown.length;
+  const moreHtml = moreCount > 0 ? `<span class="ql-related-more">+${moreCount}</span>` : '';
+  return `<div class="ql-related-row">${chips}${moreHtml}</div>`;
 }
 
 function renderQL(){
@@ -1047,10 +1069,12 @@ function renderQL(){
   const list = (qlActiveFilter === 'all'
     ? QL.map((item,i)=>({item,i}))
     : QL.map((item,i)=>({item,i})).filter(({item})=>(item.tag||'') === qlActiveFilter)
-  ).sort((a,b)=> (b.item.pinned?1:0) - (a.item.pinned?1:0));
+  ).filter(({item})=>qlMatchesSearch(item))
+   .sort((a,b)=> (b.item.pinned?1:0) - (a.item.pinned?1:0));
 
   if(!list.length){
-    body.innerHTML = QL.length
+    if(qlSearchQuery) body.innerHTML = '<span class="ql-empty">ไม่พบ note ที่ตรงกับ "' + esc(qlSearchQuery) + '"</span>';
+    else body.innerHTML = QL.length
       ? '<span class="ql-empty">ไม่มี link ใน tag นี้</span>'
       : '<span class="ql-empty">ยังไม่มี link — กด + เพิ่ม เพื่อเพิ่ม Note</span>';
     return;
@@ -1061,7 +1085,6 @@ function renderQL(){
       ? `<span class="ql-tag-badge" style="--tag-color:${qlTagColor(item.tag)};--tag-bg:${qlTagColor(item.tag)}1F">● ${esc(tagLabel)}</span>`
       : '';
     const isPermanent = item.noteType === 'permanent';
-    const typeBadge = `<span class="ql-notetype-badge${isPermanent?' permanent':''}">${isPermanent?'📌 Permanent':'📝 Fleeting'}</span>`;
     const hasUrl = item.url && item.url.trim();
     const openBtn = hasUrl
       ? `<a class="ql-open-btn" href="${esc(item.url)}" target="_blank" rel="noopener" title="${esc(item.url)}">${qlLinkSvg} เปิด Link</a>`
@@ -1069,37 +1092,41 @@ function renderQL(){
     const detailHtml = item.detail
       ? `<div class="ql-card-detail">${/<[a-z][\s\S]*>/i.test(item.detail) ? sanitizeRichHTML(item.detail) : esc(item.detail)}</div>`
       : '';
-    const imagesHtml = (item.images && item.images.length)
-      ? `<div class="ql-img-row">${item.images.map(src=>`<img class="ql-img-thumb" src="${esc(src)}" onclick="window.open('${esc(src)}')">`).join('')}</div>`
+    const imgCount = (item.images && item.images.length) || 0;
+    const imagesHtml = imgCount
+      ? `<div class="ql-img-row"><img class="ql-img-thumb" src="${esc(item.images[0])}" onclick="qlOpenRead(${i})">${imgCount>1?`<span class="ql-img-count-badge" onclick="qlOpenRead(${i})">+${imgCount-1}</span>`:''}</div>`
       : '';
-    const relatedHtml = qlRelatedChipsHtml(item);
-    const expandBtn = (item.detail || (item.images && item.images.length))
-      ? `<button class="ql-expand-btn" onclick="qlOpenRead(${i})"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg> ขยาย</button>`
+    const relatedHtml = qlRelatedChipsHtml(item, 2);
+    const hasExpandable = item.detail || imgCount || (item.relatedIds && item.relatedIds.length);
+    const expandBtn = hasExpandable
+      ? `<button class="ql-card-btn expand" onclick="qlOpenRead(${i})" title="ขยาย"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>`
       : '';
     const summarizeBtn = !isPermanent
-      ? `<button class="ql-summarize-btn" onclick="qlSummarizeToPermanent(${i})" title="สรุปเป็นโน้ตถาวร">✍️ สรุปเป็นโน้ตถาวร</button>`
+      ? `<button class="ql-card-btn summarize" onclick="qlSummarizeToPermanent(${i})" title="สรุปเป็นโน้ตถาวร">✍️</button>`
       : '';
     const isPinned = !!item.pinned;
-    const pinBadge = isPinned ? `<span class="ql-pin-badge">${qlPinSvg} ปักหมุด</span>` : '';
+    const pinBadge = isPinned ? `<span class="ql-pin-badge">${qlPinSvg}</span>` : '';
     return `
     <div class="ql-card${isPinned?' pinned':''}" data-tag="${esc(item.tag||'')}">
       <div class="ql-card-top">
         <div class="ql-card-name-wrap">
           ${pinBadge}
+          <span class="ql-notetype-badge${isPermanent?' permanent':''}" title="${isPermanent?'Permanent':'Fleeting'}">${isPermanent?'📌':'📝'}</span>
           <div class="ql-card-name" title="${esc(item.name)}">${esc(item.name)}</div>
-          ${openBtn}
         </div>
         <div class="ql-card-actions">
           <button class="ql-card-btn pin${isPinned?' pinned':''}" onclick="qlTogglePin(${i})" title="${isPinned?'ถอดหมุด':'ปักหมุด'}">${qlPinSvg}</button>
+          ${summarizeBtn}
+          ${expandBtn}
           <button class="ql-card-btn edit" onclick="qlOpenEdit(${i})" title="แก้ไข">${qlEditSvg}</button>
           <button class="ql-card-btn del"  onclick="qlDelete(${i})"   title="ลบ">${qlDelSvg}</button>
         </div>
       </div>
-      <div class="ql-card-meta-row" style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">${typeBadge}${tagBadge}</div>
+      ${tagBadge ? `<div class="ql-card-meta-row" style="margin-top:.25rem">${tagBadge}</div>` : ''}
+      ${openBtn}
       ${detailHtml}
       ${imagesHtml}
       ${relatedHtml}
-      <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:.3rem">${expandBtn}${summarizeBtn}</div>
     </div>`;
   }).join('');
 }

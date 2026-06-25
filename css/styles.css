@@ -1308,15 +1308,17 @@
   .ql-open-btn:hover { background: rgba(124,111,247,.22); border-color: var(--accent); color: #a99fff; }
   .ql-card-detail {
     font-size: .76rem;
-    color: var(--text-2);
+    color: var(--text-3);
     word-break: break-word;
-    line-height: 1.55;
-    margin-top: .25rem;
-    padding-top: .45rem;
-    border-top: 1px solid var(--border);
-    max-height: 120px;
-    overflow-y: auto;
+    line-height: 1.5;
+    margin-top: .15rem;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
   }
+  .ql-card-detail * { display: inline; } /* แสดงเป็น preview ข้อความสั้นๆ ไม่ต้องคง format เต็มของ rich text */
+  .ql-card-detail img { display: none; }
   .ql-expand-btn {
     display: inline-flex;
     align-items: center;
@@ -1334,6 +1336,19 @@
     transition: background .12s, color .12s;
   }
   .ql-expand-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border-hover); }
+  .ql-img-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .68rem;
+    font-weight: 700;
+    color: var(--text-3);
+    background: var(--surface3);
+    border-radius: 6px;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+  }
   /* Read overlay */
   .ql-read-overlay {
     position: fixed; inset: 0;
@@ -1436,6 +1451,9 @@
   .ql-card-btn.pin         { color: var(--text-3); }
   .ql-card-btn.pin:hover   { background: #f59e0b22; color: #f59e0b; border-color: #f59e0b66; }
   .ql-card-btn.pin.pinned  { color: #f59e0b; border-color: #f59e0b66; background: #f59e0b15; }
+  .ql-card-btn.expand:hover     { background: var(--surface3); color: var(--text); }
+  .ql-card-btn.summarize        { color: var(--accent); border-color: rgba(124,111,247,.4); }
+  .ql-card-btn.summarize:hover  { background: var(--accent); color: #fff; border-color: var(--accent); }
   .ql-card.pinned { border-left-color: #f59e0b !important; }
   .ql-pin-badge {
     font-size: .65rem;
@@ -1539,35 +1557,31 @@
   .ql-related-row {
     display: flex;
     flex-wrap: wrap;
-    gap: .35rem;
-    margin-top: .4rem;
+    gap: .3rem;
+    margin-top: .25rem;
   }
   .ql-related-chip {
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    font-size: .68rem;
-    padding: .2rem .55rem;
+    font-size: .65rem;
+    padding: .14rem .45rem;
     border-radius: 6px;
     border: 1px solid var(--border);
     background: var(--surface2);
-    color: var(--text-2);
+    color: var(--text-3);
     cursor: pointer;
+    max-width: 130px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
   .ql-related-chip:hover { border-color: var(--accent); color: var(--accent); }
-  .ql-summarize-btn {
-    font-size: .68rem;
-    padding: .25rem .6rem;
-    border-radius: 6px;
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    background: transparent;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+  .ql-related-more {
+    font-size: .65rem;
+    color: var(--text-3);
+    align-self: center;
   }
-  .ql-summarize-btn:hover { background: var(--accent); color: #fff; }
 
   /* ── QL Filter bar ── */
   .ql-filter-bar {
@@ -1591,6 +1605,33 @@
   }
   .ql-filter-btn:hover  { color: var(--text); border-color: var(--border-hover); }
   .ql-filter-btn.active { background: var(--surface3); color: var(--text); border-color: var(--border-hover); }
+
+  .ql-search-wrap {
+    position: relative;
+    margin-top: .6rem;
+  }
+  .ql-search-wrap svg {
+    position: absolute;
+    left: .65rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-3);
+    pointer-events: none;
+  }
+  .ql-search-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: .45rem .7rem .45rem 2rem;
+    font-size: .78rem;
+    color: var(--text);
+    font-family: var(--font);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .ql-search-input::placeholder { color: var(--text-3); }
+  .ql-search-input:focus { border-color: var(--accent); }
 
   /* ── Finance tab ── */
   .fin-toolbar {
