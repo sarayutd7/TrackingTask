@@ -2431,12 +2431,13 @@
         </div>
       </div>
       <div class="field">
-        <label>รูปบิล/สลิป <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
+        <label id="billImageLabel">รูปบิล/สลิป <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
         <div class="fin-slip-row">
           <input type="file" id="billImageInput" accept="image/*" onchange="billImageChange(event)">
           <img class="fin-slip-preview" id="billImagePreview" alt="bill image preview">
           <button class="btn btn-ghost" id="billImageRemoveBtn" style="display:none" onclick="billRemoveImage()">ลบรูป</button>
         </div>
+        <span id="billImageHint" style="font-size:.72rem;color:var(--text-3);display:none">รูปนี้จะใช้เฉพาะเดือนที่กำลังดูอยู่ เดือนอื่นไม่เปลี่ยน</span>
       </div>
     </div>
     <div class="modal-actions">
@@ -3850,6 +3851,10 @@ function getBillMonthAmount(bill, month){
   const p = findBillPayment(month, bill.id);
   return (p && p.amount != null) ? p.amount : bill.amount;
 }
+function getBillMonthImage(bill, month){
+  const p = findBillPayment(month, bill.id);
+  return (p && p.image != null) ? p.image : (bill.image || '');
+}
 
 function loadFinPM(){
   let fromLS = [];
@@ -3972,7 +3977,7 @@ function billsChangeMonth(delta){
   renderBills();
 }
 
-function billRowHtml(bill, payment, dueDateStr, isOverdue, isDueSoon, amount){
+function billRowHtml(bill, payment, dueDateStr, isOverdue, isDueSoon, amount, image){
   const paid = !!(payment && payment.paid);
   const statusBadge = paid
     ? `<span class="bill-status-badge paid">จ่ายแล้ว</span>`
@@ -3982,7 +3987,7 @@ function billRowHtml(bill, payment, dueDateStr, isOverdue, isDueSoon, amount){
         ? `<span class="bill-status-badge duesoon">ใกล้ถึงกำหนด</span>`
         : `<span class="bill-status-badge pending">ยังไม่จ่าย</span>`;
   const inactiveBadge = bill.active ? '' : `<span class="fin-pm-badge">หยุดใช้งาน</span>`;
-  const imageThumb = bill.image ? `<img class="fin-slip-thumb" src="${bill.image}" onclick="window.open(this.src)" title="คลิกเพื่อดูรูปขนาดเต็ม">` : '';
+  const imageThumb = image ? `<img class="fin-slip-thumb" src="${image}" onclick="window.open(this.src)" title="คลิกเพื่อดูรูปขนาดเต็ม">` : '';
   return `
   <div class="fin-card bill-card ${paid?'paid':isOverdue?'overdue':isDueSoon?'duesoon':''}">
     ${imageThumb}
@@ -4100,7 +4105,7 @@ function renderBills(){
       dueSoonEl.innerHTML = `<div class="bill-section-title">ใกล้ถึงกำหนด / เกินกำหนด</div>` +
         dueSoonList.map(({bill, dueStr, state})=>{
           const p = payments.find(x=>x.billId===bill.id);
-          return billRowHtml(bill, p, dueStr, state==='overdue', state==='duesoon', getBillMonthAmount(bill, billsViewMonth));
+          return billRowHtml(bill, p, dueStr, state==='overdue', state==='duesoon', getBillMonthAmount(bill, billsViewMonth), getBillMonthImage(bill, billsViewMonth));
         }).join('');
     }
   }
@@ -4120,7 +4125,7 @@ function renderBills(){
       const diffDays = isCurrentMonth ? Math.round((dueD - todayD)/86400000) : null;
       const overdue = isCurrentMonth && diffDays!==null && diffDays<0 && !(p&&p.paid);
       const dueSoon = isCurrentMonth && diffDays!==null && diffDays>=0 && diffDays<=BILL_DUE_SOON_DAYS && !(p&&p.paid);
-      return billRowHtml(b, p, dueStr, overdue, dueSoon, getBillMonthAmount(b, billsViewMonth));
+      return billRowHtml(b, p, dueStr, overdue, dueSoon, getBillMonthAmount(b, billsViewMonth), getBillMonthImage(b, billsViewMonth));
     }).join('');
 }
 
@@ -4136,7 +4141,9 @@ function openBillModal(id=null){
     selectBillActive(b.active);
     document.getElementById('billAmountLabel').textContent = `จำนวนเงิน (บาท) — ${monthLabelTH(billsViewMonth)}`;
     document.getElementById('billAmountHint').style.display = '';
-    billImageData = b.image || '';
+    document.getElementById('billImageLabel').textContent = `รูปบิล/สลิป — ${monthLabelTH(billsViewMonth)}`;
+    document.getElementById('billImageHint').style.display = '';
+    billImageData = getBillMonthImage(b, billsViewMonth);
   } else {
     document.getElementById('billModalTitle').textContent = 'เพิ่มรายจ่ายประจำ';
     document.getElementById('billName').value = '';
@@ -4145,6 +4152,8 @@ function openBillModal(id=null){
     selectBillActive(true);
     document.getElementById('billAmountLabel').textContent = 'จำนวนเงิน (บาท)';
     document.getElementById('billAmountHint').style.display = 'none';
+    document.getElementById('billImageLabel').textContent = 'รูปบิล/สลิป';
+    document.getElementById('billImageHint').style.display = 'none';
     billImageData = '';
   }
   document.getElementById('billImageInput').value = '';
@@ -4204,12 +4213,12 @@ async function saveBill(){
   const bills = getBills();
   if(billEditId){
     const idx = bills.findIndex(x=>x.id===billEditId);
-    if(idx>-1) bills[idx] = { ...bills[idx], name, dueDay, active: isActive, image: billImageData, updatedAt: new Date().toISOString() };
-    // จำนวนเงินแก้ไขเฉพาะเดือนที่กำลังดูอยู่ (override) ไม่กระทบเดือนอื่น
+    if(idx>-1) bills[idx] = { ...bills[idx], name, dueDay, active: isActive, updatedAt: new Date().toISOString() };
+    // จำนวนเงินและรูปแก้ไขเฉพาะเดือนที่กำลังดูอยู่ (override) ไม่กระทบเดือนอื่น
     const payments = getBillPayments(billsViewMonth);
     let p = payments.find(x=>x.billId===billEditId);
-    if(p){ p.amount = amount; }
-    else { payments.push({ billId: billEditId, paid: false, paidDate: null, paidAmount: null, financeEntryId: null, amount }); }
+    if(p){ p.amount = amount; p.image = billImageData; }
+    else { payments.push({ billId: billEditId, paid: false, paidDate: null, paidAmount: null, financeEntryId: null, amount, image: billImageData }); }
     setBillPayments(billsViewMonth, payments);
   } else {
     bills.push({
