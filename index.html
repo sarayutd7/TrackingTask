@@ -586,6 +586,40 @@
   </div>
 </div>
 
+<!-- Bill Pay Log Modal -->
+<div class="overlay" id="billPayOverlay" style="display:none" onclick="billPayCloseOnBg(event)">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <span class="modal-title">บันทึกการจ่าย</span>
+      <button class="close-btn" onclick="closeBillPayModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>เวลา <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
+        <input type="time" id="billPayTime">
+      </div>
+      <div class="field">
+        <label>รูปแบบการจ่าย</label>
+        <div class="fin-pm-row" id="billPayPMRow"></div>
+        <a class="fin-pm-manage-link" onclick="openFinPMModal()">+ จัดการรูปแบบการจ่าย</a>
+      </div>
+      <div class="field">
+        <label>รายการเพิ่มเติม <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
+        <textarea id="billPayNote" placeholder="บันทึกเพิ่มเติม..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeBillPayModal()">ยกเลิก</button>
+      <button class="btn btn-accent" onclick="confirmBillPay()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        บันทึกว่าจ่ายแล้ว
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Account Modal -->
 <div class="overlay" id="accountOverlay" style="display:none" onclick="if(event.target===this) closeAccountModal()">
   <div class="modal" style="max-width:420px">

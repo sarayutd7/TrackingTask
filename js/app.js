@@ -1584,6 +1584,9 @@ function billRowHtml(bill, payment, dueDateStr, isOverdue, isDueSoon, amount, im
         : `<span class="bill-status-badge pending">ยังไม่จ่าย</span>`;
   const inactiveBadge = bill.active ? '' : `<span class="fin-pm-badge">หยุดใช้งาน</span>`;
   const imageThumb = image ? `<img class="fin-slip-thumb" src="${image}" onclick="showImagePreview(this.src)" title="คลิกเพื่อดูรูปขนาดเต็ม">` : '';
+  const pmBadge = (paid && payment && payment.paymentMethod) ? `<span class="fin-pm-badge">${esc(payment.paymentMethod)}</span>` : '';
+  const payTimeBadge = (paid && payment && payment.payTime) ? `<span class="fin-card-time">จ่ายเวลา ${esc(payment.payTime)}</span>` : '';
+  const payNoteHtml = (paid && payment && payment.payNote) ? `<div class="fin-card-note">${esc(payment.payNote)}</div>` : '';
   return `
   <div class="fin-card bill-card ${paid?'paid':isOverdue?'overdue':isDueSoon?'duesoon':''}">
     ${imageThumb}
@@ -1595,7 +1598,8 @@ function billRowHtml(bill, payment, dueDateStr, isOverdue, isDueSoon, amount, im
         </div>
         <div class="fin-card-amount expense">-${finFmtMoney(amount)}</div>
       </div>
-      <div class="fin-card-meta">${statusBadge}${inactiveBadge}</div>
+      <div class="fin-card-meta">${statusBadge}${inactiveBadge}${pmBadge}${payTimeBadge}</div>
+      ${payNoteHtml}
     </div>
     <div class="fin-card-actions">
       <button class="fin-card-btn" onclick="toggleBillPaid('${esc(bill.id)}')" title="${paid?'ยกเลิกจ่าย':'มาร์คว่าจ่ายแล้ว'}">
@@ -1857,47 +1861,106 @@ async function deleteBill(id){
   renderBills();
 }
 
+let billPayBillId = null;
+let selectedBillPayPM = '';
+
 async function toggleBillPaid(billId){
   const bill = getBills().find(b=>b.id===billId);
   if(!bill) return;
   const payments = getBillPayments(billsViewMonth);
-  let p = payments.find(x=>x.billId===billId);
+  const p = payments.find(x=>x.billId===billId);
 
   if(p && p.paid){
     if(p.financeEntryId && p.paidDate){
       setFinance(p.paidDate, getFinance(p.paidDate).filter(e=>e.id!==p.financeEntryId));
     }
     p.paid = false; p.paidDate = null; p.paidAmount = null; p.financeEntryId = null;
+    p.paymentMethod = ''; p.payTime = ''; p.payNote = '';
+    setBillPayments(billsViewMonth, payments);
+    await writeFile();
+    renderBills();
+    if(typeof renderFinance === 'function') renderFinance();
   } else {
-    const monthAmount = getBillMonthAmount(bill, billsViewMonth);
-    const paidDate = today;
-    const financeId = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-    const entries = getFinance(paidDate);
-    const now = new Date();
-    entries.push({
-      id: financeId,
-      type: 'expense',
-      item: bill.name,
-      amount: monthAmount,
-      time: `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
-      paymentMethod: '',
-      note: `รายจ่ายประจำ (auto) — ${monthLabelTH(billsViewMonth)}`,
-      slip: '',
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString(),
-      billId: bill.id
-    });
-    setFinance(paidDate, entries);
-
-    if(!p){
-      p = { billId, paid: true, paidDate, paidAmount: monthAmount, financeEntryId: financeId };
-      payments.push(p);
-    } else {
-      p.paid = true; p.paidDate = paidDate; p.paidAmount = monthAmount; p.financeEntryId = financeId;
-    }
+    openBillPayModal(billId);
   }
+}
+
+function openBillPayModal(billId){
+  billPayBillId = billId;
+  const now = new Date();
+  document.getElementById('billPayTime').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  document.getElementById('billPayNote').value = '';
+  selectedBillPayPM = '';
+  renderBillPayPMRow();
+  document.getElementById('billPayOverlay').style.display = 'flex';
+}
+
+function closeBillPayModal(){
+  document.getElementById('billPayOverlay').style.display = 'none';
+  billPayBillId = null;
+}
+
+function billPayCloseOnBg(e){
+  if(e.target.id === 'billPayOverlay') closeBillPayModal();
+}
+
+function renderBillPayPMRow(){
+  const row = document.getElementById('billPayPMRow');
+  if(!row) return;
+  row.innerHTML = FINPM.map(pm=>
+    `<button class="fin-pm-pill ${pm===selectedBillPayPM?'active':''}" data-pm="${esc(pm)}" onclick="selectBillPayPM('${esc(pm)}')">${esc(pm)}</button>`
+  ).join('');
+}
+
+function selectBillPayPM(pm){
+  selectedBillPayPM = (selectedBillPayPM===pm) ? '' : pm;
+  document.querySelectorAll('#billPayPMRow .fin-pm-pill').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.pm === selectedBillPayPM);
+  });
+}
+
+async function confirmBillPay(){
+  const billId = billPayBillId;
+  const bill = getBills().find(b=>b.id===billId);
+  if(!bill) return;
+  const payments = getBillPayments(billsViewMonth);
+  let p = payments.find(x=>x.billId===billId);
+
+  const monthAmount = getBillMonthAmount(bill, billsViewMonth);
+  const paidDate = today;
+  const financeId = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const entries = getFinance(paidDate);
+  const now = new Date();
+  const payTime = document.getElementById('billPayTime').value || '';
+  const payNote = document.getElementById('billPayNote').value.trim();
+  entries.push({
+    id: financeId,
+    type: 'expense',
+    item: bill.name,
+    amount: monthAmount,
+    time: payTime,
+    paymentMethod: selectedBillPayPM,
+    note: payNote || `รายจ่ายประจำ (auto) — ${monthLabelTH(billsViewMonth)}`,
+    slip: '',
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+    billId: bill.id
+  });
+  setFinance(paidDate, entries);
+
+  if(!p){
+    p = { billId, paid: true, paidDate, paidAmount: monthAmount, financeEntryId: financeId };
+    payments.push(p);
+  } else {
+    p.paid = true; p.paidDate = paidDate; p.paidAmount = monthAmount; p.financeEntryId = financeId;
+  }
+  p.paymentMethod = selectedBillPayPM;
+  p.payTime = payTime;
+  p.payNote = payNote;
+
   setBillPayments(billsViewMonth, payments);
   await writeFile();
+  closeBillPayModal();
   renderBills();
   if(typeof renderFinance === 'function') renderFinance();
 }
@@ -2091,6 +2154,7 @@ async function finPMAdd(){
   saveFinPM();
   renderFinPMManageList();
   renderFinPMRow();
+  renderBillPayPMRow();
   input.value = '';
   input.focus();
 }
@@ -2099,9 +2163,11 @@ async function finPMDelete(i){
   const pm = FINPM[i];
   FINPM.splice(i,1);
   if(selectedFinPM === pm) selectedFinPM = '';
+  if(selectedBillPayPM === pm) selectedBillPayPM = '';
   saveFinPM();
   renderFinPMManageList();
   renderFinPMRow();
+  renderBillPayPMRow();
 }
 
 // ── Initial render (ต้องอยู่ท้ายสุด เพื่อให้ const ทุกตัวถูก initialize ก่อน) ──
