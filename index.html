@@ -1719,7 +1719,7 @@
     border-radius: var(--r);
   }
   .bill-card { border-left-color: var(--gray); }
-  .bill-card.duesoon { border-left-color: var(--yellow); background: var(--yellow-dim); }
+  .bill-card.duesoon { border-left-color: var(--yellow); background: var(--yellow-dim); margin-top: .6rem; }
   .bill-card.overdue { border-left-color: var(--red); background: var(--red-dim); }
   .bill-card.paid { border-left-color: var(--teal); background: var(--teal-dim); opacity: .75; }
   .bill-status-badge {
@@ -2140,8 +2140,6 @@
           เพิ่มรายจ่ายประจำ
         </button>
       </div>
-
-      <div class="bill-section" id="billDueSoonSection"></div>
 
       <div class="fin-list" id="billListBody"></div>
 
@@ -4249,19 +4247,6 @@ function renderBills(){
   const forecastEl = document.getElementById('billForecastNote');
   if(forecastEl){
     forecastEl.innerHTML = `<div class="bill-forecast-note">📅 คาดการณ์เดือนหน้า (${monthLabelTH(nextMonth)}): ประมาณ <b>${finFmtMoney(nextMonthForecast)}</b> บาท</div>`;
-  }
-
-  const dueSoonEl = document.getElementById('billDueSoonSection');
-  if(dueSoonEl){
-    if(!isCurrentMonth || !dueSoonList.length){
-      dueSoonEl.innerHTML = '';
-    } else {
-      dueSoonEl.innerHTML = `<div class="bill-section-title">ใกล้ถึงกำหนด / เกินกำหนด</div>` +
-        dueSoonList.map(({bill, dueStr, state})=>{
-          const p = payments.find(x=>x.billId===bill.id);
-          return billRowHtml(bill, p, dueStr, state==='overdue', state==='duesoon', getBillMonthAmount(bill, billsViewMonth), getBillMonthImage(bill, billsViewMonth));
-        }).join('');
-    }
   }
 
   const listEl = document.getElementById('billListBody');
