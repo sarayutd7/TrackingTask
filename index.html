@@ -1718,10 +1718,10 @@
     border-left: 3px solid var(--amber);
     border-radius: var(--r);
   }
-  .bill-card { border-left-color: var(--navy); }
+  .bill-card { border-left-color: var(--gray); }
   .bill-card.duesoon { border-left-color: var(--yellow); background: var(--yellow-dim); }
   .bill-card.overdue { border-left-color: var(--red); background: var(--red-dim); }
-  .bill-card.paid { border-left-color: var(--blue); opacity: .65; }
+  .bill-card.paid { border-left-color: var(--teal); background: var(--teal-dim); opacity: .75; }
   .bill-status-badge {
     display: inline-flex;
     align-items: center;
@@ -1731,10 +1731,39 @@
     border-radius: 99px;
     border: 1px solid var(--border);
   }
-  .bill-status-badge.paid    { color: var(--blue); background: var(--blue-dim); border-color: var(--blue); }
-  .bill-status-badge.pending { color: var(--text-2); background: var(--surface3); }
+  .bill-status-badge.paid    { color: var(--teal); background: var(--teal-dim); border-color: var(--teal); }
+  .bill-status-badge.pending { color: var(--gray); background: var(--gray-dim); border-color: var(--gray); }
   .bill-status-badge.duesoon { color: var(--yellow); background: var(--yellow-dim); border-color: var(--yellow); }
   .bill-status-badge.overdue { color: var(--red); background: var(--red-dim); border-color: var(--red); }
+
+  .bill-group-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1rem 0;
+  }
+  .bill-group-title {
+    font-size: .76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    margin-bottom: .5rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .bill-group-title .bill-group-count {
+    font-size: .68rem;
+    font-weight: 600;
+    padding: .05rem .5rem;
+    border-radius: 99px;
+    background: var(--surface3);
+  }
+  .bill-group-title.overdue { color: var(--red); }
+  .bill-group-title.duesoon { color: var(--yellow); }
+  .bill-group-title.paid    { color: var(--teal); }
+  .bill-group-title.pending { color: var(--gray); }
+  .bill-group { margin-bottom: .9rem; }
+  .bill-group .fin-list { margin-bottom: 0; }
   #finBillsPane .btn-accent { background: var(--navy); border-color: var(--navy); }
   #finBillsPane .btn-accent:hover { background: #2f4fc0; border-color: #2f4fc0; }
 
@@ -4241,17 +4270,39 @@ function renderBills(){
     listEl.innerHTML = '<span class="ql-empty">ยังไม่มีรายจ่ายประจำ — กด + เพิ่มรายจ่ายประจำ</span>';
     return;
   }
-  listEl.innerHTML = bills
+
+  const rows = bills
     .map(b=>({ b, dueStr: clampDueDate(billsViewMonth, b.dueDay) }))
     .sort((x,y)=>x.dueStr.localeCompare(y.dueStr))
     .map(({b, dueStr})=>{
       const p = payments.find(x=>x.billId===b.id);
+      const paid = !!(p && p.paid);
       const dueD = new Date(dueStr+'T00:00:00');
       const diffDays = isCurrentMonth ? Math.round((dueD - todayD)/86400000) : null;
-      const overdue = isCurrentMonth && diffDays!==null && diffDays<0 && !(p&&p.paid);
-      const dueSoon = isCurrentMonth && diffDays!==null && diffDays>=0 && diffDays<=BILL_DUE_SOON_DAYS && !(p&&p.paid);
-      return billRowHtml(b, p, dueStr, overdue, dueSoon, getBillMonthAmount(b, billsViewMonth), getBillMonthImage(b, billsViewMonth));
-    }).join('');
+      const overdue = isCurrentMonth && diffDays!==null && diffDays<0 && !paid;
+      const dueSoon = isCurrentMonth && diffDays!==null && diffDays>=0 && diffDays<=BILL_DUE_SOON_DAYS && !paid;
+      const group = paid ? 'paid' : overdue ? 'overdue' : dueSoon ? 'duesoon' : 'pending';
+      const html = billRowHtml(b, p, dueStr, overdue, dueSoon, getBillMonthAmount(b, billsViewMonth), getBillMonthImage(b, billsViewMonth));
+      return { group, html };
+    });
+
+  const groupOrder = [
+    { key: 'overdue', label: 'เกินกำหนด' },
+    { key: 'duesoon', label: 'ใกล้ถึงกำหนด' },
+    { key: 'paid',    label: 'จ่ายแล้ว' },
+    { key: 'pending', label: 'รอชำระ' },
+  ];
+  const sections = [];
+  groupOrder.forEach(({key, label})=>{
+    const items = rows.filter(r=>r.group===key);
+    if(!items.length) return;
+    sections.push(`
+      <div class="bill-group">
+        <div class="bill-group-title ${key}">${label} <span class="bill-group-count">${items.length}</span></div>
+        <div class="fin-list">${items.map(r=>r.html).join('')}</div>
+      </div>`);
+  });
+  listEl.innerHTML = sections.join('<hr class="bill-group-divider">');
 }
 
 function openBillModal(id=null){
