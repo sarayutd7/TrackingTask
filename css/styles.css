@@ -1608,30 +1608,32 @@
 
   .ql-search-wrap {
     position: relative;
-    margin-top: .6rem;
+    margin-top: .75rem;
   }
   .ql-search-wrap svg {
     position: absolute;
-    left: .65rem;
+    left: .9rem;
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-3);
     pointer-events: none;
+    width: 16px;
+    height: 16px;
   }
   .ql-search-input {
     width: 100%;
     background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    padding: .45rem .7rem .45rem 2rem;
-    font-size: .78rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: .75rem .9rem .75rem 2.6rem;
+    font-size: .92rem;
     color: var(--text);
     font-family: var(--font);
     outline: none;
-    transition: border-color .15s;
+    transition: border-color .15s, box-shadow .15s;
   }
   .ql-search-input::placeholder { color: var(--text-3); }
-  .ql-search-input:focus { border-color: var(--accent); }
+  .ql-search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,111,247,.18); }
 
   /* ── Finance tab ── */
   .fin-toolbar {
