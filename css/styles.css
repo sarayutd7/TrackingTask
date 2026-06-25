@@ -548,6 +548,16 @@
     cursor: pointer;
   }
   .lock-footer a:hover { color: var(--text-2); }
+  .lock-forgot-link {
+    display: block;
+    margin-top: .7rem;
+    font-size: .73rem;
+    color: var(--text-3);
+    text-decoration: underline;
+    cursor: pointer;
+    text-align: center;
+  }
+  .lock-forgot-link:hover { color: var(--text-2); }
   @keyframes lockShake {
     0%,100%{ transform:translateX(0) }
     20%    { transform:translateX(-8px) }

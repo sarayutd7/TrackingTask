@@ -26,8 +26,32 @@
         <input class="lock-input" type="password" inputmode="numeric" pattern="\d*" maxlength="6" id="lockPwConfirm" placeholder="ยืนยัน PIN 6 หลัก" style="display:none" autocomplete="new-password" onkeydown="if(event.key==='Enter') lockSubmit()">
         <div class="lock-error" id="lockError"></div>
         <button class="lock-submit" id="lockSubmitBtn" onclick="lockSubmit()">เข้าสู่ระบบ</button>
+        <a class="lock-forgot-link" id="lockForgotLink" onclick="showForgotPinScreen()">ลืม PIN?</a>
       </div>
       <div class="lock-footer" id="lockFooter"></div>
+    </div>
+  </div>
+
+  <!-- Forgot PIN (ลืม PIN — ขอรหัสยืนยันทางอีเมล) -->
+  <div class="lock-screen" id="forgotPinScreen" style="display:none">
+    <div class="lock-box" id="forgotPinBox">
+      <div class="lock-icon">📧</div>
+      <div class="lock-title">ลืม PIN?</div>
+      <div class="lock-sub" id="forgotPinSub">ใส่ชื่อผู้ใช้และอีเมลที่ลงทะเบียนไว้ เพื่อรับรหัสยืนยัน</div>
+      <div class="lock-fields" id="forgotPinStep1">
+        <input class="lock-input" type="text" id="forgotPinUser" placeholder="ชื่อผู้ใช้ (username)" autocomplete="username" onkeydown="if(event.key==='Enter') submitForgotPinRequest()">
+        <input class="lock-input" type="email" id="forgotPinEmail" placeholder="อีเมลที่ลงทะเบียนไว้" autocomplete="email" onkeydown="if(event.key==='Enter') submitForgotPinRequest()">
+        <div class="lock-error" id="forgotPinError"></div>
+        <button class="lock-submit" onclick="submitForgotPinRequest()">ส่งรหัสยืนยัน</button>
+      </div>
+      <div class="lock-fields" id="forgotPinStep2" style="display:none">
+        <input class="lock-input" type="text" inputmode="numeric" pattern="\d*" maxlength="6" id="forgotPinCode" placeholder="รหัสยืนยัน 6 หลักจากอีเมล" onkeydown="if(event.key==='Enter') submitForgotPinConfirm()">
+        <input class="lock-input" type="password" inputmode="numeric" pattern="\d*" maxlength="6" id="forgotPinNewPin" placeholder="PIN ใหม่ 6 หลัก" onkeydown="if(event.key==='Enter') submitForgotPinConfirm()">
+        <input class="lock-input" type="password" inputmode="numeric" pattern="\d*" maxlength="6" id="forgotPinNewPinConfirm" placeholder="ยืนยัน PIN ใหม่" onkeydown="if(event.key==='Enter') submitForgotPinConfirm()">
+        <div class="lock-error" id="forgotPinConfirmError"></div>
+        <button class="lock-submit" onclick="submitForgotPinConfirm()">ตั้ง PIN ใหม่</button>
+      </div>
+      <div class="lock-footer"><a onclick="hideForgotPinScreen()">กลับไปเข้าสู่ระบบ</a></div>
     </div>
   </div>
 
@@ -684,6 +708,7 @@
   </div>
 </div>
 
+<script src="js/auth.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

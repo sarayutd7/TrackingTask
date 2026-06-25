@@ -286,6 +286,73 @@ export default {
       return jsonResponse({ ok: true }, 200, CORS_HEADERS);
     }
 
+    if (url.pathname === "/forgot-pin" && request.method === "POST") {
+      let body;
+      try {
+        body = await request.json();
+      } catch (e) {
+        return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
+      }
+      const { username, email } = body || {};
+      if (typeof username !== "string" || !USERNAME_RE.test(username)) {
+        return jsonResponse({ error: "Invalid username" }, 400, CORS_HEADERS);
+      }
+      // ตอบ ok เสมอไม่ว่า username/email จะตรงกับระบบหรือไม่ เพื่อไม่ให้เดา username ในระบบได้
+      const recordRaw = await env.TRACKING_TASK_KV.get(`user:${username}`);
+      if (recordRaw) {
+        const userRec = JSON.parse(recordRaw);
+        if (userRec.email && typeof email === "string" && email.trim().toLowerCase() === userRec.email.trim().toLowerCase()) {
+          const code = String(Math.floor(100000 + Math.random() * 900000));
+          const now = Math.floor(Date.now() / 1000);
+          userRec.resetCode = code;
+          userRec.resetCodeExpires = now + 15 * 60; // 15 นาที
+          await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
+          // TODO: ส่งอีเมลจริงเมื่อมี domain onboard กับ Cloudflare Email Sending แล้ว
+          await sendEmail(env, {
+            to: userRec.email,
+            subject: "รหัสยืนยันสำหรับรีเซ็ต PIN — TrackingTask",
+            text: `รหัสยืนยันของคุณคือ ${code} (มีอายุ 15 นาที) ใช้รหัสนี้เพื่อตั้ง PIN ใหม่สำหรับบัญชี ${username}`,
+          });
+        }
+      }
+      return jsonResponse({ ok: true }, 200, CORS_HEADERS);
+    }
+
+    if (url.pathname === "/forgot-pin/confirm" && request.method === "POST") {
+      let body;
+      try {
+        body = await request.json();
+      } catch (e) {
+        return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
+      }
+      const { username, code, newPin } = body || {};
+      if (typeof username !== "string" || !USERNAME_RE.test(username)) {
+        return jsonResponse({ error: "Invalid username" }, 400, CORS_HEADERS);
+      }
+      if (typeof newPin !== "string" || !PIN_RE.test(newPin)) {
+        return jsonResponse({ error: "PIN ต้องเป็นตัวเลข 6 หลักเท่านั้น" }, 400, CORS_HEADERS);
+      }
+      const recordRaw = await env.TRACKING_TASK_KV.get(`user:${username}`);
+      if (!recordRaw) {
+        return jsonResponse({ error: "รหัสยืนยันไม่ถูกต้องหรือหมดอายุ" }, 400, CORS_HEADERS);
+      }
+      const userRec = JSON.parse(recordRaw);
+      const now = Math.floor(Date.now() / 1000);
+      if (!userRec.resetCode || typeof code !== "string" || code !== userRec.resetCode || !userRec.resetCodeExpires || now > userRec.resetCodeExpires) {
+        return jsonResponse({ error: "รหัสยืนยันไม่ถูกต้องหรือหมดอายุ" }, 400, CORS_HEADERS);
+      }
+      const { salt, hash } = await hashPassword(newPin);
+      userRec.salt = salt;
+      userRec.hash = hash;
+      userRec.mustResetPin = false;
+      userRec.failedAttempts = 0;
+      userRec.locked = false;
+      delete userRec.resetCode;
+      delete userRec.resetCodeExpires;
+      await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
+      return jsonResponse({ ok: true }, 200, CORS_HEADERS);
+    }
+
     if (url.pathname === "/account" && request.method === "GET") {
       const username = await getAuthUser(request, env);
       if (!username) {
