@@ -1046,8 +1046,11 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 99px; }
 
-  @media (max-width: 680px) {
+  @media (max-width: 820px) {
     .board { grid-template-columns: 1fr !important; }
+  }
+
+  @media (max-width: 680px) {
     .stats { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
     .stat-card { padding: .75rem; }
     .stat-num { font-size: 1.2rem; }

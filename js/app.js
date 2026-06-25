@@ -163,7 +163,7 @@ function switchTab(tab){
   document.getElementById('tabBtnTool').classList.toggle('active',    tab==='tool');
   document.getElementById('tabBtnFinance').classList.toggle('active', tab==='finance');
   if(tab==='tool')    renderDL();
-  if(tab==='finance'){ renderFinance(); if(finSubTab==='bills') renderBills(); }
+  if(tab==='finance'){ renderFinance(); if(finSubTab==='bills') renderBills(); if(finSubTab==='income') renderIncomeSources(); }
 }
 
 // ── Status selector ─────────────────────────────────
@@ -1461,9 +1461,11 @@ function finSetSubTab(tab){
   document.querySelectorAll('#finSubTabBar .ql-filter-btn').forEach(btn=>{
     btn.classList.toggle('active', btn.dataset.subtab === tab);
   });
-  document.getElementById('finListPane').style.display  = tab==='list'  ? '' : 'none';
-  document.getElementById('finBillsPane').style.display = tab==='bills' ? '' : 'none';
+  document.getElementById('finListPane').style.display   = tab==='list'   ? '' : 'none';
+  document.getElementById('finBillsPane').style.display  = tab==='bills'  ? '' : 'none';
+  document.getElementById('finIncomePane').style.display = tab==='income' ? '' : 'none';
   if(tab==='bills') renderBills();
+  if(tab==='income') renderIncomeSources();
 }
 
 const finEditSvg = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
@@ -1633,7 +1635,6 @@ function renderBills(){
 
   const statsEl = document.getElementById('billStatsGrid');
   if(statsEl){
-    statsEl.style.gridTemplateColumns = 'repeat(5, 1fr)';
     statsEl.innerHTML = `
     <div class="stat-card">
       <div class="stat-icon navy"><svg width="18" height="18" fill="none" stroke="var(--navy)" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
@@ -1968,6 +1969,323 @@ async function confirmBillPay(){
   closeBillPayModal();
   renderBills();
   if(typeof renderFinance === 'function') renderFinance();
+}
+
+// ── รายรับเสริม (Income Sources + Log การรับ) ─────────
+let incomeSourceEditId = null;
+let selectedIncomeSourcePM = '';
+let selectedIncomeLogPM = '';
+let incomeLogSourceId = null;
+let incomeHistorySourceId = null;
+
+function getIncomeSources(){ return Array.isArray(DB._incomeSources) ? DB._incomeSources : (DB._incomeSources = []); }
+function setIncomeSources(arr){ DB._incomeSources = arr; }
+function getIncomeLogs(){ return Array.isArray(DB._incomeLogs) ? DB._incomeLogs : (DB._incomeLogs = []); }
+function setIncomeLogs(arr){ DB._incomeLogs = arr; }
+
+function openIncomeSourceModal(id=null){
+  incomeSourceEditId = id;
+  if(id){
+    const s = getIncomeSources().find(x=>x.id===id);
+    if(!s) return;
+    document.getElementById('incomeSourceModalTitle').textContent = 'แก้ไขแหล่งรายรับ';
+    document.getElementById('incomeSourceName').value = s.name;
+    document.getElementById('incomeSourceAmount').value = s.amount || '';
+    selectIncomeSourceActive(s.active);
+    selectedIncomeSourcePM = s.paymentMethod || '';
+    document.getElementById('incomeSourceNote').value = s.note || '';
+  } else {
+    document.getElementById('incomeSourceModalTitle').textContent = 'เพิ่มแหล่งรายรับ';
+    document.getElementById('incomeSourceName').value = '';
+    document.getElementById('incomeSourceAmount').value = '';
+    selectIncomeSourceActive(true);
+    selectedIncomeSourcePM = '';
+    document.getElementById('incomeSourceNote').value = '';
+  }
+  renderIncomeSourcePMRow();
+  document.getElementById('incomeSourceOverlay').style.display = 'flex';
+  setTimeout(()=>document.getElementById('incomeSourceName').focus(), 60);
+}
+
+function closeIncomeSourceModal(){
+  const el = document.getElementById('incomeSourceOverlay');
+  if(el) el.style.display = 'none';
+  incomeSourceEditId = null;
+}
+function incomeSourceCloseOnBg(e){ if(e.target===document.getElementById('incomeSourceOverlay')) closeIncomeSourceModal(); }
+
+function selectIncomeSourceActive(isActive){
+  document.querySelectorAll('#incomeSourceActiveRow .fin-type-pill').forEach(btn=>{
+    btn.classList.toggle('active', (btn.dataset.active==='true') === isActive);
+  });
+  document.getElementById('incomeSourceActiveRow').dataset.value = isActive ? 'true' : 'false';
+}
+
+function renderIncomeSourcePMRow(){
+  const row = document.getElementById('incomeSourcePMRow');
+  if(!row) return;
+  row.innerHTML = FINPM.map(pm=>
+    `<button class="fin-pm-pill ${pm===selectedIncomeSourcePM?'active':''}" data-pm="${esc(pm)}" onclick="selectIncomeSourcePM('${esc(pm)}')">${esc(pm)}</button>`
+  ).join('');
+}
+function selectIncomeSourcePM(pm){
+  selectedIncomeSourcePM = (selectedIncomeSourcePM===pm) ? '' : pm;
+  document.querySelectorAll('#incomeSourcePMRow .fin-pm-pill').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.pm === selectedIncomeSourcePM);
+  });
+}
+
+async function saveIncomeSource(){
+  const name = document.getElementById('incomeSourceName').value.trim();
+  const amount = parseFloat(document.getElementById('incomeSourceAmount').value) || 0;
+  if(!name){ document.getElementById('incomeSourceName').focus(); return; }
+  const isActive = document.getElementById('incomeSourceActiveRow').dataset.value !== 'false';
+  const note = document.getElementById('incomeSourceNote').value.trim();
+  const sources = getIncomeSources();
+  if(incomeSourceEditId){
+    const idx = sources.findIndex(x=>x.id===incomeSourceEditId);
+    if(idx>-1) sources[idx] = { ...sources[idx], name, amount, active: isActive, paymentMethod: selectedIncomeSourcePM, note, updatedAt: new Date().toISOString() };
+  } else {
+    sources.push({
+      id: Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+      name, amount, active: isActive, paymentMethod: selectedIncomeSourcePM, note,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+    });
+  }
+  setIncomeSources(sources);
+  closeIncomeSourceModal();
+  await writeFile();
+  renderIncomeSources();
+}
+
+async function deleteIncomeSource(id){
+  const hasHistory = getIncomeLogs().some(l=>l.sourceId===id);
+  if(hasHistory && !confirm('แหล่งรายรับนี้มีประวัติการรับเงินแล้ว ต้องการลบทิ้งทั้งหมดหรือไม่? (ประวัติรายการในแท็บ "รายการ" จะยังอยู่)')) return;
+  setIncomeSources(getIncomeSources().filter(x=>x.id!==id));
+  setIncomeLogs(getIncomeLogs().filter(l=>l.sourceId!==id));
+  await writeFile();
+  renderIncomeSources();
+}
+
+function openIncomeLogModal(sourceId){
+  const source = getIncomeSources().find(x=>x.id===sourceId);
+  if(!source) return;
+  incomeLogSourceId = sourceId;
+  const now = new Date();
+  document.getElementById('incomeLogAmount').value = source.amount || '';
+  document.getElementById('incomeLogDate').value = today;
+  document.getElementById('incomeLogTime').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  document.getElementById('incomeLogNote').value = source.note || '';
+  selectedIncomeLogPM = source.paymentMethod || '';
+  renderIncomeLogPMRow();
+  document.getElementById('incomeLogOverlay').style.display = 'flex';
+  setTimeout(()=>document.getElementById('incomeLogAmount').focus(), 60);
+}
+
+function closeIncomeLogModal(){
+  const el = document.getElementById('incomeLogOverlay');
+  if(el) el.style.display = 'none';
+  incomeLogSourceId = null;
+}
+function incomeLogCloseOnBg(e){ if(e.target===document.getElementById('incomeLogOverlay')) closeIncomeLogModal(); }
+
+function renderIncomeLogPMRow(){
+  const row = document.getElementById('incomeLogPMRow');
+  if(!row) return;
+  row.innerHTML = FINPM.map(pm=>
+    `<button class="fin-pm-pill ${pm===selectedIncomeLogPM?'active':''}" data-pm="${esc(pm)}" onclick="selectIncomeLogPM('${esc(pm)}')">${esc(pm)}</button>`
+  ).join('');
+}
+function selectIncomeLogPM(pm){
+  selectedIncomeLogPM = (selectedIncomeLogPM===pm) ? '' : pm;
+  document.querySelectorAll('#incomeLogPMRow .fin-pm-pill').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.pm === selectedIncomeLogPM);
+  });
+}
+
+async function confirmIncomeLog(){
+  const source = getIncomeSources().find(x=>x.id===incomeLogSourceId);
+  if(!source) return;
+  const amount = parseFloat(document.getElementById('incomeLogAmount').value);
+  if(!amount || amount<=0){ document.getElementById('incomeLogAmount').focus(); return; }
+  const date = document.getElementById('incomeLogDate').value || today;
+  const time = document.getElementById('incomeLogTime').value || '';
+  const note = document.getElementById('incomeLogNote').value.trim();
+  const now = new Date();
+  const financeId = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+  const entries = getFinance(date);
+  entries.push({
+    id: financeId,
+    type: 'income',
+    item: source.name,
+    amount,
+    time,
+    paymentMethod: selectedIncomeLogPM,
+    note: note || `รายรับเสริม — ${source.name}`,
+    slip: '',
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+    incomeSourceId: source.id
+  });
+  setFinance(date, entries);
+
+  const logs = getIncomeLogs();
+  logs.push({
+    id: Date.now().toString(36)+Math.random().toString(36).slice(2,8),
+    sourceId: source.id,
+    amount, date, time,
+    paymentMethod: selectedIncomeLogPM,
+    note,
+    financeEntryId: financeId,
+    createdAt: now.toISOString()
+  });
+  setIncomeLogs(logs);
+
+  await writeFile();
+  closeIncomeLogModal();
+  renderIncomeSources();
+  if(typeof renderFinance === 'function') renderFinance();
+}
+
+async function deleteIncomeLog(logId){
+  const logs = getIncomeLogs();
+  const log = logs.find(l=>l.id===logId);
+  if(!log) return;
+  if(log.financeEntryId){
+    setFinance(log.date, getFinance(log.date).filter(e=>e.id!==log.financeEntryId));
+  }
+  setIncomeLogs(logs.filter(l=>l.id!==logId));
+  await writeFile();
+  renderIncomeHistory(incomeHistorySourceId);
+  renderIncomeSources();
+  if(typeof renderFinance === 'function') renderFinance();
+}
+
+function incomeSourceRowHtml(source, logsThisMonth, totalThisMonth){
+  const inactiveBadge = source.active ? '' : `<span class="fin-pm-badge">หยุดใช้งาน</span>`;
+  const pmBadge = source.paymentMethod ? `<span class="fin-pm-badge">${esc(source.paymentMethod)}</span>` : '';
+  const lastLog = logsThisMonth[0];
+  const lastInfo = lastLog ? `ล่าสุด ${lastLog.date.slice(-2)}/${lastLog.date.slice(5,7)} — ${finFmtMoney(lastLog.amount)} บาท` : 'ยังไม่มีรายการเดือนนี้';
+  return `
+  <div class="fin-card bill-card">
+    <div class="fin-card-main">
+      <div class="fin-card-top">
+        <div>
+          <div class="fin-card-item">${esc(source.name)}</div>
+          <span class="fin-card-time">${esc(lastInfo)}</span>
+        </div>
+        <div class="fin-card-amount income">+${finFmtMoney(totalThisMonth)}</div>
+      </div>
+      <div class="fin-card-meta">
+        <span class="bill-status-badge pending">${logsThisMonth.length} ครั้งเดือนนี้</span>
+        ${pmBadge}${inactiveBadge}
+      </div>
+    </div>
+    <div class="fin-card-actions">
+      <button class="fin-card-btn" onclick="openIncomeLogModal('${esc(source.id)}')" title="บันทึกว่าได้รับ">
+        <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <button class="fin-card-btn" onclick="openIncomeHistory('${esc(source.id)}')" title="ดูประวัติการรับ">
+        <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+      </button>
+      <button class="fin-card-btn edit" onclick="openIncomeSourceModal('${esc(source.id)}')" title="แก้ไข">${finEditSvg}</button>
+      <button class="fin-card-btn del"  onclick="deleteIncomeSource('${esc(source.id)}')" title="ลบ">${finDelSvg}</button>
+    </div>
+  </div>`;
+}
+
+function renderIncomeSources(){
+  const sources = getIncomeSources();
+  const logs = getIncomeLogs();
+  const curMonth = today.slice(0,7);
+  const logsThisMonth = logs.filter(l=>(l.date||'').slice(0,7) === curMonth);
+
+  const statsEl = document.getElementById('incomeStatsGrid');
+  if(statsEl){
+    const totalThisMonth = logsThisMonth.reduce((s,l)=>s+Number(l.amount||0),0);
+    const countThisMonth = logsThisMonth.length;
+    const sortedRecent = logsThisMonth.slice().sort((a,b)=> (b.date+(b.time||'')+(b.createdAt||'')).localeCompare(a.date+(a.time||'')+(a.createdAt||'')));
+    const lastSourceName = sortedRecent.length ? (sources.find(s=>s.id===sortedRecent[0].sourceId)||{}).name || '-' : '-';
+    statsEl.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-icon green"><svg width="18" height="18" fill="none" stroke="var(--green)" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.1 1.1-2 3-2s3 .9 3 2-1.3 2-3 2-3 .9-3 2 1.34 2 3 2 3-.9 3-2"/></svg></div>
+      <div class="stat-body">
+        <div class="stat-num green">${finFmtMoney(totalThisMonth)}</div>
+        <div class="stat-label">รายรับเสริมเดือนนี้</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon blue"><svg width="18" height="18" fill="none" stroke="var(--blue)" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+      <div class="stat-body">
+        <div class="stat-num blue">${countThisMonth}</div>
+        <div class="stat-label">จำนวนครั้งเดือนนี้</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon gray"><svg width="18" height="18" fill="none" stroke="var(--gray)" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="stat-body">
+        <div class="stat-num gray" style="font-size:1.1rem">${esc(lastSourceName)}</div>
+        <div class="stat-label">แหล่งล่าสุดที่ได้รับ</div>
+      </div>
+    </div>`;
+  }
+
+  const listEl = document.getElementById('incomeSourceListBody');
+  if(!listEl) return;
+  if(!sources.length){
+    listEl.innerHTML = '<span class="ql-empty">ยังไม่มีแหล่งรายรับเสริม — กด + เพิ่มแหล่งรายรับ</span>';
+    return;
+  }
+  listEl.innerHTML = sources.map(source=>{
+    const sourceLogsThisMonth = logsThisMonth.filter(l=>l.sourceId===source.id).sort((a,b)=> (b.date+(b.time||'')+(b.createdAt||'')).localeCompare(a.date+(a.time||'')+(a.createdAt||'')));
+    const totalThisMonth = sourceLogsThisMonth.reduce((s,l)=>s+Number(l.amount||0),0);
+    return incomeSourceRowHtml(source, sourceLogsThisMonth, totalThisMonth);
+  }).join('');
+}
+
+function openIncomeHistory(sourceId){
+  incomeHistorySourceId = sourceId;
+  renderIncomeHistory(sourceId);
+  document.getElementById('incomeHistoryOverlay').style.display = 'flex';
+}
+function closeIncomeHistory(){
+  document.getElementById('incomeHistoryOverlay').style.display = 'none';
+  incomeHistorySourceId = null;
+}
+
+function renderIncomeHistory(sourceId){
+  const source = getIncomeSources().find(x=>x.id===sourceId);
+  if(!source) return;
+  document.getElementById('incomeHistoryTitle').textContent = source.name;
+  const logs = getIncomeLogs().filter(l=>l.sourceId===sourceId).sort((a,b)=> (b.date+(b.time||'')+(b.createdAt||'')).localeCompare(a.date+(a.time||'')+(a.createdAt||'')));
+  const total = logs.reduce((s,l)=>s+Number(l.amount||0),0);
+  document.getElementById('incomeHistoryMeta').innerHTML = `<span class="ql-tag-badge" style="--tag-color:var(--green);--tag-bg:var(--green-dim)">● รวมทั้งหมด ${finFmtMoney(total)} บาท · ${logs.length} ครั้ง</span>`;
+  const body = document.getElementById('incomeHistoryBody');
+  if(!logs.length){
+    body.innerHTML = '<span class="ql-empty">ยังไม่มีประวัติการรับเงินจากแหล่งนี้</span>';
+    return;
+  }
+  body.innerHTML = logs.map(l=>{
+    const pmBadge = l.paymentMethod ? `<span class="fin-pm-badge">${esc(l.paymentMethod)}</span>` : '';
+    const noteHtml = l.note ? `<div class="fin-card-note">${esc(l.note)}</div>` : '';
+    return `
+    <div class="fin-card">
+      <div class="fin-card-main">
+        <div class="fin-card-top">
+          <div>
+            <div class="fin-card-item">${esc(l.date)}${l.time?` ${esc(l.time)}`:''}</div>
+          </div>
+          <div class="fin-card-amount income">+${finFmtMoney(l.amount)}</div>
+        </div>
+        <div class="fin-card-meta">${pmBadge}</div>
+        ${noteHtml}
+      </div>
+      <div class="fin-card-actions">
+        <button class="fin-card-btn del" onclick="deleteIncomeLog('${esc(l.id)}')" title="ลบรายการนี้">${finDelSvg}</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function selectFinType(type){

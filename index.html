@@ -223,8 +223,9 @@
   <div class="tab-pane" id="tabFinance" style="display:none">
 
     <div class="ql-filter-bar fin-subtab-bar" id="finSubTabBar">
-      <button class="ql-filter-btn active" data-subtab="list"  onclick="finSetSubTab('list')">รายการ</button>
-      <button class="ql-filter-btn"        data-subtab="bills" onclick="finSetSubTab('bills')">รายจ่ายประจำ</button>
+      <button class="ql-filter-btn active" data-subtab="list"   onclick="finSetSubTab('list')">รายการ</button>
+      <button class="ql-filter-btn"        data-subtab="bills"  onclick="finSetSubTab('bills')">รายจ่ายประจำ</button>
+      <button class="ql-filter-btn"        data-subtab="income" onclick="finSetSubTab('income')">รายรับเสริม</button>
     </div>
 
     <div id="finListPane">
@@ -267,6 +268,21 @@
       </div>
 
       <div class="fin-list" id="billListBody"></div>
+
+    </div>
+
+    <div id="finIncomePane" style="display:none">
+
+      <div class="stats" id="incomeStatsGrid"></div>
+
+      <div class="fin-toolbar">
+        <button class="btn btn-accent" onclick="openIncomeSourceModal()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          เพิ่มแหล่งรายรับ
+        </button>
+      </div>
+
+      <div class="fin-list" id="incomeSourceListBody"></div>
 
     </div>
 
@@ -671,6 +687,108 @@
         <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
         บันทึกว่าจ่ายแล้ว
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- Income Source Modal -->
+<div class="overlay" id="incomeSourceOverlay" style="display:none" onclick="incomeSourceCloseOnBg(event)">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <span class="modal-title" id="incomeSourceModalTitle">เพิ่มแหล่งรายรับ</span>
+      <button class="close-btn" onclick="closeIncomeSourceModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>ชื่อแหล่งรายรับ</label>
+        <input type="text" id="incomeSourceName" placeholder="เช่น ค่าคอม, ฟรีแลนซ์ Client A, ขายของออนไลน์..." autocomplete="off">
+      </div>
+      <div class="field">
+        <label>จำนวนเงินเริ่มต้น (บาท) <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ, แก้ไขได้ทุกครั้งที่บันทึกว่าได้รับ)</span></label>
+        <input type="number" id="incomeSourceAmount" placeholder="0.00" min="0" step="0.01" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label>สถานะ</label>
+        <div class="fin-type-row" id="incomeSourceActiveRow">
+          <button class="fin-type-pill income" data-active="true"  onclick="selectIncomeSourceActive(true)">ใช้งานอยู่</button>
+          <button class="fin-type-pill expense" data-active="false" onclick="selectIncomeSourceActive(false)">หยุดใช้งาน</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>รูปแบบการรับเงิน</label>
+        <div class="fin-pm-row" id="incomeSourcePMRow"></div>
+        <a class="fin-pm-manage-link" onclick="openFinPMModal()">+ จัดการรูปแบบการจ่าย</a>
+      </div>
+      <div class="field">
+        <label>รายละเอียดเพิ่มเติม <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
+        <textarea id="incomeSourceNote" placeholder="บันทึกเพิ่มเติม..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeIncomeSourceModal()">ยกเลิก</button>
+      <button class="btn btn-accent" onclick="saveIncomeSource()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Income Log (บันทึกว่าได้รับเงิน) Modal -->
+<div class="overlay" id="incomeLogOverlay" style="display:none" onclick="incomeLogCloseOnBg(event)">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <span class="modal-title">บันทึกว่าได้รับเงิน</span>
+      <button class="close-btn" onclick="closeIncomeLogModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>จำนวนเงิน (บาท)</label>
+        <input type="number" id="incomeLogAmount" placeholder="0.00" min="0" step="0.01" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label>วันที่</label>
+        <input type="date" id="incomeLogDate">
+      </div>
+      <div class="field">
+        <label>เวลา <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
+        <input type="time" id="incomeLogTime">
+      </div>
+      <div class="field">
+        <label>รูปแบบการรับเงิน</label>
+        <div class="fin-pm-row" id="incomeLogPMRow"></div>
+        <a class="fin-pm-manage-link" onclick="openFinPMModal()">+ จัดการรูปแบบการจ่าย</a>
+      </div>
+      <div class="field">
+        <label>รายการเพิ่มเติม <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
+        <textarea id="incomeLogNote" placeholder="บันทึกเพิ่มเติม..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeIncomeLogModal()">ยกเลิก</button>
+      <button class="btn btn-accent" onclick="confirmIncomeLog()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        บันทึก
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Income Source History Overlay -->
+<div class="ql-read-overlay" id="incomeHistoryOverlay" style="display:none" onclick="if(event.target===this)closeIncomeHistory()">
+  <div class="ql-read-modal">
+    <div class="ql-read-header">
+      <div>
+        <div class="ql-read-title" id="incomeHistoryTitle"></div>
+        <div id="incomeHistoryMeta" style="margin-top:.35rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center"></div>
+      </div>
+      <button class="close-btn" style="flex-shrink:0" onclick="closeIncomeHistory()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="ql-read-body">
+      <div class="fin-list" id="incomeHistoryBody"></div>
     </div>
   </div>
 </div>
