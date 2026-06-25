@@ -1496,6 +1496,8 @@ function renderBills(){
   listEl.innerHTML = sections.join('<hr class="bill-group-divider">');
 }
 
+let selectedBillPM = '';
+
 function openBillModal(id=null){
   billEditId = id;
   if(id){
@@ -1511,6 +1513,8 @@ function openBillModal(id=null){
     document.getElementById('billImageLabel').textContent = `รูปบิล/สลิป — ${monthLabelTH(billsViewMonth)}`;
     document.getElementById('billImageHint').style.display = '';
     billImageData = getBillMonthImage(b, billsViewMonth);
+    selectedBillPM = b.paymentMethod || '';
+    document.getElementById('billNote').value = b.note || '';
   } else {
     document.getElementById('billModalTitle').textContent = 'เพิ่มรายจ่ายประจำ';
     document.getElementById('billName').value = '';
@@ -1522,7 +1526,10 @@ function openBillModal(id=null){
     document.getElementById('billImageLabel').textContent = 'รูปบิล/สลิป';
     document.getElementById('billImageHint').style.display = 'none';
     billImageData = '';
+    selectedBillPM = '';
+    document.getElementById('billNote').value = '';
   }
+  renderBillPMRow();
   document.getElementById('billImageInput').value = '';
   const preview = document.getElementById('billImagePreview');
   if(billImageData){
@@ -1536,6 +1543,21 @@ function openBillModal(id=null){
   }
   document.getElementById('billOverlay').style.display = 'flex';
   setTimeout(()=>document.getElementById('billName').focus(), 60);
+}
+
+function renderBillPMRow(){
+  const row = document.getElementById('billPMRow');
+  if(!row) return;
+  row.innerHTML = FINPM.map(pm=>
+    `<button class="fin-pm-pill ${pm===selectedBillPM?'active':''}" data-pm="${esc(pm)}" onclick="selectBillPM('${esc(pm)}')">${esc(pm)}</button>`
+  ).join('');
+}
+
+function selectBillPM(pm){
+  selectedBillPM = (selectedBillPM===pm) ? '' : pm;
+  document.querySelectorAll('#billPMRow .fin-pm-pill').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.pm === selectedBillPM);
+  });
 }
 function closeBillModal(){
   const el = document.getElementById('billOverlay');
@@ -1577,10 +1599,11 @@ async function saveBill(){
   if(!amount || amount<=0){ document.getElementById('billAmount').focus(); return; }
   if(!dueDay || dueDay<1 || dueDay>31){ document.getElementById('billDueDay').focus(); return; }
   const isActive = document.getElementById('billActiveRow').dataset.value !== 'false';
+  const note = document.getElementById('billNote').value.trim();
   const bills = getBills();
   if(billEditId){
     const idx = bills.findIndex(x=>x.id===billEditId);
-    if(idx>-1) bills[idx] = { ...bills[idx], name, dueDay, active: isActive, updatedAt: new Date().toISOString() };
+    if(idx>-1) bills[idx] = { ...bills[idx], name, dueDay, active: isActive, paymentMethod: selectedBillPM, note, updatedAt: new Date().toISOString() };
     // จำนวนเงินและรูปแก้ไขเฉพาะเดือนที่กำลังดูอยู่ (override) ไม่กระทบเดือนอื่น
     const payments = getBillPayments(billsViewMonth);
     let p = payments.find(x=>x.billId===billEditId);
@@ -1591,6 +1614,7 @@ async function saveBill(){
     bills.push({
       id: Date.now().toString(36)+Math.random().toString(36).slice(2,6),
       name, amount, dueDay, active: isActive, image: billImageData,
+      paymentMethod: selectedBillPM, note,
       startMonth: billsViewMonth,
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
     });
@@ -1645,10 +1669,11 @@ async function toggleBillPaid(billId){
 
 function openBillPayModal(billId){
   billPayBillId = billId;
+  const bill = getBills().find(b=>b.id===billId);
   const now = new Date();
   document.getElementById('billPayTime').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  document.getElementById('billPayNote').value = '';
-  selectedBillPayPM = '';
+  document.getElementById('billPayNote').value = (bill && bill.note) || '';
+  selectedBillPayPM = (bill && bill.paymentMethod) || '';
   renderBillPayPMRow();
   document.getElementById('billPayOverlay').style.display = 'flex';
 }
@@ -1913,6 +1938,7 @@ async function finPMAdd(){
   renderFinPMManageList();
   renderFinPMRow();
   renderBillPayPMRow();
+  renderBillPMRow();
   input.value = '';
   input.focus();
 }
@@ -1922,10 +1948,12 @@ async function finPMDelete(i){
   FINPM.splice(i,1);
   if(selectedFinPM === pm) selectedFinPM = '';
   if(selectedBillPayPM === pm) selectedBillPayPM = '';
+  if(selectedBillPM === pm) selectedBillPM = '';
   saveFinPM();
   renderFinPMManageList();
   renderFinPMRow();
   renderBillPayPMRow();
+  renderBillPMRow();
 }
 
 // ── Initial render (ต้องอยู่ท้ายสุด เพื่อให้ const ทุกตัวถูก initialize ก่อน) ──

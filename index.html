@@ -602,6 +602,15 @@
         </div>
         <span id="billImageHint" style="font-size:.72rem;color:var(--text-3);display:none">รูปนี้จะใช้เฉพาะเดือนที่กำลังดูอยู่ เดือนอื่นไม่เปลี่ยน</span>
       </div>
+      <div class="field">
+        <label>รูปแบบการจ่าย</label>
+        <div class="fin-pm-row" id="billPMRow"></div>
+        <a class="fin-pm-manage-link" onclick="openFinPMModal()">+ จัดการรูปแบบการจ่าย</a>
+      </div>
+      <div class="field">
+        <label>รายละเอียดเพิ่มเติม <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
+        <textarea id="billNote" placeholder="บันทึกเพิ่มเติม..."></textarea>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeBillModal()">ยกเลิก</button>
