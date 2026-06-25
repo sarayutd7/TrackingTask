@@ -1520,6 +1520,55 @@
     width: fit-content;
   }
 
+  /* ── QL note-type badge + related notes (card) ── */
+  .ql-notetype-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: .63rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    padding: .18rem .6rem;
+    border-radius: 99px;
+    border: 1px solid var(--border-hover);
+    color: var(--text-3);
+    line-height: 1;
+    width: fit-content;
+  }
+  .ql-notetype-badge.permanent { color: var(--accent); border-color: var(--accent); }
+  .ql-related-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    margin-top: .4rem;
+  }
+  .ql-related-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: .68rem;
+    padding: .2rem .55rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-2);
+    cursor: pointer;
+  }
+  .ql-related-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .ql-summarize-btn {
+    font-size: .68rem;
+    padding: .25rem .6rem;
+    border-radius: 6px;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    background: transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .ql-summarize-btn:hover { background: var(--accent); color: #fff; }
+
   /* ── QL Filter bar ── */
   .ql-filter-bar {
     display: flex;

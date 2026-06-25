@@ -893,6 +893,8 @@ const QL_KEY = 'dailyTodoQL';
 let QL = [];
 let qlActiveFilter = 'all';
 let selectedQlTag  = '';
+let selectedQlType = 'fleeting';
+let selectedQlRelated = [];
 
 function loadQL(){
   // Merge localStorage (fallback เฉพาะของ account นี้) with file (_ql), file takes precedence
@@ -900,6 +902,14 @@ function loadQL(){
   try { const key = userKey(QL_KEY); if(key) fromLS = JSON.parse(localStorage.getItem(key)||'[]'); } catch(_){}
   const fromFile = Array.isArray(DB._ql) ? DB._ql : null;
   QL = fromFile !== null ? fromFile : fromLS;
+  // บันทึกเก่าก่อนมีฟีเจอร์ id/noteType อาจไม่มี field พวกนี้ -> backfill ให้ครบ
+  let backfilled = false;
+  QL.forEach(item=>{
+    if(!item.id){ item.id = Date.now().toString(36)+Math.random().toString(36).slice(2,8); backfilled = true; }
+    if(!item.noteType){ item.noteType = 'fleeting'; backfilled = true; }
+    if(!Array.isArray(item.relatedIds)){ item.relatedIds = []; backfilled = true; }
+  });
+  if(backfilled) saveQL();
 }
 function saveQL(){
   DB._ql = QL;
@@ -979,6 +989,34 @@ function selectQlTag(tag){
   renderQlTagRow();
 }
 
+function selectQlType(type){
+  selectedQlType = type;
+  document.querySelectorAll('#qlTypeRow .ql-filter-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.type === type);
+  });
+}
+
+function renderQlRelatedRow(){
+  const row = document.getElementById('qlRelatedRow');
+  if(!row) return;
+  const others = QL.map((item,i)=>({item,i})).filter(({item})=>item.id !== qlEditId);
+  if(!others.length){
+    row.innerHTML = '<span class="ql-empty" style="font-size:.72rem">ยังไม่มีโน้ตอื่นให้เลือก</span>';
+    return;
+  }
+  row.innerHTML = others.map(({item})=>{
+    const active = selectedQlRelated.includes(item.id) ? 'active-tag' : '';
+    return `<span class="ql-tag-pill ${active}" data-related="${esc(item.id)}" onclick="toggleQlRelated('${esc(item.id)}')">${esc(item.name)}</span>`;
+  }).join('');
+}
+
+function toggleQlRelated(id){
+  const idx = selectedQlRelated.indexOf(id);
+  if(idx>=0) selectedQlRelated.splice(idx,1);
+  else selectedQlRelated.push(id);
+  renderQlRelatedRow();
+}
+
 function qlSetFilter(filter){
   qlActiveFilter = filter;
   renderQlFilterBar();
@@ -990,6 +1028,19 @@ const qlLinkSvg = `<svg width="11" height="11" fill="none" stroke="currentColor"
 const qlEditSvg = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
 const qlDelSvg  = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
 const qlPinSvg  = `<svg width="9" height="9" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 6H21l-5.1 3.7 1.9 6.3L12 14l-5.8 4 1.9-6.3L3 8h6.6z"/></svg>`;
+
+function qlIndexById(id){ return QL.findIndex(x=>x.id===id); }
+
+function qlRelatedChipsHtml(item){
+  const ids = item.relatedIds || [];
+  if(!ids.length) return '';
+  const chips = ids.map(id=>{
+    const idx = qlIndexById(id);
+    if(idx<0) return '';
+    return `<span class="ql-related-chip" onclick="qlOpenRead(${idx})" title="เปิดโน้ตที่เกี่ยวข้อง">🔗 ${esc(QL[idx].name)}</span>`;
+  }).filter(Boolean).join('');
+  return chips ? `<div class="ql-related-row">${chips}</div>` : '';
+}
 
 function renderQL(){
   const body = document.getElementById('qlBody');
@@ -1009,6 +1060,8 @@ function renderQL(){
     const tagBadge = tagLabel
       ? `<span class="ql-tag-badge" style="--tag-color:${qlTagColor(item.tag)};--tag-bg:${qlTagColor(item.tag)}1F">● ${esc(tagLabel)}</span>`
       : '';
+    const isPermanent = item.noteType === 'permanent';
+    const typeBadge = `<span class="ql-notetype-badge${isPermanent?' permanent':''}">${isPermanent?'📌 Permanent':'📝 Fleeting'}</span>`;
     const hasUrl = item.url && item.url.trim();
     const openBtn = hasUrl
       ? `<a class="ql-open-btn" href="${esc(item.url)}" target="_blank" rel="noopener" title="${esc(item.url)}">${qlLinkSvg} เปิด Link</a>`
@@ -1019,8 +1072,12 @@ function renderQL(){
     const imagesHtml = (item.images && item.images.length)
       ? `<div class="ql-img-row">${item.images.map(src=>`<img class="ql-img-thumb" src="${esc(src)}" onclick="window.open('${esc(src)}')">`).join('')}</div>`
       : '';
+    const relatedHtml = qlRelatedChipsHtml(item);
     const expandBtn = (item.detail || (item.images && item.images.length))
       ? `<button class="ql-expand-btn" onclick="qlOpenRead(${i})"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg> ขยาย</button>`
+      : '';
+    const summarizeBtn = !isPermanent
+      ? `<button class="ql-summarize-btn" onclick="qlSummarizeToPermanent(${i})" title="สรุปเป็นโน้ตถาวร">✍️ สรุปเป็นโน้ตถาวร</button>`
       : '';
     const isPinned = !!item.pinned;
     const pinBadge = isPinned ? `<span class="ql-pin-badge">${qlPinSvg} ปักหมุด</span>` : '';
@@ -1038,10 +1095,11 @@ function renderQL(){
           <button class="ql-card-btn del"  onclick="qlDelete(${i})"   title="ลบ">${qlDelSvg}</button>
         </div>
       </div>
-      ${tagBadge}
+      <div class="ql-card-meta-row" style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">${typeBadge}${tagBadge}</div>
       ${detailHtml}
       ${imagesHtml}
-      ${expandBtn}
+      ${relatedHtml}
+      <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:.3rem">${expandBtn}${summarizeBtn}</div>
     </div>`;
   }).join('');
 }
@@ -1050,8 +1108,10 @@ function qlOpenRead(i){
   const item = QL[i];
   if(!item) return;
   document.getElementById('qlReadTitle').textContent = item.name;
-  // meta: tag badge + open link
+  // meta: type badge + tag badge + open link
   const meta = document.getElementById('qlReadMeta');
+  const isPermanent = item.noteType === 'permanent';
+  const typeHtml = `<span class="ql-notetype-badge${isPermanent?' permanent':''}">${isPermanent?'📌 Permanent':'📝 Fleeting'}</span>`;
   const tagLabel = item.tag ? qlTagLabel(item.tag) : '';
   const tagHtml = tagLabel
     ? `<span class="ql-tag-badge" style="--tag-color:${qlTagColor(item.tag)};--tag-bg:${qlTagColor(item.tag)}1F">● ${esc(tagLabel)}</span>`
@@ -1059,7 +1119,7 @@ function qlOpenRead(i){
   const linkHtml = (item.url && item.url.trim())
     ? `<a class="ql-open-btn" href="${esc(item.url)}" target="_blank" rel="noopener">${qlLinkSvg} เปิด Link</a>`
     : '';
-  meta.innerHTML = tagHtml + linkHtml;
+  meta.innerHTML = typeHtml + tagHtml + linkHtml;
   // detail
   const detail = document.getElementById('qlReadDetail');
   detail.innerHTML = item.detail
@@ -1070,6 +1130,9 @@ function qlOpenRead(i){
   imgs.innerHTML = (item.images && item.images.length)
     ? item.images.map(src=>`<img src="${esc(src)}" style="max-width:100%;max-height:280px;border-radius:8px;cursor:pointer;object-fit:contain" onclick="window.open('${esc(src)}')">`).join('')
     : '';
+  // related notes
+  const relatedEl = document.getElementById('qlReadRelated');
+  if(relatedEl) relatedEl.innerHTML = qlRelatedChipsHtml(item);
   document.getElementById('qlReadOverlay').style.display = 'flex';
 }
 function qlReadClose(){
@@ -1094,6 +1157,7 @@ function qlDelete(i){
 }
 
 let qlEditIdx = -1;
+let qlEditId = null;
 let qlPendingImages = [];
 
 function renderQlImagesRow(){
@@ -1119,15 +1183,20 @@ function qlImageRemove(i){
   renderQlImagesRow();
 }
 
-function qlOpenAdd(){
+function qlOpenAdd(prefill=null){
   qlEditIdx = -1;
+  qlEditId = null;
   document.getElementById('qlModalTitle').textContent = 'เพิ่ม Note';
-  document.getElementById('qlName').value='';
-  document.getElementById('qlUrl').value='';
-  rteClear('qlDetailBody');
-  selectedQlTag = '';
+  document.getElementById('qlName').value = (prefill && prefill.name) || '';
+  document.getElementById('qlUrl').value = (prefill && prefill.url) || '';
+  rteSetHTML('qlDetailBody', (prefill && prefill.detail) || '');
+  selectedQlTag = (prefill && prefill.tag) || '';
   renderQlTagRow();
-  qlPendingImages = [];
+  selectedQlType = (prefill && prefill.noteType) || 'fleeting';
+  selectQlType(selectedQlType);
+  selectedQlRelated = (prefill && prefill.relatedIds) ? prefill.relatedIds.slice() : [];
+  renderQlRelatedRow();
+  qlPendingImages = (prefill && prefill.images) ? prefill.images.slice() : [];
   renderQlImagesRow();
   document.getElementById('qlOverlay').style.display='flex';
   setTimeout(()=>document.getElementById('qlName').focus(),60);
@@ -1137,12 +1206,17 @@ function qlOpenEdit(i){
   const item = QL[i];
   if(!item) return;
   qlEditIdx = i;
+  qlEditId = item.id;
   document.getElementById('qlModalTitle').textContent = 'แก้ไข Note';
   document.getElementById('qlName').value   = item.name   || '';
   document.getElementById('qlUrl').value    = item.url    || '';
   rteSetHTML('qlDetailBody', item.detail || '');
   selectedQlTag = item.tag || '';
   renderQlTagRow();
+  selectedQlType = item.noteType || 'fleeting';
+  selectQlType(selectedQlType);
+  selectedQlRelated = (item.relatedIds || []).slice();
+  renderQlRelatedRow();
   qlPendingImages = (item.images || []).slice();
   renderQlImagesRow();
   document.getElementById('qlOverlay').style.display='flex';
@@ -1152,6 +1226,7 @@ function qlOpenEdit(i){
 function qlClose(){
   document.getElementById('qlOverlay').style.display='none';
   qlEditIdx = -1;
+  qlEditId = null;
 }
 
 function qlCloseOnBg(e){
@@ -1163,15 +1238,30 @@ function qlSave(){
   const url    = document.getElementById('qlUrl').value.trim();
   const detail = rteGetHTML('qlDetailBody');
   if(!name){ document.getElementById('qlName').focus(); return; }
-  const entry = {name, url, tag: selectedQlTag, detail, images: qlPendingImages.slice()};
   if(qlEditIdx >= 0){
-    QL[qlEditIdx] = entry;
+    const existing = QL[qlEditIdx];
+    QL[qlEditIdx] = { ...existing, name, url, tag: selectedQlTag, detail, images: qlPendingImages.slice(), noteType: selectedQlType, relatedIds: selectedQlRelated.slice() };
   } else {
-    QL.push(entry);
+    const id = Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+    QL.push({ id, name, url, tag: selectedQlTag, detail, images: qlPendingImages.slice(), noteType: selectedQlType, relatedIds: selectedQlRelated.slice() });
   }
   saveQL();
   renderQL();
   qlClose();
+}
+
+function qlSummarizeToPermanent(i){
+  const item = QL[i];
+  if(!item) return;
+  showToast('เขียนสรุปด้วยคำพูดของตัวเอง (Feynman Technique) ก่อนบันทึก ✍️', 3200);
+  qlOpenAdd({
+    name: 'สรุป: ' + item.name,
+    url: item.url,
+    tag: item.tag,
+    detail: item.detail,
+    noteType: 'permanent',
+    relatedIds: [item.id]
+  });
 }
 
 // (loadQL/renderQL called after loadFile resolves, below)

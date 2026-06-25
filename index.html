@@ -368,6 +368,17 @@
       </div>
     </div>
     <div class="field">
+      <label>ประเภทโน้ต <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(Fleeting = จดไว้ก่อน, Permanent = สรุปแล้ว)</span></label>
+      <div class="ql-filter-bar" id="qlTypeRow" style="margin-bottom:0">
+        <button class="ql-filter-btn" data-type="fleeting" onclick="selectQlType('fleeting')">📝 Fleeting</button>
+        <button class="ql-filter-btn" data-type="permanent" onclick="selectQlType('permanent')">📌 Permanent</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>โน้ตที่เกี่ยวข้อง <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ, เลือกได้หลายโน้ต)</span></label>
+      <div class="ql-tag-row" id="qlRelatedRow"></div>
+    </div>
+    <div class="field">
       <label>Detail <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
       <div class="rte-wrap">
         <div class="rte-toolbar">
@@ -713,6 +724,7 @@
     <div class="ql-read-body">
       <div class="ql-read-detail" id="qlReadDetail"></div>
       <div id="qlReadImages" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem"></div>
+      <div id="qlReadRelated"></div>
     </div>
   </div>
 </div>
