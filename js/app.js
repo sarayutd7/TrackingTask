@@ -928,6 +928,7 @@ function loadQL(){
     if(!item.id){ item.id = Date.now().toString(36)+Math.random().toString(36).slice(2,8); backfilled = true; }
     if(!item.noteType){ item.noteType = 'fleeting'; backfilled = true; }
     if(!Array.isArray(item.relatedIds)){ item.relatedIds = []; backfilled = true; }
+    if(typeof item.hidden !== 'boolean'){ item.hidden = false; backfilled = true; }
   });
   if(backfilled) saveQL();
 }
@@ -1017,24 +1018,50 @@ function selectQlType(type){
 }
 
 function renderQlRelatedRow(){
-  const row = document.getElementById('qlRelatedRow');
-  if(!row) return;
-  const others = QL.map((item,i)=>({item,i})).filter(({item})=>item.id !== qlEditId);
-  if(!others.length){
-    row.innerHTML = '<span class="ql-empty" style="font-size:.72rem">ยังไม่มีโน้ตอื่นให้เลือก</span>';
-    return;
-  }
-  row.innerHTML = others.map(({item})=>{
-    const active = selectedQlRelated.includes(item.id) ? 'active-tag' : '';
-    return `<span class="ql-tag-pill ${active}" data-related="${esc(item.id)}" onclick="toggleQlRelated('${esc(item.id)}')">${esc(item.name)}</span>`;
-  }).join('');
+  renderQlRelatedChipsEdit();
+  const searchEl = document.getElementById('qlRelatedSearchInput');
+  if(searchEl) searchEl.value = '';
+  const box = document.getElementById('qlRelatedSuggestions');
+  if(box) box.style.display = 'none';
 }
 
-function toggleQlRelated(id){
-  const idx = selectedQlRelated.indexOf(id);
-  if(idx>=0) selectedQlRelated.splice(idx,1);
-  else selectedQlRelated.push(id);
-  renderQlRelatedRow();
+function renderQlRelatedChipsEdit(){
+  const row = document.getElementById('qlRelatedChipsEdit');
+  if(!row) return;
+  if(!selectedQlRelated.length){ row.innerHTML = ''; return; }
+  row.innerHTML = selectedQlRelated.map(id=>{
+    const idx = qlIndexById(id);
+    if(idx<0) return '';
+    return `<span class="ql-related-chip removable">🔗 ${esc(QL[idx].name)}<button type="button" onclick="qlRemoveRelatedPick('${esc(id)}')" title="เอาออก">✕</button></span>`;
+  }).filter(Boolean).join('');
+}
+
+function qlRelatedSearchInputHandler(value){
+  const box = document.getElementById('qlRelatedSuggestions');
+  if(!box) return;
+  const q = value.trim().toLowerCase();
+  const others = QL.filter(item=>item.id !== qlEditId && !selectedQlRelated.includes(item.id));
+  const matches = (q ? others.filter(item=>item.name.toLowerCase().includes(q)) : others).slice(0, 8);
+  if(!matches.length){
+    const emptyMsg = q ? 'ไม่พบโน้ตที่ตรงกับคำค้นหา' : (others.length ? 'พิมพ์เพื่อค้นหาโน้ต…' : 'ไม่มีโน้ตอื่นให้เลือก');
+    box.innerHTML = `<div class="ql-related-suggestion-empty">${esc(emptyMsg)}</div>`;
+  } else {
+    box.innerHTML = matches.map(item=>`<div class="ql-related-suggestion-item" onmousedown="event.preventDefault();qlPickRelated('${esc(item.id)}')">${esc(item.name)}</div>`).join('');
+  }
+  box.style.display = 'block';
+}
+
+function qlPickRelated(id){
+  if(!selectedQlRelated.includes(id)) selectedQlRelated.push(id);
+  const searchEl = document.getElementById('qlRelatedSearchInput');
+  if(searchEl){ searchEl.value = ''; searchEl.focus(); }
+  qlRelatedSearchInputHandler('');
+  renderQlRelatedChipsEdit();
+}
+
+function qlRemoveRelatedPick(id){
+  selectedQlRelated = selectedQlRelated.filter(x=>x!==id);
+  renderQlRelatedChipsEdit();
 }
 
 function qlSetFilter(filter){
@@ -1069,7 +1096,10 @@ function renderQL(){
   const list = (qlActiveFilter === 'all'
     ? QL.map((item,i)=>({item,i}))
     : QL.map((item,i)=>({item,i})).filter(({item})=>(item.tag||'') === qlActiveFilter)
-  ).filter(({item})=>qlMatchesSearch(item))
+  ).filter(({item})=>{
+     const isLocked = item.hidden && !qlUnlockedIds.has(item.id);
+     return isLocked ? !qlSearchQuery : qlMatchesSearch(item); // note ที่ซ่อนไว้ไม่ให้ค้นหาเจอเนื้อหาก่อนปลดล็อก
+   })
    .sort((a,b)=> (b.item.pinned?1:0) - (a.item.pinned?1:0));
 
   if(!list.length){
@@ -1080,6 +1110,17 @@ function renderQL(){
     return;
   }
   body.innerHTML = list.map(({item,i})=>{
+    const isLocked = item.hidden && !qlUnlockedIds.has(item.id);
+    if(isLocked){
+      return `
+      <div class="ql-card ql-card-locked">
+        <div class="ql-card-locked-body">
+          <span class="ql-card-locked-icon">🔒</span>
+          <span class="ql-card-locked-text">Note นี้ถูกซ่อนไว้</span>
+          <button class="btn btn-ghost ql-unlock-btn" onclick="qlRequestUnlock(${i})">ใส่ PIN เพื่อดู</button>
+        </div>
+      </div>`;
+    }
     const tagLabel = item.tag ? qlTagLabel(item.tag) : '';
     const tagBadge = tagLabel
       ? `<span class="ql-tag-badge" style="--tag-color:${qlTagColor(item.tag)};--tag-bg:${qlTagColor(item.tag)}1F">● ${esc(tagLabel)}</span>`
@@ -1106,6 +1147,11 @@ function renderQL(){
       : '';
     const isPinned = !!item.pinned;
     const pinBadge = isPinned ? `<span class="ql-pin-badge">${qlPinSvg}</span>` : '';
+    const wasUnlocked = !!item.hidden; // ซ่อนอยู่แต่ปลดล็อกแล้วใน session นี้
+    const hideBtn = wasUnlocked
+      ? `<button class="ql-card-btn unhide" onclick="qlUnhideNote(${i})" title="เลิกซ่อน Note นี้">🔓</button>`
+      : `<button class="ql-card-btn hide" onclick="qlHideNote(${i})" title="ซ่อน Note นี้ (ต้องใส่ PIN เพื่อดูอีกครั้ง)">🔒</button>`;
+    const hiddenBadge = wasUnlocked ? `<span class="ql-pin-badge" style="color:var(--text-3)" title="ซ่อนอยู่ — ปลดล็อกแล้วชั่วคราว">🔓 ซ่อนอยู่</span>` : '';
     return `
     <div class="ql-card${isPinned?' pinned':''}" data-tag="${esc(item.tag||'')}">
       <div class="ql-card-top">
@@ -1116,13 +1162,14 @@ function renderQL(){
         </div>
         <div class="ql-card-actions">
           <button class="ql-card-btn pin${isPinned?' pinned':''}" onclick="qlTogglePin(${i})" title="${isPinned?'ถอดหมุด':'ปักหมุด'}">${qlPinSvg}</button>
+          ${hideBtn}
           ${summarizeBtn}
           ${expandBtn}
           <button class="ql-card-btn edit" onclick="qlOpenEdit(${i})" title="แก้ไข">${qlEditSvg}</button>
           <button class="ql-card-btn del"  onclick="qlDelete(${i})"   title="ลบ">${qlDelSvg}</button>
         </div>
       </div>
-      ${tagBadge ? `<div class="ql-card-meta-row" style="margin-top:.25rem">${tagBadge}</div>` : ''}
+      ${(tagBadge || hiddenBadge) ? `<div class="ql-card-meta-row" style="margin-top:.25rem">${tagBadge}${hiddenBadge}</div>` : ''}
       ${openBtn}
       ${detailHtml}
       ${imagesHtml}
@@ -1289,6 +1336,64 @@ function qlSummarizeToPermanent(i){
     noteType: 'permanent',
     relatedIds: [item.id]
   });
+}
+
+// ── Note ซ่อน / ปลดล็อกด้วย PIN ───────────────────────
+let qlUnlockedIds = new Set(); // เก็บแค่ใน session นี้ ไม่ persist — กลับมาเปิดแอปใหม่ต้องใส่ PIN อีก
+let qlPendingUnlockIdx = null;
+
+function qlHideNote(i){
+  const item = QL[i];
+  if(!item) return;
+  item.hidden = true;
+  qlUnlockedIds.delete(item.id);
+  saveQL();
+  renderQL();
+}
+
+function qlUnhideNote(i){
+  const item = QL[i];
+  if(!item) return;
+  item.hidden = false;
+  saveQL();
+  renderQL();
+}
+
+function qlRequestUnlock(i){
+  qlPendingUnlockIdx = i;
+  document.getElementById('qlUnlockPin').value = '';
+  document.getElementById('qlUnlockError').textContent = '';
+  document.getElementById('qlUnlockOverlay').style.display = 'flex';
+  setTimeout(()=>document.getElementById('qlUnlockPin').focus(), 60);
+}
+
+function closeQlUnlock(){
+  document.getElementById('qlUnlockOverlay').style.display = 'none';
+  qlPendingUnlockIdx = null;
+}
+
+async function submitQlUnlock(){
+  const pin = document.getElementById('qlUnlockPin').value;
+  const errorEl = document.getElementById('qlUnlockError');
+  if(!PIN_RE.test(pin)){ errorEl.textContent = 'PIN ต้องเป็นตัวเลข 6 หลักเท่านั้น'; return; }
+  try {
+    const r = await fetch(API + '/verify-pin', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', ...authHeaders()},
+      body: JSON.stringify({ pin })
+    });
+    const data = await r.json();
+    if(!r.ok){
+      errorEl.textContent = data.error || 'PIN ไม่ถูกต้อง';
+      return;
+    }
+    const item = QL[qlPendingUnlockIdx];
+    if(item) qlUnlockedIds.add(item.id);
+    closeQlUnlock();
+    renderQL();
+  } catch(e){
+    errorEl.textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง';
+  }
 }
 
 // (loadQL/renderQL called after loadFile resolves, below)

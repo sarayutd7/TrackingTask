@@ -256,6 +256,33 @@ export default {
       return jsonResponse({ token, username, mustResetPin }, 200, CORS_HEADERS);
     }
 
+    if (url.pathname === "/verify-pin" && request.method === "POST") {
+      const username = await getAuthUser(request, env);
+      if (!username) {
+        return jsonResponse({ error: "Unauthorized" }, 401, CORS_HEADERS);
+      }
+      let body;
+      try {
+        body = await request.json();
+      } catch (e) {
+        return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
+      }
+      const { pin } = body || {};
+      if (typeof pin !== "string" || !PIN_RE.test(pin)) {
+        return jsonResponse({ error: "PIN ต้องเป็นตัวเลข 6 หลักเท่านั้น" }, 400, CORS_HEADERS);
+      }
+      const recordRaw = await env.TRACKING_TASK_KV.get(`user:${username}`);
+      if (!recordRaw) {
+        return jsonResponse({ error: "Unauthorized" }, 401, CORS_HEADERS);
+      }
+      const userRec = JSON.parse(recordRaw);
+      const ok = await verifyPassword(pin, userRec.salt, userRec.hash);
+      if (!ok) {
+        return jsonResponse({ error: "PIN ไม่ถูกต้อง" }, 401, CORS_HEADERS);
+      }
+      return jsonResponse({ ok: true }, 200, CORS_HEADERS);
+    }
+
     if (url.pathname === "/reset-pin" && request.method === "POST") {
       const username = await getAuthUser(request, env);
       if (!username) {

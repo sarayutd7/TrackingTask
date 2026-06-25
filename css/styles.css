@@ -1180,13 +1180,14 @@
   .ql-add-btn {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     background: transparent;
     color: var(--text-3);
     border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 3px 9px;
-    font-size: .72rem;
+    border-radius: 8px;
+    padding: .5rem 1rem;
+    font-size: .85rem;
+    font-weight: 600;
     cursor: pointer;
     font-family: var(--font);
     transition: color .15s, border-color .15s;
@@ -1454,7 +1455,26 @@
   .ql-card-btn.expand:hover     { background: var(--surface3); color: var(--text); }
   .ql-card-btn.summarize        { color: var(--accent); border-color: rgba(124,111,247,.4); }
   .ql-card-btn.summarize:hover  { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .ql-card-btn.unhide            { color: var(--text-3); }
+  .ql-card-btn.hide:hover        { background: var(--surface3); color: var(--text); }
+  .ql-card-btn.unhide:hover      { background: var(--surface3); color: var(--text); }
   .ql-card.pinned { border-left-color: #f59e0b !important; }
+  .ql-card-locked {
+    align-items: center;
+    justify-content: center;
+    min-height: 90px;
+  }
+  .ql-card-locked-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .35rem;
+    width: 100%;
+    text-align: center;
+  }
+  .ql-card-locked-icon { font-size: 1.3rem; }
+  .ql-card-locked-text { font-size: .76rem; color: var(--text-3); }
+  .ql-unlock-btn { font-size: .72rem; padding: .3rem .8rem; }
   .ql-pin-badge {
     font-size: .65rem;
     color: #f59e0b;
@@ -1583,6 +1603,71 @@
     align-self: center;
   }
 
+  /* ── Related notes combobox (modal) ── */
+  .ql-related-picker { position: relative; margin-top: .35rem; }
+  .ql-related-picker input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: .5rem .7rem;
+    font-size: .8rem;
+    color: var(--text);
+    font-family: var(--font);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .ql-related-picker input::placeholder { color: var(--text-3); }
+  .ql-related-picker input:focus { border-color: var(--accent); }
+  .ql-related-suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    background: var(--surface2);
+    border: 1px solid var(--border-hover);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    z-index: 20;
+  }
+  .ql-related-suggestion-item {
+    padding: .5rem .7rem;
+    font-size: .78rem;
+    color: var(--text-2);
+    cursor: pointer;
+  }
+  .ql-related-suggestion-item:hover { background: var(--surface3); color: var(--text); }
+  .ql-related-suggestion-empty {
+    padding: .5rem .7rem;
+    font-size: .74rem;
+    color: var(--text-3);
+  }
+  .ql-related-chips-edit {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    margin-top: .5rem;
+  }
+  .ql-related-chip.removable {
+    background: var(--surface3);
+    color: var(--text-2);
+    max-width: none;
+    cursor: default;
+  }
+  .ql-related-chip.removable button {
+    background: transparent;
+    border: none;
+    color: var(--text-3);
+    cursor: pointer;
+    padding: 0;
+    font-size: .7rem;
+    line-height: 1;
+    margin-left: 2px;
+  }
+  .ql-related-chip.removable button:hover { color: var(--red); }
+
   /* ── QL Filter bar ── */
   .ql-filter-bar {
     display: flex;
@@ -1605,6 +1690,25 @@
   }
   .ql-filter-btn:hover  { color: var(--text); border-color: var(--border-hover); }
   .ql-filter-btn.active { background: var(--surface3); color: var(--text); border-color: var(--border-hover); }
+
+  /* Note tag filter bar — ปุ่มใหญ่ขึ้น กดง่ายขึ้นบนมือถือ */
+  #qlFilterBar {
+    gap: .5rem;
+    margin: .75rem 0 .2rem;
+  }
+  #qlFilterBar .ql-filter-btn {
+    padding: .5rem 1rem;
+    font-size: .8rem;
+    border-radius: 8px;
+    min-height: 38px;
+  }
+  @media (max-width: 640px) {
+    #qlFilterBar .ql-filter-btn {
+      padding: .6rem 1.1rem;
+      font-size: .85rem;
+      min-height: 42px;
+    }
+  }
 
   .ql-search-wrap {
     position: relative;

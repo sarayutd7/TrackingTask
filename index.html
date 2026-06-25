@@ -200,7 +200,7 @@
         <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         <span class="ql-title">Notes</span>
         <button class="ql-add-btn" onclick="event.stopPropagation();qlOpenAdd()">
-          <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           เพิ่ม
         </button>
         <span class="ql-chevron" id="qlChevron">
@@ -379,8 +379,15 @@
       </div>
     </div>
     <div class="field">
-      <label>โน้ตที่เกี่ยวข้อง <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ, เลือกได้หลายโน้ต)</span></label>
-      <div class="ql-tag-row" id="qlRelatedRow"></div>
+      <label>โน้ตที่เกี่ยวข้อง <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ, ค้นหาแล้วเลือกได้หลายโน้ต)</span></label>
+      <div class="ql-related-picker">
+        <input type="text" id="qlRelatedSearchInput" placeholder="ค้นหาโน้ตที่ต้องการเชื่อมโยง…" autocomplete="off"
+          oninput="qlRelatedSearchInputHandler(this.value)"
+          onfocus="qlRelatedSearchInputHandler(this.value)"
+          onblur="setTimeout(()=>{const b=document.getElementById('qlRelatedSuggestions'); if(b) b.style.display='none';}, 150)">
+        <div class="ql-related-suggestions" id="qlRelatedSuggestions" style="display:none"></div>
+      </div>
+      <div class="ql-related-chips-edit" id="qlRelatedChipsEdit"></div>
     </div>
     <div class="field">
       <label>Detail <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
@@ -699,6 +706,28 @@
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeAccountModal()">ยกเลิก</button>
       <button class="btn btn-accent" onclick="saveAccount()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Note Unlock (ใส่ PIN เพื่อดู Note ที่ซ่อนไว้) -->
+<div class="overlay" id="qlUnlockOverlay" style="display:none" onclick="if(event.target===this) closeQlUnlock()">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-header">
+      <span class="modal-title">🔒 ใส่ PIN เพื่อดู Note นี้</span>
+      <button class="close-btn" onclick="closeQlUnlock()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <input class="lock-input" type="password" inputmode="numeric" pattern="\d*" maxlength="6" id="qlUnlockPin" placeholder="PIN 6 หลัก" onkeydown="if(event.key==='Enter') submitQlUnlock()">
+        <div class="lock-error" id="qlUnlockError"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeQlUnlock()">ยกเลิก</button>
+      <button class="btn btn-accent" onclick="submitQlUnlock()">ปลดล็อก</button>
     </div>
   </div>
 </div>
