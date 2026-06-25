@@ -1971,7 +1971,7 @@ async function confirmBillPay(){
   if(typeof renderFinance === 'function') renderFinance();
 }
 
-// ── รายรับเสริม (Income Sources + Log การรับ) ─────────
+// ── รายรับ (Income Sources + Log การรับ) ─────────
 let incomeSourceEditId = null;
 let selectedIncomeSourcePM = '';
 let selectedIncomeLogPM = '';
@@ -2076,6 +2076,7 @@ function openIncomeLogModal(sourceId){
   document.getElementById('incomeLogDate').value = today;
   document.getElementById('incomeLogTime').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   document.getElementById('incomeLogNote').value = source.note || '';
+  document.getElementById('incomeLogError').textContent = '';
   selectedIncomeLogPM = source.paymentMethod || '';
   renderIncomeLogPMRow();
   document.getElementById('incomeLogOverlay').style.display = 'flex';
@@ -2106,8 +2107,14 @@ function selectIncomeLogPM(pm){
 async function confirmIncomeLog(){
   const source = getIncomeSources().find(x=>x.id===incomeLogSourceId);
   if(!source) return;
+  const errorEl = document.getElementById('incomeLogError');
+  if(errorEl) errorEl.textContent = '';
   const amount = parseFloat(document.getElementById('incomeLogAmount').value);
-  if(!amount || amount<=0){ document.getElementById('incomeLogAmount').focus(); return; }
+  if(!amount || amount<=0){
+    if(errorEl) errorEl.textContent = 'กรุณาใส่จำนวนเงินที่ได้รับ';
+    document.getElementById('incomeLogAmount').focus();
+    return;
+  }
   const date = document.getElementById('incomeLogDate').value || today;
   const time = document.getElementById('incomeLogTime').value || '';
   const note = document.getElementById('incomeLogNote').value.trim();
@@ -2122,7 +2129,7 @@ async function confirmIncomeLog(){
     amount,
     time,
     paymentMethod: selectedIncomeLogPM,
-    note: note || `รายรับเสริม — ${source.name}`,
+    note: note || `รายรับ — ${source.name}`,
     slip: '',
     createdAt: now.toISOString(),
     updatedAt: now.toISOString(),
@@ -2146,6 +2153,7 @@ async function confirmIncomeLog(){
   closeIncomeLogModal();
   renderIncomeSources();
   if(typeof renderFinance === 'function') renderFinance();
+  showToast('บันทึกว่าได้รับเงินสำเร็จ ✅');
 }
 
 async function deleteIncomeLog(logId){
@@ -2212,7 +2220,7 @@ function renderIncomeSources(){
       <div class="stat-icon green"><svg width="18" height="18" fill="none" stroke="var(--green)" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.1 1.1-2 3-2s3 .9 3 2-1.3 2-3 2-3 .9-3 2 1.34 2 3 2 3-.9 3-2"/></svg></div>
       <div class="stat-body">
         <div class="stat-num green">${finFmtMoney(totalThisMonth)}</div>
-        <div class="stat-label">รายรับเสริมเดือนนี้</div>
+        <div class="stat-label">รายรับเดือนนี้</div>
       </div>
     </div>
     <div class="stat-card">
@@ -2234,7 +2242,7 @@ function renderIncomeSources(){
   const listEl = document.getElementById('incomeSourceListBody');
   if(!listEl) return;
   if(!sources.length){
-    listEl.innerHTML = '<span class="ql-empty">ยังไม่มีแหล่งรายรับเสริม — กด + เพิ่มแหล่งรายรับ</span>';
+    listEl.innerHTML = '<span class="ql-empty">ยังไม่มีแหล่งรายรับ — กด + เพิ่มแหล่งรายรับ</span>';
     return;
   }
   listEl.innerHTML = sources.map(source=>{

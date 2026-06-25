@@ -225,7 +225,7 @@
     <div class="ql-filter-bar fin-subtab-bar" id="finSubTabBar">
       <button class="ql-filter-btn active" data-subtab="list"   onclick="finSetSubTab('list')">รายการ</button>
       <button class="ql-filter-btn"        data-subtab="bills"  onclick="finSetSubTab('bills')">รายจ่ายประจำ</button>
-      <button class="ql-filter-btn"        data-subtab="income" onclick="finSetSubTab('income')">รายรับเสริม</button>
+      <button class="ql-filter-btn"        data-subtab="income" onclick="finSetSubTab('income')">รายรับ</button>
     </div>
 
     <div id="finListPane">
@@ -746,6 +746,7 @@
       <div class="field">
         <label>จำนวนเงิน (บาท)</label>
         <input type="number" id="incomeLogAmount" placeholder="0.00" min="0" step="0.01" inputmode="decimal">
+        <div class="lock-error" id="incomeLogError"></div>
       </div>
       <div class="field">
         <label>วันที่</label>
