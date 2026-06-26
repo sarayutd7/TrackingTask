@@ -4,6 +4,8 @@ const PIN_RE = /^\d{6}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
 const MAX_FAILED_ATTEMPTS = 5; // ครั้งที่ 6 จะถูกล็อกและ "ส่งอีเมล" แจ้งเตือน
+const ADMIN_USERNAMES = new Set(["Yut"]);
+const ALL_MENUS = ["task", "tool", "finance"];
 
 const ALLOWED_ORIGINS = new Set([
   "https://sarayutd7.github.io",
@@ -195,6 +197,8 @@ export default {
         mustResetPin: false,
         failedAttempts: 0,
         locked: false,
+        disabled: false,
+        allowedMenus: ALL_MENUS.slice(),
       }));
       await migrateLegacyDataTo(username, env);
 
@@ -203,7 +207,7 @@ export default {
 
       const now = Math.floor(Date.now() / 1000);
       const token = await signJWT({ sub: username, iat: now, exp: now + TOKEN_TTL_SECONDS }, env.JWT_SECRET);
-      return jsonResponse({ token, username }, 200, CORS_HEADERS);
+      return jsonResponse({ token, username, allowedMenus: ALL_MENUS.slice() }, 200, CORS_HEADERS);
     }
 
     if (url.pathname === "/login" && request.method === "POST") {
@@ -223,6 +227,10 @@ export default {
         return jsonResponse({ error: "Invalid credentials" }, 401, CORS_HEADERS);
       }
       const userRec = JSON.parse(recordRaw);
+
+      if (userRec.disabled) {
+        return jsonResponse({ error: "บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ" }, 403, CORS_HEADERS);
+      }
 
       if (userRec.locked) {
         return jsonResponse({ error: "บัญชีถูกล็อกเนื่องจากพยายามเข้าระบบผิดหลายครั้ง กรุณารีเซ็ต PIN ผ่านอีเมลที่แจ้งไว้" }, 423, CORS_HEADERS);
@@ -253,7 +261,8 @@ export default {
       const token = await signJWT({ sub: username, iat: now, exp: now + TOKEN_TTL_SECONDS }, env.JWT_SECRET);
       // record เก่าก่อนมีฟีเจอร์นี้จะไม่มี field mustResetPin เลย -> ถือว่าต้อง reset เป็น PIN 6 หลักก่อนใช้งานต่อ
       const mustResetPin = userRec.mustResetPin !== false;
-      return jsonResponse({ token, username, mustResetPin }, 200, CORS_HEADERS);
+      const allowedMenus = Array.isArray(userRec.allowedMenus) ? userRec.allowedMenus : ALL_MENUS.slice();
+      return jsonResponse({ token, username, mustResetPin, allowedMenus }, 200, CORS_HEADERS);
     }
 
     if (url.pathname === "/verify-pin" && request.method === "POST") {
@@ -459,6 +468,84 @@ export default {
       return jsonResponse({ ok: true }, 200, CORS_HEADERS);
     }
 
+    if (url.pathname === "/admin/users" && request.method === "GET") {
+      const username = await getAuthUser(request, env);
+      if (!username || !ADMIN_USERNAMES.has(username)) {
+        return jsonResponse({ error: "Unauthorized" }, 401, CORS_HEADERS);
+      }
+      const users = [];
+      let cursor;
+      do {
+        const page = await env.TRACKING_TASK_KV.list({ prefix: "user:", cursor });
+        for (const key of page.keys) {
+          const uname = key.name.slice("user:".length);
+          const recordRaw = await env.TRACKING_TASK_KV.get(key.name);
+          if (!recordRaw) continue;
+          const rec = JSON.parse(recordRaw);
+          users.push({
+            username: uname,
+            email: rec.email || "",
+            disabled: !!rec.disabled,
+            locked: !!rec.locked,
+            allowedMenus: Array.isArray(rec.allowedMenus) ? rec.allowedMenus : ALL_MENUS.slice(),
+          });
+        }
+        cursor = page.cursor;
+      } while (cursor);
+      return jsonResponse({ users }, 200, CORS_HEADERS);
+    }
+
+    const adminUserMatch = url.pathname.match(/^\/admin\/users\/([^/]+)(?:\/(disable|enable|permissions))?$/);
+    if (adminUserMatch && (request.method === "POST" || request.method === "DELETE")) {
+      const adminUsername = await getAuthUser(request, env);
+      if (!adminUsername || !ADMIN_USERNAMES.has(adminUsername)) {
+        return jsonResponse({ error: "Unauthorized" }, 401, CORS_HEADERS);
+      }
+      const targetUsername = decodeURIComponent(adminUserMatch[1]);
+      const action = adminUserMatch[2];
+
+      if (targetUsername === adminUsername) {
+        return jsonResponse({ error: "ไม่สามารถจัดการบัญชีของตัวเองได้" }, 400, CORS_HEADERS);
+      }
+
+      const recordRaw = await env.TRACKING_TASK_KV.get(`user:${targetUsername}`);
+      if (!recordRaw) {
+        return jsonResponse({ error: "User not found" }, 404, CORS_HEADERS);
+      }
+
+      if (request.method === "DELETE") {
+        await env.TRACKING_TASK_KV.delete(`user:${targetUsername}`);
+        await env.TRACKING_TASK_KV.delete(`data:${targetUsername}`);
+        return jsonResponse({ ok: true }, 200, CORS_HEADERS);
+      }
+
+      const userRec = JSON.parse(recordRaw);
+
+      if (action === "permissions") {
+        let body;
+        try {
+          body = await request.json();
+        } catch (e) {
+          return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
+        }
+        const { allowedMenus } = body || {};
+        if (!Array.isArray(allowedMenus) || allowedMenus.length === 0 || !allowedMenus.every((m) => ALL_MENUS.includes(m))) {
+          return jsonResponse({ error: "allowedMenus ต้องเป็นรายการเมนูที่ถูกต้อง อย่างน้อย 1 เมนู" }, 400, CORS_HEADERS);
+        }
+        userRec.allowedMenus = allowedMenus;
+        await env.TRACKING_TASK_KV.put(`user:${targetUsername}`, JSON.stringify(userRec));
+        return jsonResponse({ ok: true }, 200, CORS_HEADERS);
+      }
+
+      // POST .../disable or .../enable
+      if (action !== "disable" && action !== "enable") {
+        return jsonResponse({ error: "Not Found" }, 404, CORS_HEADERS);
+      }
+      userRec.disabled = action === "disable";
+      await env.TRACKING_TASK_KV.put(`user:${targetUsername}`, JSON.stringify(userRec));
+      return jsonResponse({ ok: true }, 200, CORS_HEADERS);
+    }
+
     if (url.pathname === "/data") {
       const username = await getAuthUser(request, env);
       if (!username) {
@@ -466,6 +553,9 @@ export default {
       }
       const userRecRaw = await env.TRACKING_TASK_KV.get(`user:${username}`);
       const userRec = userRecRaw ? JSON.parse(userRecRaw) : null;
+      if (userRec && userRec.disabled) {
+        return jsonResponse({ error: "บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ" }, 403, CORS_HEADERS);
+      }
       if (userRec && userRec.mustResetPin !== false) {
         return jsonResponse({ error: "PIN_RESET_REQUIRED" }, 403, CORS_HEADERS);
       }

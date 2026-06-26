@@ -2546,6 +2546,7 @@ async function finPMDelete(i){
 // ── Initial render (ต้องอยู่ท้ายสุด เพื่อให้ const ทุกตัวถูก initialize ก่อน) ──
 loadCols();
 renderBoard();
+if(typeof applyMenuPermissions === 'function') applyMenuPermissions();
 loadFile().then(() => {
   render();
   loadDL();
