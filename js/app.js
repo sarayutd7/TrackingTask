@@ -2105,55 +2105,70 @@ function selectIncomeLogPM(pm){
 }
 
 async function confirmIncomeLog(){
-  const source = getIncomeSources().find(x=>x.id===incomeLogSourceId);
-  if(!source) return;
   const errorEl = document.getElementById('incomeLogError');
   if(errorEl) errorEl.textContent = '';
-  const amount = parseFloat(document.getElementById('incomeLogAmount').value);
-  if(!amount || amount<=0){
-    if(errorEl) errorEl.textContent = 'กรุณาใส่จำนวนเงินที่ได้รับ';
-    document.getElementById('incomeLogAmount').focus();
-    return;
+  try {
+    const source = getIncomeSources().find(x=>x.id===incomeLogSourceId);
+    if(!source){
+      if(errorEl) errorEl.textContent = 'ไม่พบแหล่งรายรับนี้ กรุณาปิดหน้านี้แล้วลองใหม่';
+      return;
+    }
+    const amount = parseFloat(document.getElementById('incomeLogAmount').value);
+    if(!amount || amount<=0){
+      if(errorEl) errorEl.textContent = 'กรุณาใส่จำนวนเงินที่ได้รับ';
+      document.getElementById('incomeLogAmount').focus();
+      return;
+    }
+    const date = document.getElementById('incomeLogDate').value || today;
+    const time = document.getElementById('incomeLogTime').value || '';
+    const note = document.getElementById('incomeLogNote').value.trim();
+    const now = new Date();
+    const financeId = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    const logId = Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+
+    const entries = getFinance(date);
+    entries.push({
+      id: financeId,
+      type: 'income',
+      item: source.name,
+      amount,
+      time,
+      paymentMethod: selectedIncomeLogPM,
+      note: note || `รายรับ — ${source.name}`,
+      slip: '',
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+      incomeSourceId: source.id
+    });
+    setFinance(date, entries);
+
+    const logs = getIncomeLogs();
+    logs.push({
+      id: logId,
+      sourceId: source.id,
+      amount, date, time,
+      paymentMethod: selectedIncomeLogPM,
+      note,
+      financeEntryId: financeId,
+      createdAt: now.toISOString()
+    });
+    setIncomeLogs(logs);
+
+    await writeFile();
+
+    if(!getIncomeLogs().some(l=>l.id===logId)){
+      if(errorEl) errorEl.textContent = 'เกิดข้อผิดพลาดระหว่างบันทึก กรุณาลองใหม่';
+      return;
+    }
+
+    closeIncomeLogModal();
+    renderIncomeSources();
+    if(typeof renderFinance === 'function') renderFinance();
+    showToast('บันทึกว่าได้รับเงินสำเร็จ ✅');
+  } catch(e){
+    console.error('confirmIncomeLog error:', e);
+    if(errorEl) errorEl.textContent = 'เกิดข้อผิดพลาดในการบันทึก กรุณาลองใหม่';
   }
-  const date = document.getElementById('incomeLogDate').value || today;
-  const time = document.getElementById('incomeLogTime').value || '';
-  const note = document.getElementById('incomeLogNote').value.trim();
-  const now = new Date();
-  const financeId = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-
-  const entries = getFinance(date);
-  entries.push({
-    id: financeId,
-    type: 'income',
-    item: source.name,
-    amount,
-    time,
-    paymentMethod: selectedIncomeLogPM,
-    note: note || `รายรับ — ${source.name}`,
-    slip: '',
-    createdAt: now.toISOString(),
-    updatedAt: now.toISOString(),
-    incomeSourceId: source.id
-  });
-  setFinance(date, entries);
-
-  const logs = getIncomeLogs();
-  logs.push({
-    id: Date.now().toString(36)+Math.random().toString(36).slice(2,8),
-    sourceId: source.id,
-    amount, date, time,
-    paymentMethod: selectedIncomeLogPM,
-    note,
-    financeEntryId: financeId,
-    createdAt: now.toISOString()
-  });
-  setIncomeLogs(logs);
-
-  await writeFile();
-  closeIncomeLogModal();
-  renderIncomeSources();
-  if(typeof renderFinance === 'function') renderFinance();
-  showToast('บันทึกว่าได้รับเงินสำเร็จ ✅');
 }
 
 async function deleteIncomeLog(logId){
