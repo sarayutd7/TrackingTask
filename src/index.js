@@ -139,6 +139,17 @@ async function getAuthUser(request, env) {
   return payload ? payload.sub : null;
 }
 
+// ── Request metadata (สำหรับแปะใน email แจ้งเตือนความปลอดภัย) ──
+function getRequestMeta(request) {
+  const ip = request.headers.get("CF-Connecting-IP") || "ไม่ทราบ";
+  const cf = request.cf || {};
+  const locationParts = [cf.city, cf.region, cf.country].filter(Boolean);
+  const location = locationParts.length ? locationParts.join(", ") : "ไม่ทราบ";
+  const userAgent = request.headers.get("User-Agent") || "ไม่ทราบ";
+  const time = new Date().toLocaleString("th-TH", { timeZone: "Asia/Bangkok", dateStyle: "medium", timeStyle: "medium" }) + " น. (เวลาไทย)";
+  return { ip, location, userAgent, time };
+}
+
 // ── Email (Resend) ─────────────────────────────────────
 // ส่งผ่าน Resend API (https://resend.com) — ต้องตั้ง Worker secret RESEND_API_KEY
 // (และ verify domain ที่ resend.com ถ้าจะส่งจากอีเมล @trackingtask.online ของจริง)
@@ -252,7 +263,11 @@ export default {
       }));
       await migrateLegacyDataTo(username, env);
 
-      await sendEmail(env, { to: email, subject: "ยืนยันการสมัครสมาชิก TrackingTask", text: `สมัครสมาชิกด้วยชื่อผู้ใช้ ${username} สำเร็จแล้ว` });
+      await sendEmail(env, {
+        to: email,
+        subject: "ยืนยันการสมัครสมาชิก TrackingTask",
+        text: `สมัครสมาชิกด้วยชื่อผู้ใช้ ${username} สำเร็จแล้ว\n\nเข้าใช้งานได้ที่: https://trackingtask.online/`,
+      });
 
       const now = Math.floor(Date.now() / 1000);
       const token = await signJWT({ sub: username, iat: now, exp: now + TOKEN_TTL_SECONDS }, env.JWT_SECRET);
@@ -291,10 +306,17 @@ export default {
         if (userRec.failedAttempts > MAX_FAILED_ATTEMPTS) {
           userRec.locked = true;
           await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
+          const meta = getRequestMeta(request);
           await sendEmail(env, {
             to: userRec.email,
             subject: "แจ้งเตือน: มีการพยายามเข้าระบบผิดหลายครั้ง",
-            text: `บัญชี ${username} ถูกล็อกเนื่องจากพยายามเข้าระบบผิด ${userRec.failedAttempts} ครั้ง กรุณารีเซ็ต PIN`,
+            text: `บัญชี ${username} ถูกล็อกเนื่องจากพยายามเข้าระบบผิด ${userRec.failedAttempts} ครั้ง กรุณารีเซ็ต PIN\n\n`
+              + `รายละเอียดความพยายามเข้าระบบล่าสุดที่ทำให้บัญชีถูกล็อก:\n`
+              + `- เวลา: ${meta.time}\n`
+              + `- IP Address: ${meta.ip}\n`
+              + `- ตำแหน่งที่ตั้ง (โดยประมาณ): ${meta.location}\n`
+              + `- อุปกรณ์/เบราว์เซอร์: ${meta.userAgent}\n\n`
+              + `ถ้าไม่ใช่คุณ กรุณารีเซ็ต PIN ทันทีที่: https://trackingtask.online/`,
           });
           return jsonResponse({ error: "พยายามเข้าระบบผิดเกินกำหนด บัญชีถูกล็อกและส่งอีเมลแจ้งเตือนแล้ว" }, 423, CORS_HEADERS);
         }
@@ -391,10 +413,17 @@ export default {
           userRec.resetCode = code;
           userRec.resetCodeExpires = now + 15 * 60; // 15 นาที
           await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
+          const meta = getRequestMeta(request);
           await sendEmail(env, {
             to: userRec.email,
             subject: "รหัสยืนยันสำหรับรีเซ็ต PIN — TrackingTask",
-            text: `รหัสยืนยันของคุณคือ ${code} (มีอายุ 15 นาที) ใช้รหัสนี้เพื่อตั้ง PIN ใหม่สำหรับบัญชี ${username}`,
+            text: `รหัสยืนยันของคุณคือ ${code} (มีอายุ 15 นาที) ใช้รหัสนี้เพื่อตั้ง PIN ใหม่สำหรับบัญชี ${username} ที่: https://trackingtask.online/\n\n`
+              + `รายละเอียดคำขอนี้:\n`
+              + `- เวลา: ${meta.time}\n`
+              + `- IP Address: ${meta.ip}\n`
+              + `- ตำแหน่งที่ตั้ง (โดยประมาณ): ${meta.location}\n`
+              + `- อุปกรณ์/เบราว์เซอร์: ${meta.userAgent}\n\n`
+              + `ถ้าไม่ใช่คุณที่ขอรีเซ็ต PIN กรุณาเพิกเฉยอีเมลนี้ได้เลย`,
           });
         }
       }
