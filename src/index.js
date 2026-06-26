@@ -18,7 +18,7 @@ const ALLOWED_ORIGINS = new Set([
 function corsHeaders(request) {
   const origin = request.headers.get("Origin");
   const headers = {
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Vary": "Origin",
   };
