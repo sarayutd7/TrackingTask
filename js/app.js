@@ -1474,9 +1474,13 @@ const finDelSvg  = `<svg width="9" height="9" fill="none" stroke="currentColor" 
 function renderFinance(){
   const entries = getFinance(currentDate);
 
-  // Summary cards
+  // Summary cards (totals for the whole month being viewed)
+  const curMonth = currentDate.slice(0,7);
+  const monthEntries = Object.keys(DB._finance||{})
+    .filter(d=>d.slice(0,7)===curMonth)
+    .flatMap(d=>DB._finance[d]);
   let income = 0, expense = 0;
-  entries.forEach(e=>{
+  monthEntries.forEach(e=>{
     if(e.type === 'income') income += Number(e.amount)||0;
     else expense += Number(e.amount)||0;
   });
@@ -1489,21 +1493,21 @@ function renderFinance(){
       <div class="stat-icon green"><svg width="18" height="18" fill="none" stroke="var(--green)" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
       <div class="stat-body">
         <div class="stat-num green">${finFmtMoney(income)}</div>
-        <div class="stat-label">รายรับ</div>
+        <div class="stat-label">รายรับเดือนนี้</div>
       </div>
     </div>
     <div class="stat-card">
       <div class="stat-icon red"><svg width="18" height="18" fill="none" stroke="var(--red)" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg></div>
       <div class="stat-body">
         <div class="stat-num red">${finFmtMoney(expense)}</div>
-        <div class="stat-label">รายจ่าย</div>
+        <div class="stat-label">รายจ่ายเดือนนี้</div>
       </div>
     </div>
     <div class="stat-card">
       <div class="stat-icon ${balance>=0?'blue':'red'}"><svg width="18" height="18" fill="none" stroke="${balance>=0?'var(--blue)':'var(--red)'}" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
       <div class="stat-body">
         <div class="stat-num ${balance>=0?'blue':'red'}">${finFmtMoney(balance)}</div>
-        <div class="stat-label">คงเหลือ</div>
+        <div class="stat-label">คงเหลือเดือนนี้</div>
       </div>
     </div>`;
   }
