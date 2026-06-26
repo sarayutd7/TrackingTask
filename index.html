@@ -829,6 +829,14 @@
         <input type="password" inputmode="numeric" pattern="\d*" maxlength="6" id="accountCurrentPin" placeholder="PIN ปัจจุบัน 6 หลัก" autocomplete="current-password">
       </div>
       <div class="lock-error" id="accountError" style="margin-top:.3rem"></div>
+      <div class="field" style="border-top:1px solid var(--border);padding-top:.8rem;margin-top:.4rem">
+        <label>เข้าสู่ระบบด้วย Google</label>
+        <div id="accountGoogleLinked" style="display:none;font-size:.82rem;color:var(--text-2);display:flex;align-items:center;justify-content:space-between;gap:.5rem">
+          <span id="accountGoogleLinkedEmail"></span>
+          <button class="btn btn-ghost" style="padding:.3rem .7rem;font-size:.76rem" onclick="unlinkGoogleAccount()">ยกเลิกการเชื่อม</button>
+        </div>
+        <div id="accountGoogleLinkBtn"></div>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeAccountModal()">ยกเลิก</button>

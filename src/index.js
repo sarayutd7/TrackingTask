@@ -180,14 +180,21 @@ async function verifyOAuthIdToken(idToken, jwksUrl, expectedAud, issuerOk) {
   return payload;
 }
 
-// สร้างบัญชีใหม่จากอีเมลที่ provider ยืนยันแล้ว (ครั้งแรก) หรือ login เข้าบัญชีเดิม — ไม่มี PIN เลย
+// ถ้าอีเมลนี้ถูก "เชื่อม" (link) ไว้กับบัญชี username+PIN เดิมแล้ว ให้ login เข้าบัญชีนั้นแทน
+// ไม่ใช่สร้างบัญชีแยกใหม่ตามอีเมล — ป้องกันปัญหาบัญชีซ้ำซ้อนเวลาคนเดิม sign in ด้วย Google/Microsoft
 async function loginOrRegisterOAuthUser(env, email, provider, corsHdrs) {
-  const username = email.toLowerCase();
+  const normalizedEmail = email.toLowerCase();
+  const linkedUsername = await env.TRACKING_TASK_KV.get(`oauthlink:${provider}:${normalizedEmail}`);
+  const username = linkedUsername || normalizedEmail;
+
   const recordRaw = await env.TRACKING_TASK_KV.get(`user:${username}`);
   let userRec;
   if (!recordRaw) {
+    if (linkedUsername) {
+      return jsonResponse({ error: "บัญชีที่เชื่อมโยงไว้ไม่พบ กรุณาติดต่อผู้ดูแลระบบ" }, 404, corsHdrs);
+    }
     userRec = {
-      email: username,
+      email: normalizedEmail,
       authProvider: provider,
       salt: "",
       hash: "",
@@ -594,7 +601,76 @@ export default {
         return jsonResponse({ error: "Unauthorized" }, 401, CORS_HEADERS);
       }
       const userRec = JSON.parse(recordRaw);
-      return jsonResponse({ username, email: userRec.email || "" }, 200, CORS_HEADERS);
+      return jsonResponse({ username, email: userRec.email || "", linkedGoogleEmail: userRec.linkedGoogleEmail || "" }, 200, CORS_HEADERS);
+    }
+
+    if (url.pathname === "/account/link-google" && request.method === "POST") {
+      const username = await getAuthUser(request, env);
+      if (!username) {
+        return jsonResponse({ error: "Unauthorized" }, 401, CORS_HEADERS);
+      }
+      if (!env.GOOGLE_CLIENT_ID) {
+        return jsonResponse({ error: "ยังไม่ได้ตั้งค่า Google Sign-In บนเซิร์ฟเวอร์" }, 501, CORS_HEADERS);
+      }
+      let body;
+      try {
+        body = await request.json();
+      } catch (e) {
+        return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
+      }
+      const payload = await verifyOAuthIdToken(
+        body.credential,
+        "https://www.googleapis.com/oauth2/v3/certs",
+        env.GOOGLE_CLIENT_ID,
+        (iss) => iss === "https://accounts.google.com" || iss === "accounts.google.com"
+      );
+      if (!payload || !payload.email || payload.email_verified !== true) {
+        return jsonResponse({ error: "ยืนยันตัวตนกับ Google ไม่สำเร็จ" }, 401, CORS_HEADERS);
+      }
+      const email = payload.email.toLowerCase();
+      const linkKey = `oauthlink:google:${email}`;
+      const existingLink = await env.TRACKING_TASK_KV.get(linkKey);
+      if (existingLink && existingLink !== username) {
+        return jsonResponse({ error: "อีเมล Google นี้ถูกเชื่อมกับบัญชีอื่นไปแล้ว" }, 409, CORS_HEADERS);
+      }
+      // ถ้ามีบัญชีที่ถูกสร้างแยกไว้ก่อนหน้าด้วยอีเมลนี้เอง (sign in ตรงๆโดยไม่ผ่านการเชื่อม) แต่ยังไม่มีข้อมูลจริง ให้ลบทิ้งรวมเป็นบัญชีเดียว
+      if (email !== username.toLowerCase()) {
+        const dupRaw = await env.TRACKING_TASK_KV.get(`user:${email}`);
+        if (dupRaw) {
+          const dupRec = JSON.parse(dupRaw);
+          const dupData = await env.TRACKING_TASK_KV.get(`data:${email}`);
+          if (dupData) {
+            return jsonResponse({ error: "มีบัญชีอื่นที่ใช้อีเมลนี้อยู่แล้วและมีข้อมูลอยู่ กรุณาติดต่อผู้ดูแลระบบเพื่อรวมบัญชี" }, 409, CORS_HEADERS);
+          }
+          if (dupRec.authProvider) {
+            await env.TRACKING_TASK_KV.delete(`user:${email}`);
+          }
+        }
+      }
+      await env.TRACKING_TASK_KV.put(linkKey, username);
+      const recordRaw = await env.TRACKING_TASK_KV.get(`user:${username}`);
+      const userRec = JSON.parse(recordRaw);
+      userRec.linkedGoogleEmail = email;
+      await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
+      return jsonResponse({ ok: true, linkedGoogleEmail: email }, 200, CORS_HEADERS);
+    }
+
+    if (url.pathname === "/account/unlink-google" && request.method === "POST") {
+      const username = await getAuthUser(request, env);
+      if (!username) {
+        return jsonResponse({ error: "Unauthorized" }, 401, CORS_HEADERS);
+      }
+      const recordRaw = await env.TRACKING_TASK_KV.get(`user:${username}`);
+      if (!recordRaw) {
+        return jsonResponse({ error: "Unauthorized" }, 401, CORS_HEADERS);
+      }
+      const userRec = JSON.parse(recordRaw);
+      if (userRec.linkedGoogleEmail) {
+        await env.TRACKING_TASK_KV.delete(`oauthlink:google:${userRec.linkedGoogleEmail}`);
+        delete userRec.linkedGoogleEmail;
+        await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
+      }
+      return jsonResponse({ ok: true }, 200, CORS_HEADERS);
     }
 
     if (url.pathname === "/account" && request.method === "POST") {

@@ -47,6 +47,67 @@ async function handleGoogleCredential(response){
   }
 }
 
+function renderAccountGoogleLink(linkedEmail){
+  const linkedBox = document.getElementById('accountGoogleLinked');
+  const linkBtnBox = document.getElementById('accountGoogleLinkBtn');
+  if(linkedEmail){
+    linkedBox.style.display = 'flex';
+    document.getElementById('accountGoogleLinkedEmail').textContent = `เชื่อมต่อแล้ว: ${linkedEmail}`;
+    linkBtnBox.innerHTML = '';
+    return;
+  }
+  linkedBox.style.display = 'none';
+  if(!GOOGLE_CLIENT_ID){
+    linkBtnBox.innerHTML = '<span class="ql-empty">ยังไม่เปิดใช้งาน Google Sign-In</span>';
+    return;
+  }
+  function render(){
+    if(window.google && window.google.accounts){
+      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleLinkCredential });
+      google.accounts.id.renderButton(linkBtnBox, { theme: 'outline', size: 'large', width: 280 });
+    } else {
+      setTimeout(render, 200);
+    }
+  }
+  render();
+}
+
+async function handleGoogleLinkCredential(response){
+  const errorEl = document.getElementById('accountError');
+  errorEl.textContent = '';
+  try {
+    const r = await fetch(API + '/account/link-google', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', ...authHeaders()},
+      body: JSON.stringify({ credential: response.credential })
+    });
+    const data = await r.json();
+    if(!r.ok){ errorEl.textContent = data.error || 'เชื่อมต่อ Google ไม่สำเร็จ'; return; }
+    renderAccountGoogleLink(data.linkedGoogleEmail);
+    showToast('เชื่อมต่อบัญชี Google สำเร็จ ✅');
+    // คืน Google Identity Services กลับไปใช้ callback สำหรับหน้า login ตามปกติ
+    if(window.google && window.google.accounts){
+      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
+    }
+  } catch(e){
+    errorEl.textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง';
+  }
+}
+
+async function unlinkGoogleAccount(){
+  const errorEl = document.getElementById('accountError');
+  errorEl.textContent = '';
+  try {
+    const r = await fetch(API + '/account/unlink-google', { method: 'POST', headers: authHeaders() });
+    const data = await r.json();
+    if(!r.ok){ errorEl.textContent = data.error || 'ยกเลิกการเชื่อมไม่สำเร็จ'; return; }
+    renderAccountGoogleLink('');
+    showToast('ยกเลิกการเชื่อมต่อ Google แล้ว');
+  } catch(e){
+    errorEl.textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง';
+  }
+}
+
 async function microsoftSignIn(){
   const errorEl = document.getElementById('lockError');
   errorEl.textContent = '';
@@ -294,6 +355,7 @@ async function openAccountModal(){
     if(r.ok){
       document.getElementById('accountUsername').value = data.username;
       document.getElementById('accountEmail').value = data.email || '';
+      renderAccountGoogleLink(data.linkedGoogleEmail || '');
     }
   } catch(e){
     document.getElementById('accountError').textContent = 'โหลดข้อมูลบัญชีไม่สำเร็จ ลองใหม่อีกครั้ง';
@@ -302,6 +364,9 @@ async function openAccountModal(){
 
 function closeAccountModal(){
   document.getElementById('accountOverlay').style.display = 'none';
+  if(window.google && window.google.accounts && GOOGLE_CLIENT_ID){
+    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
+  }
 }
 
 async function saveAccount(){
