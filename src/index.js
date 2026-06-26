@@ -139,13 +139,39 @@ async function getAuthUser(request, env) {
   return payload ? payload.sub : null;
 }
 
-// ── Email (stub) ──────────────────────────────────────
-// ยังไม่มี domain ที่ onboard กับ Cloudflare Email Sending จึงยังส่งอีเมลจริงไม่ได้
-// TODO: เมื่อมี domain แล้ว ให้เปลี่ยนเนื้อ function นี้เป็น env.EMAIL.send({...})
-// (ดู skill cloudflare-email-service) ตอนนี้แค่ log ไว้ใน wrangler tail ก่อน
+// ── Email (Resend) ─────────────────────────────────────
+// ส่งผ่าน Resend API (https://resend.com) — ต้องตั้ง Worker secret RESEND_API_KEY
+// (และ verify domain ที่ resend.com ถ้าจะส่งจากอีเมล @trackingtask.online ของจริง)
+// ถ้ายังไม่ตั้ง RESEND_API_KEY จะ fallback เป็น log ไว้ใน wrangler tail เหมือนเดิม
 async function sendEmail(env, { to, subject, text }) {
-  console.log(`[EMAIL STUB] to=${to} subject="${subject}" body="${text}"`);
-  return true;
+  if (!env.RESEND_API_KEY) {
+    console.log(`[EMAIL STUB] to=${to} subject="${subject}" body="${text}"`);
+    return true;
+  }
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: env.RESEND_FROM_EMAIL || "TrackingTask <onboarding@resend.dev>",
+        to: [to],
+        subject,
+        text,
+      }),
+    });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => "");
+      console.log(`[EMAIL FAILED] status=${res.status} to=${to} body=${errBody}`);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.log(`[EMAIL ERROR] ${e.message} to=${to}`);
+    return false;
+  }
 }
 
 // ── Per-account usage stats (record counts per menu) ──
@@ -226,7 +252,6 @@ export default {
       }));
       await migrateLegacyDataTo(username, env);
 
-      // TODO: ส่งอีเมลยืนยันการสมัครจริง เมื่อมี domain onboard กับ Cloudflare Email Sending แล้ว
       await sendEmail(env, { to: email, subject: "ยืนยันการสมัครสมาชิก TrackingTask", text: `สมัครสมาชิกด้วยชื่อผู้ใช้ ${username} สำเร็จแล้ว` });
 
       const now = Math.floor(Date.now() / 1000);
@@ -266,7 +291,6 @@ export default {
         if (userRec.failedAttempts > MAX_FAILED_ATTEMPTS) {
           userRec.locked = true;
           await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
-          // TODO: ส่งอีเมลจริงเมื่อมี domain onboard กับ Cloudflare Email Sending แล้ว
           await sendEmail(env, {
             to: userRec.email,
             subject: "แจ้งเตือน: มีการพยายามเข้าระบบผิดหลายครั้ง",
@@ -367,7 +391,6 @@ export default {
           userRec.resetCode = code;
           userRec.resetCodeExpires = now + 15 * 60; // 15 นาที
           await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
-          // TODO: ส่งอีเมลจริงเมื่อมี domain onboard กับ Cloudflare Email Sending แล้ว
           await sendEmail(env, {
             to: userRec.email,
             subject: "รหัสยืนยันสำหรับรีเซ็ต PIN — TrackingTask",
