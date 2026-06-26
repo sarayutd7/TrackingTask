@@ -7,7 +7,7 @@ const MENU_TAB_BTN = { task: 'tabBtnTask', tool: 'tabBtnTool', finance: 'tabBtnF
 
 // ── Sign in with Google / Microsoft ──────────────────
 // Client ID (ไม่ใช่ secret) จาก Google Cloud Console / Azure Portal — เติมแล้วปุ่มจะโชว์เอง
-const GOOGLE_CLIENT_ID = '';
+const GOOGLE_CLIENT_ID = '273491289869-2hv9a0829st3nnelhhok3mq3dplf8ckv.apps.googleusercontent.com';
 const MICROSOFT_CLIENT_ID = '';
 let msalInstance = null;
 
