@@ -2042,20 +2042,34 @@ async function saveIncomeSource(){
   const isActive = document.getElementById('incomeSourceActiveRow').dataset.value !== 'false';
   const note = document.getElementById('incomeSourceNote').value.trim();
   const sources = getIncomeSources();
+  const isNew = !incomeSourceEditId;
+  let newSource = null;
   if(incomeSourceEditId){
     const idx = sources.findIndex(x=>x.id===incomeSourceEditId);
     if(idx>-1) sources[idx] = { ...sources[idx], name, amount, active: isActive, paymentMethod: selectedIncomeSourcePM, note, updatedAt: new Date().toISOString() };
   } else {
-    sources.push({
+    newSource = {
       id: Date.now().toString(36)+Math.random().toString(36).slice(2,6),
       name, amount, active: isActive, paymentMethod: selectedIncomeSourcePM, note,
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
-    });
+    };
+    sources.push(newSource);
   }
   setIncomeSources(sources);
+
+  if(isNew && newSource && amount > 0){
+    const now = new Date();
+    recordIncomeReceipt(newSource, {
+      amount, date: today,
+      time: `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
+      paymentMethod: selectedIncomeSourcePM, note
+    });
+  }
+
   closeIncomeSourceModal();
   await writeFile();
   renderIncomeSources();
+  if(typeof renderFinance === 'function') renderFinance();
 }
 
 async function deleteIncomeSource(id){
@@ -2104,6 +2118,41 @@ function selectIncomeLogPM(pm){
   });
 }
 
+function recordIncomeReceipt(source, { amount, date, time, paymentMethod, note }){
+  const now = new Date();
+  const financeId = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const logId = Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+
+  const entries = getFinance(date);
+  entries.push({
+    id: financeId,
+    type: 'income',
+    item: source.name,
+    amount,
+    time,
+    paymentMethod,
+    note: note || `รายรับ — ${source.name}`,
+    slip: '',
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+    incomeSourceId: source.id
+  });
+  setFinance(date, entries);
+
+  const logs = getIncomeLogs();
+  logs.push({
+    id: logId,
+    sourceId: source.id,
+    amount, date, time,
+    paymentMethod,
+    note,
+    financeEntryId: financeId,
+    createdAt: now.toISOString()
+  });
+  setIncomeLogs(logs);
+  return logId;
+}
+
 async function confirmIncomeLog(){
   const errorEl = document.getElementById('incomeLogError');
   if(errorEl) errorEl.textContent = '';
@@ -2122,37 +2171,8 @@ async function confirmIncomeLog(){
     const date = document.getElementById('incomeLogDate').value || today;
     const time = document.getElementById('incomeLogTime').value || '';
     const note = document.getElementById('incomeLogNote').value.trim();
-    const now = new Date();
-    const financeId = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-    const logId = Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 
-    const entries = getFinance(date);
-    entries.push({
-      id: financeId,
-      type: 'income',
-      item: source.name,
-      amount,
-      time,
-      paymentMethod: selectedIncomeLogPM,
-      note: note || `รายรับ — ${source.name}`,
-      slip: '',
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString(),
-      incomeSourceId: source.id
-    });
-    setFinance(date, entries);
-
-    const logs = getIncomeLogs();
-    logs.push({
-      id: logId,
-      sourceId: source.id,
-      amount, date, time,
-      paymentMethod: selectedIncomeLogPM,
-      note,
-      financeEntryId: financeId,
-      createdAt: now.toISOString()
-    });
-    setIncomeLogs(logs);
+    const logId = recordIncomeReceipt(source, { amount, date, time, paymentMethod: selectedIncomeLogPM, note });
 
     await writeFile();
 
