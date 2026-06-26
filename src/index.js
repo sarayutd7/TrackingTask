@@ -139,6 +139,78 @@ async function getAuthUser(request, env) {
   return payload ? payload.sub : null;
 }
 
+// ── OAuth ID token verification (Google / Microsoft) ─
+// ตรวจ RS256 JWT จาก provider โดย verify signature ด้วย public key (JWKS) ของ provider เอง
+// ไม่ต้องใช้ client secret เพราะเป็น public-client flow (ID token ออกให้ฝั่ง browser ตรงๆ)
+async function verifyOAuthIdToken(idToken, jwksUrl, expectedAud, issuerOk) {
+  if (typeof idToken !== "string") return null;
+  const parts = idToken.split(".");
+  if (parts.length !== 3) return null;
+  const [headerB64, payloadB64, sigB64] = parts;
+  let header, payload;
+  try {
+    header = JSON.parse(new TextDecoder().decode(b64UrlToBytes(headerB64)));
+    payload = JSON.parse(new TextDecoder().decode(b64UrlToBytes(payloadB64)));
+  } catch (e) {
+    return null;
+  }
+  if (header.alg !== "RS256" || !header.kid) return null;
+
+  const jwksRes = await fetch(jwksUrl);
+  if (!jwksRes.ok) return null;
+  const jwks = await jwksRes.json();
+  const jwk = (jwks.keys || []).find((k) => k.kid === header.kid);
+  if (!jwk) return null;
+
+  let key;
+  try {
+    key = await crypto.subtle.importKey("jwk", jwk, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]);
+  } catch (e) {
+    return null;
+  }
+  const data = new TextEncoder().encode(`${headerB64}.${payloadB64}`);
+  const valid = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, b64UrlToBytes(sigB64), data);
+  if (!valid) return null;
+
+  const now = Date.now() / 1000;
+  if (typeof payload.exp !== "number" || now > payload.exp) return null;
+  if (payload.aud !== expectedAud) return null;
+  if (!issuerOk(payload.iss)) return null;
+
+  return payload;
+}
+
+// สร้างบัญชีใหม่จากอีเมลที่ provider ยืนยันแล้ว (ครั้งแรก) หรือ login เข้าบัญชีเดิม — ไม่มี PIN เลย
+async function loginOrRegisterOAuthUser(env, email, provider, corsHdrs) {
+  const username = email.toLowerCase();
+  const recordRaw = await env.TRACKING_TASK_KV.get(`user:${username}`);
+  let userRec;
+  if (!recordRaw) {
+    userRec = {
+      email: username,
+      authProvider: provider,
+      salt: "",
+      hash: "",
+      mustResetPin: false,
+      failedAttempts: 0,
+      locked: false,
+      disabled: false,
+      allowedMenus: ALL_MENUS.slice(),
+    };
+    await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
+    await migrateLegacyDataTo(username, env);
+  } else {
+    userRec = JSON.parse(recordRaw);
+    if (userRec.disabled) {
+      return jsonResponse({ error: "บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ" }, 403, corsHdrs);
+    }
+  }
+  const now = Math.floor(Date.now() / 1000);
+  const token = await signJWT({ sub: username, iat: now, exp: now + TOKEN_TTL_SECONDS }, env.JWT_SECRET);
+  const allowedMenus = Array.isArray(userRec.allowedMenus) ? userRec.allowedMenus : ALL_MENUS.slice();
+  return jsonResponse({ token, username, allowedMenus }, 200, corsHdrs);
+}
+
 // ── Request metadata (สำหรับแปะใน email แจ้งเตือนความปลอดภัย) ──
 function getRequestMeta(request) {
   const ip = request.headers.get("CF-Connecting-IP") || "ไม่ทราบ";
@@ -272,6 +344,53 @@ export default {
       const now = Math.floor(Date.now() / 1000);
       const token = await signJWT({ sub: username, iat: now, exp: now + TOKEN_TTL_SECONDS }, env.JWT_SECRET);
       return jsonResponse({ token, username, allowedMenus: ALL_MENUS.slice() }, 200, CORS_HEADERS);
+    }
+
+    if (url.pathname === "/oauth/google" && request.method === "POST") {
+      if (!env.GOOGLE_CLIENT_ID) {
+        return jsonResponse({ error: "ยังไม่ได้ตั้งค่า Google Sign-In บนเซิร์ฟเวอร์" }, 501, CORS_HEADERS);
+      }
+      let body;
+      try {
+        body = await request.json();
+      } catch (e) {
+        return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
+      }
+      const { credential } = body || {};
+      const payload = await verifyOAuthIdToken(
+        credential,
+        "https://www.googleapis.com/oauth2/v3/certs",
+        env.GOOGLE_CLIENT_ID,
+        (iss) => iss === "https://accounts.google.com" || iss === "accounts.google.com"
+      );
+      if (!payload || !payload.email || payload.email_verified !== true) {
+        return jsonResponse({ error: "ยืนยันตัวตนกับ Google ไม่สำเร็จ" }, 401, CORS_HEADERS);
+      }
+      return await loginOrRegisterOAuthUser(env, payload.email, "google", CORS_HEADERS);
+    }
+
+    if (url.pathname === "/oauth/microsoft" && request.method === "POST") {
+      if (!env.MICROSOFT_CLIENT_ID) {
+        return jsonResponse({ error: "ยังไม่ได้ตั้งค่า Microsoft Sign-In บนเซิร์ฟเวอร์" }, 501, CORS_HEADERS);
+      }
+      let body;
+      try {
+        body = await request.json();
+      } catch (e) {
+        return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
+      }
+      const { credential } = body || {};
+      const payload = await verifyOAuthIdToken(
+        credential,
+        "https://login.microsoftonline.com/common/discovery/v2.0/keys",
+        env.MICROSOFT_CLIENT_ID,
+        (iss) => /^https:\/\/login\.microsoftonline\.com\/[^/]+\/v2\.0$/.test(iss || "")
+      );
+      const email = payload && (payload.email || payload.preferred_username);
+      if (!payload || !email) {
+        return jsonResponse({ error: "ยืนยันตัวตนกับ Microsoft ไม่สำเร็จ" }, 401, CORS_HEADERS);
+      }
+      return await loginOrRegisterOAuthUser(env, email, "microsoft", CORS_HEADERS);
     }
 
     if (url.pathname === "/login" && request.method === "POST") {

@@ -5,6 +5,75 @@ const AUTH_MENUS_KEY = 'trackingTaskAllowedMenus';
 const ADMIN_USERNAME = 'Yut';
 const MENU_TAB_BTN = { task: 'tabBtnTask', tool: 'tabBtnTool', finance: 'tabBtnFinance' };
 
+// ── Sign in with Google / Microsoft ──────────────────
+// Client ID (ไม่ใช่ secret) จาก Google Cloud Console / Azure Portal — เติมแล้วปุ่มจะโชว์เอง
+const GOOGLE_CLIENT_ID = '';
+const MICROSOFT_CLIENT_ID = '';
+let msalInstance = null;
+
+function initOAuthSignIn(){
+  if(!GOOGLE_CLIENT_ID && !MICROSOFT_CLIENT_ID) return;
+  document.getElementById('oauthSignInSection').style.display = '';
+  if(GOOGLE_CLIENT_ID){
+    if(window.google && window.google.accounts){
+      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
+      google.accounts.id.renderButton(document.getElementById('googleSignInBtn'), { theme: 'outline', size: 'large', width: 280 });
+    } else {
+      setTimeout(initOAuthSignIn, 200);
+      return;
+    }
+  }
+  if(MICROSOFT_CLIENT_ID){
+    document.getElementById('msSignInBtn').style.display = '';
+  }
+}
+
+async function handleGoogleCredential(response){
+  const errorEl = document.getElementById('lockError');
+  try {
+    const r = await fetch(API + '/oauth/google', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ credential: response.credential })
+    });
+    const data = await r.json();
+    if(!r.ok){ if(errorEl) errorEl.textContent = data.error || 'เข้าสู่ระบบด้วย Google ไม่สำเร็จ'; return; }
+    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+    localStorage.setItem(AUTH_USER_KEY, data.username);
+    localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(data.allowedMenus || ['task','tool','finance']));
+    await afterAuthSuccess();
+  } catch(e){
+    if(errorEl) errorEl.textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง';
+  }
+}
+
+async function microsoftSignIn(){
+  const errorEl = document.getElementById('lockError');
+  errorEl.textContent = '';
+  try {
+    if(!msalInstance){
+      msalInstance = new msal.PublicClientApplication({
+        auth: { clientId: MICROSOFT_CLIENT_ID, authority: 'https://login.microsoftonline.com/common' }
+      });
+      await msalInstance.initialize();
+    }
+    const result = await msalInstance.loginPopup({ scopes: ['openid','email','profile'] });
+    const r = await fetch(API + '/oauth/microsoft', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ credential: result.idToken })
+    });
+    const data = await r.json();
+    if(!r.ok){ errorEl.textContent = data.error || 'เข้าสู่ระบบด้วย Microsoft ไม่สำเร็จ'; return; }
+    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+    localStorage.setItem(AUTH_USER_KEY, data.username);
+    localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(data.allowedMenus || ['task','tool','finance']));
+    await afterAuthSuccess();
+  } catch(e){
+    errorEl.textContent = 'เข้าสู่ระบบด้วย Microsoft ไม่สำเร็จ ลองใหม่อีกครั้ง';
+  }
+}
+
 function getAllowedMenus(){
   if(localStorage.getItem(AUTH_USER_KEY) === ADMIN_USERNAME) return ['task','tool','finance'];
   try {
@@ -67,6 +136,7 @@ function lockShow(){
   document.getElementById('headerAdminBtn').style.display = 'none';
   document.getElementById('userGreeting').style.display = 'none';
   setTimeout(()=>document.getElementById('lockUser').focus(), 80);
+  initOAuthSignIn();
 }
 
 function lockHide(){

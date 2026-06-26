@@ -8,3 +8,6 @@ id = "fd739e4dea724bf48c19bd36230de733"
 
 [vars]
 RESEND_FROM_EMAIL = "TrackingTask <noreply@trackingtask.online>"
+# Client ID (ไม่ใช่ secret) จาก Google Cloud Console / Azure Portal — เติมแล้ว wrangler deploy ใหม่
+# GOOGLE_CLIENT_ID = "xxxxx.apps.googleusercontent.com"
+# MICROSOFT_CLIENT_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
