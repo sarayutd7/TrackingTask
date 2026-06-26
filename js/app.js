@@ -56,6 +56,7 @@ async function loadFile(){
     if(r.status === 403){
       const data = await r.json().catch(()=>({}));
       if(data.error === 'PIN_RESET_REQUIRED'){ showResetPinScreen(); return; }
+      accountDisabled(data.error); return;
     }
     if(r.ok) DB = await r.json();
     else DB = {};
@@ -82,6 +83,10 @@ async function writeFile(){
       body: JSON.stringify(DB)
     });
     if(r.status === 401){ sessionExpired(); return; }
+    if(r.status === 403){
+      const data = await r.json().catch(()=>({}));
+      if(data.error !== 'PIN_RESET_REQUIRED'){ accountDisabled(data.error); return; }
+    }
     if(!r.ok) throw new Error('status '+r.status);
     if(key) localStorage.setItem(key, JSON.stringify(DB));
     showStatus('✓ บันทึกแล้ว', 'ok');
@@ -96,6 +101,17 @@ function sessionExpired(){
   localStorage.removeItem(AUTH_USER_KEY);
   DB = {};
   lockShow();
+}
+
+function accountDisabled(message){
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem(AUTH_USER_KEY);
+  localStorage.removeItem(AUTH_MENUS_KEY);
+  DB = {};
+  lockShow();
+  const errorEl = document.getElementById('lockError');
+  if(errorEl) errorEl.textContent = message || 'บัญชีนี้ถูกระงับการใช้งาน';
+  alert(message || 'บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ');
 }
 
 function getTasks(d){ return DB[d]||[]; }

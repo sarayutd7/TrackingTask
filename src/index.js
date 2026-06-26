@@ -148,6 +148,29 @@ async function sendEmail(env, { to, subject, text }) {
   return true;
 }
 
+// ── Per-account usage stats (record counts per menu) ──
+const DATE_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
+function computeUsageStats(dataRaw) {
+  let data;
+  try {
+    data = JSON.parse(dataRaw || "{}");
+  } catch (e) {
+    return { task: 0, note: 0, finance: 0 };
+  }
+  let task = 0;
+  for (const key of Object.keys(data)) {
+    if (DATE_KEY_RE.test(key) && Array.isArray(data[key])) task += data[key].length;
+  }
+  const note = Array.isArray(data._ql) ? data._ql.length : 0;
+  let finance = 0;
+  if (data._finance && typeof data._finance === "object") {
+    for (const d of Object.keys(data._finance)) {
+      if (Array.isArray(data._finance[d])) finance += data._finance[d].length;
+    }
+  }
+  return { task, note, finance };
+}
+
 // ── Migration of legacy single-blob data ─────────────
 async function migrateLegacyDataTo(username, env) {
   const migrated = await env.TRACKING_TASK_KV.get("migrated");
@@ -483,12 +506,14 @@ export default {
           const recordRaw = await env.TRACKING_TASK_KV.get(key.name);
           if (!recordRaw) continue;
           const rec = JSON.parse(recordRaw);
+          const dataRaw = await env.TRACKING_TASK_KV.get(`data:${uname}`);
           users.push({
             username: uname,
             email: rec.email || "",
             disabled: !!rec.disabled,
             locked: !!rec.locked,
             allowedMenus: Array.isArray(rec.allowedMenus) ? rec.allowedMenus : ALL_MENUS.slice(),
+            stats: computeUsageStats(dataRaw),
           });
         }
         cursor = page.cursor;

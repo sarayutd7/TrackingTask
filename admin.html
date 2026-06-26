@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — TrackingTask</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="shell">
+
+  <header>
+    <div class="brand">
+      <div class="brand-dot"></div>
+      <h1>Admin Dashboard</h1>
+    </div>
+    <div class="header-right">
+      <a class="btn" href="index.html">← กลับหน้าหลัก</a>
+    </div>
+  </header>
+
+  <div id="adminDenied" style="display:none;text-align:center;padding:4rem 1rem;color:var(--text-3)">
+    <div style="font-size:2rem;margin-bottom:.5rem">🚫</div>
+    <div style="font-size:1rem;font-weight:600;color:var(--text)">ไม่มีสิทธิ์เข้าถึงหน้านี้</div>
+    <div style="margin-top:.4rem;font-size:.85rem">หน้านี้สำหรับ Super Admin เท่านั้น</div>
+    <a class="btn btn-accent" href="index.html" style="margin-top:1.2rem;display:inline-flex">กลับหน้าหลัก</a>
+  </div>
+
+  <div id="adminContent" style="display:none">
+    <div class="stats" id="adminStatsGrid" style="margin-bottom:1.2rem"></div>
+    <div class="lock-error" id="adminError" style="margin-bottom:.8rem"></div>
+    <div class="fin-list" id="adminUserList"></div>
+  </div>
+
+</div>
+
+<script src="js/admin.js"></script>
+</body>
+</html>

@@ -81,9 +81,9 @@
       <button class="lock-btn" id="headerAccountBtn" onclick="openAccountModal()" title="จัดการบัญชี" style="display:none">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
       </button>
-      <button class="lock-btn" id="headerAdminBtn" onclick="openAdminPanel()" title="จัดการผู้ใช้งาน (Admin)" style="display:none">
+      <a class="lock-btn" id="headerAdminBtn" href="admin.html" title="จัดการผู้ใช้งาน (Admin)" style="display:none">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2 3 6v6c0 5 4 9 9 10 5-1 9-5 9-10V6z"/></svg>
-      </button>
+      </a>
       <button class="lock-btn" id="headerLockBtn" onclick="lockApp()" title="ออกจากระบบ" style="display:none">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       </button>
@@ -828,23 +828,6 @@
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeAccountModal()">ยกเลิก</button>
       <button class="btn btn-accent" onclick="saveAccount()">บันทึก</button>
-    </div>
-  </div>
-</div>
-
-<!-- Admin Panel (จัดการผู้ใช้งานในระบบ) -->
-<div class="overlay" id="adminOverlay" style="display:none" onclick="if(event.target===this) closeAdminPanel()">
-  <div class="modal" style="max-width:640px">
-    <div class="modal-header">
-      <span class="modal-title">จัดการผู้ใช้งาน (Admin)</span>
-      <button class="close-btn" onclick="closeAdminPanel()">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div id="adminMeta" style="font-size:.78rem;color:var(--text-3);margin-bottom:.6rem"></div>
-      <div class="lock-error" id="adminError" style="margin-bottom:.6rem"></div>
-      <div class="fin-list" id="adminUserList" style="max-height:55vh;overflow-y:auto"></div>
     </div>
   </div>
 </div>
