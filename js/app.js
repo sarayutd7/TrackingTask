@@ -59,6 +59,11 @@ async function loadFile(){
     }
     if(r.ok) DB = await r.json();
     else DB = {};
+    const menusHeader = r.headers.get('X-Allowed-Menus');
+    if(menusHeader){
+      localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(menusHeader.split(',').filter(Boolean)));
+      if(typeof applyMenuPermissions === 'function') applyMenuPermissions();
+    }
     const key = dbCacheKey();
     if(key) localStorage.setItem(key, JSON.stringify(DB)); // local backup เฉพาะ account นี้
   } catch(_){

@@ -20,6 +20,7 @@ function corsHeaders(request) {
   const headers = {
     "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Expose-Headers": "X-Allowed-Menus",
     "Vary": "Origin",
   };
   if (origin && ALLOWED_ORIGINS.has(origin)) {
@@ -562,9 +563,10 @@ export default {
 
       if (request.method === "GET") {
         const value = await env.TRACKING_TASK_KV.get(`data:${username}`);
+        const allowedMenus = Array.isArray(userRec && userRec.allowedMenus) ? userRec.allowedMenus : ALL_MENUS.slice();
         return new Response(value || "{}", {
           status: 200,
-          headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+          headers: { "Content-Type": "application/json", "X-Allowed-Menus": allowedMenus.join(","), ...CORS_HEADERS },
         });
       }
 
