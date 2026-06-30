@@ -2850,6 +2850,51 @@ async function finPMDelete(i){
   renderBillPMRow();
 }
 
+// ── Cross-device auto-refresh ──────────────────────────
+// บัญชีเดียวกันเปิดหลายเครื่อง/แท็บพร้อมกัน: poll ข้อมูลใหม่จาก server เป็นระยะ
+// แล้ว re-render ให้อัตโนมัติโดยไม่ต้องกดรีเฟรช (ข้ามถ้ากำลังเปิดฟอร์มแก้ไขอยู่ กันข้อมูลที่พิมพ์ค้างหาย)
+const POLL_INTERVAL_MS = 15000;
+const EDIT_OVERLAY_IDS = ['overlay','colOverlay','rschedOverlay','qlOverlay','billOverlay','billPayOverlay','incomeSourceOverlay','incomeLogOverlay','finTagOverlay','finOverlay','finPMOverlay'];
+function isEditingNow(){
+  return EDIT_OVERLAY_IDS.some(id=>{
+    const el = document.getElementById(id);
+    return el && el.style.display === 'flex';
+  });
+}
+
+let pollTimer = null;
+async function pollServerForUpdates(){
+  if(document.hidden || isEditingNow()) return;
+  try {
+    const r = await fetch(API + '/data', { headers: authHeaders() });
+    if(r.status === 401){ sessionExpired(); return; }
+    if(!r.ok) return; // เงียบไว้ ลองใหม่รอบถัดไป ไม่อยากขัดจังหวะผู้ใช้ระหว่างทำงาน
+    const fresh = await r.json();
+    if(JSON.stringify(fresh) === JSON.stringify(DB)) return; // ไม่มีอะไรเปลี่ยน
+    DB = fresh;
+    const key = dbCacheKey();
+    if(key) localStorage.setItem(key, JSON.stringify(DB));
+    render();
+    loadDL();
+    renderDL();
+    loadQLTags();
+    loadQL();
+    renderQlFilterBar();
+    renderQL();
+    loadFinPM();
+    loadFinTags();
+    renderFinance();
+    showStatus('🔄 อัปเดตข้อมูลใหม่จากอุปกรณ์อื่น', 'ok');
+  } catch(_){
+    // network hiccup ระหว่าง poll - ข้ามไปเงียบๆ ลองใหม่รอบถัดไป
+  }
+}
+function startAutoRefresh(){
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(pollServerForUpdates, POLL_INTERVAL_MS);
+  document.addEventListener('visibilitychange', () => { if(!document.hidden) pollServerForUpdates(); });
+}
+
 // ── Initial render (ต้องอยู่ท้ายสุด เพื่อให้ const ทุกตัวถูก initialize ก่อน) ──
 loadCols();
 renderBoard();
@@ -2865,4 +2910,5 @@ loadFile().then(() => {
   loadFinPM();
   loadFinTags();
   renderFinance();
+  startAutoRefresh();
 });
