@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=20260630-2">
+<link rel="stylesheet" href="css/styles.css?v=20260630-3">
 </head>
 <body>
 <div class="shell">
@@ -567,6 +567,7 @@
     <div class="field">
       <label>Tag <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
       <div class="fin-pm-row" id="finTagRow"></div>
+      <a class="fin-pm-manage-link" onclick="openFinTagModal()">+ จัดการ tag</a>
     </div>
 
     <div class="field" id="finBillDueDayField" style="display:none">
@@ -617,6 +618,28 @@
     </div><!-- /modal-body -->
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeFinPMModal()">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tag Manage Modal -->
+<div class="overlay" id="finTagOverlay" style="display:none" onclick="finTagCloseOnBg(event)">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header">
+      <span class="modal-title">จัดการ tag</span>
+      <button class="close-btn" onclick="closeFinTagModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+    <div class="fin-pm-manage-list" id="finTagManageList"></div>
+    <div class="fin-pm-manage-add">
+      <input type="text" id="finTagNewName" placeholder="เพิ่ม tag ใหม่..." autocomplete="off" onkeydown="if(event.key==='Enter') finTagAdd()">
+      <button class="btn btn-accent" onclick="finTagAdd()">เพิ่ม</button>
+    </div>
+    </div><!-- /modal-body -->
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeFinTagModal()">ปิด</button>
     </div>
   </div>
 </div>
@@ -920,7 +943,7 @@
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://alcdn.msauth.net/browser/3.18.0/js/msal-browser.min.js"></script>
-<script src="js/auth.js?v=20260630-2"></script>
-<script src="js/app.js?v=20260630-2"></script>
+<script src="js/auth.js?v=20260630-3"></script>
+<script src="js/app.js?v=20260630-3"></script>
 </body>
 </html>

@@ -1424,7 +1424,11 @@ const FINPM_KEY = 'dailyTodoFinPM';
 const FINPM_DEFAULT = ['เงินสด','โอน/พร้อมเพย์','บัตรเครดิต','บัตรเดบิต','อื่นๆ'];
 let FINPM = [];
 const FIN_TAG_RECURRING = 'รายจ่ายประจำ';
-const FIN_TAGS = [FIN_TAG_RECURRING, 'บิล', 'shopping'];
+const FIN_TAG_INCOME = 'รายรับ';
+const FIN_TAG_RESERVED = [FIN_TAG_RECURRING, FIN_TAG_INCOME];
+const FIN_TAG_KEY = 'dailyTodoFinTags';
+const FIN_TAG_CUSTOM_DEFAULT = ['บิล', 'shopping'];
+let FIN_TAGS = [];
 let finActiveFilter = 'all';
 let selectedFinType = 'income';
 let selectedFinPM = '';
@@ -1468,6 +1472,20 @@ function loadFinPM(){
 function saveFinPM(){
   DB._finPM = FINPM;
   const key = userKey(FINPM_KEY); if(key) localStorage.setItem(key, JSON.stringify(FINPM));
+  writeFile();
+}
+
+function loadFinTags(){
+  let fromLS = [];
+  try { const key = userKey(FIN_TAG_KEY); if(key) fromLS = JSON.parse(localStorage.getItem(key)||'[]'); } catch(_){}
+  const fromFile = Array.isArray(DB._finTags) ? DB._finTags : null;
+  const custom = fromFile !== null ? fromFile : (fromLS.length ? fromLS : FIN_TAG_CUSTOM_DEFAULT.slice());
+  FIN_TAGS = [...FIN_TAG_RESERVED, ...custom.filter(t=>!FIN_TAG_RESERVED.includes(t))];
+}
+function saveFinTags(){
+  const custom = FIN_TAGS.filter(t=>!FIN_TAG_RESERVED.includes(t));
+  DB._finTags = custom;
+  const key = userKey(FIN_TAG_KEY); if(key) localStorage.setItem(key, JSON.stringify(custom));
   writeFile();
 }
 
@@ -2429,6 +2447,57 @@ function selectFinTag(tag){
   if(dueDayField) dueDayField.style.display = (selectedFinTag === FIN_TAG_RECURRING) ? '' : 'none';
 }
 
+// ── Tag manage modal ──────────────────────────────────
+function renderFinTagManageList(){
+  const list = document.getElementById('finTagManageList');
+  if(!list) return;
+  list.innerHTML = FIN_TAGS.map((tag,i)=>{
+    const isReserved = FIN_TAG_RESERVED.includes(tag);
+    const delBtn = isReserved
+      ? `<span style="font-size:.7rem;color:var(--text-3)">tag หลัก</span>`
+      : `<button class="fin-card-btn del" onclick="finTagDelete(${i})" title="ลบ">${finDelSvg}</button>`;
+    return `
+      <div class="fin-pm-manage-item">
+        <span>${esc(tag)}</span>
+        ${delBtn}
+      </div>`;
+  }).join('');
+}
+
+function openFinTagModal(){
+  renderFinTagManageList();
+  document.getElementById('finTagNewName').value = '';
+  document.getElementById('finTagOverlay').style.display = 'flex';
+  setTimeout(()=>document.getElementById('finTagNewName').focus(), 60);
+}
+function closeFinTagModal(){
+  const el = document.getElementById('finTagOverlay');
+  if(el) el.style.display = 'none';
+}
+function finTagCloseOnBg(e){ if(e.target===document.getElementById('finTagOverlay')) closeFinTagModal(); }
+
+async function finTagAdd(){
+  const input = document.getElementById('finTagNewName');
+  const name = input.value.trim();
+  if(!name || FIN_TAGS.includes(name)){ input.focus(); return; }
+  FIN_TAGS.push(name);
+  saveFinTags();
+  renderFinTagManageList();
+  renderFinTagRow();
+  input.value = '';
+  input.focus();
+}
+
+async function finTagDelete(i){
+  const tag = FIN_TAGS[i];
+  if(FIN_TAG_RESERVED.includes(tag)) return;
+  FIN_TAGS.splice(i,1);
+  if(selectedFinTag === tag) selectedFinTag = '';
+  saveFinTags();
+  renderFinTagManageList();
+  renderFinTagRow();
+}
+
 function finSlipChange(e){
   const file = e.target.files && e.target.files[0];
   if(!file) return;
@@ -2508,6 +2577,7 @@ function openFinanceModal(id=null){
       dueDayField.style.display = 'none';
       document.getElementById('finBillDueDay').value = '';
     }
+
     finSlipData = e.slip || '';
     const preview = document.getElementById('finSlipPreview');
     if(finSlipData){
@@ -2556,6 +2626,11 @@ function unlinkFinanceBill(billId){
   }
 }
 
+function unlinkFinanceIncomeSource(sourceId){
+  setIncomeSources(getIncomeSources().filter(s=>s.id!==sourceId));
+  setIncomeLogs(getIncomeLogs().filter(l=>l.sourceId!==sourceId));
+}
+
 async function saveFinance(){
   const item = document.getElementById('finItem').value.trim();
   const amount = parseFloat(document.getElementById('finAmount').value);
@@ -2565,6 +2640,7 @@ async function saveFinance(){
   const note = document.getElementById('finNote').value.trim();
   const tag = selectedFinTag;
   const isRecurring = tag === FIN_TAG_RECURRING;
+  const isIncomeTag = tag === FIN_TAG_INCOME;
   const dueDay = isRecurring ? parseInt(document.getElementById('finBillDueDay').value, 10) : null;
   if(isRecurring && (!dueDay || dueDay<1 || dueDay>31)){
     document.getElementById('finBillDueDay').focus();
@@ -2574,12 +2650,14 @@ async function saveFinance(){
   const entries = getFinance(currentDate);
   const now = new Date();
   let existingBillId = null;
+  let existingIncomeSourceId = null;
   let financeId;
 
   if(finEditId){
     const idx = entries.findIndex(x=>x.id===finEditId);
     if(idx<0) return;
     existingBillId = entries[idx].billId || null;
+    existingIncomeSourceId = entries[idx].incomeSourceId || null;
     financeId = entries[idx].id;
     if(existingBillId && !isRecurring){
       const ok = confirm(`"${entries[idx].item}" เป็นรายจ่ายประจำอยู่ การเอา tag นี้ออกจะลบรายการรายจ่ายประจำที่ผูกไว้ด้วย (ประวัติการจ่ายเดือนอื่นจะไม่ถูกลบ) ต้องการดำเนินการต่อหรือไม่?`);
@@ -2587,13 +2665,19 @@ async function saveFinance(){
       unlinkFinanceBill(existingBillId);
       existingBillId = null;
     }
+    if(existingIncomeSourceId && !isIncomeTag){
+      const ok = confirm(`"${entries[idx].item}" เป็นแหล่งรายรับอยู่ การเอา tag นี้ออกจะลบแหล่งรายรับที่ผูกไว้ด้วย (ประวัติการรับเงินเดือนอื่นจะไม่ถูกลบ) ต้องการดำเนินการต่อหรือไม่?`);
+      if(!ok) return;
+      unlinkFinanceIncomeSource(existingIncomeSourceId);
+      existingIncomeSourceId = null;
+    }
     entries[idx] = {
       ...entries[idx],
       type: selectedFinType,
       item, amount, time,
       paymentMethod: selectedFinPM,
       note, slip: finSlipData,
-      tag, billId: existingBillId,
+      tag, billId: existingBillId, incomeSourceId: existingIncomeSourceId,
       updatedAt: now.toISOString()
     };
   } else {
@@ -2604,7 +2688,7 @@ async function saveFinance(){
       item, amount, time,
       paymentMethod: selectedFinPM,
       note, slip: finSlipData,
-      tag, billId: null,
+      tag, billId: null, incomeSourceId: null,
       createdAt: now.toISOString(),
       updatedAt: now.toISOString()
     });
@@ -2637,11 +2721,38 @@ async function saveFinance(){
     }
   }
 
+  if(isIncomeTag){
+    if(existingIncomeSourceId){
+      const sources = getIncomeSources();
+      const sIdx = sources.findIndex(s=>s.id===existingIncomeSourceId);
+      if(sIdx>-1) sources[sIdx] = { ...sources[sIdx], name: item, amount, paymentMethod: selectedFinPM, note, updatedAt: now.toISOString() };
+      setIncomeSources(sources);
+      const logs = getIncomeLogs();
+      const log = logs.find(l=>l.financeEntryId===financeId);
+      if(log){ log.amount = amount; log.paymentMethod = selectedFinPM; log.note = note; }
+      else logs.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,8), sourceId: existingIncomeSourceId, amount, date: currentDate, time, paymentMethod: selectedFinPM, note, financeEntryId: financeId, createdAt: now.toISOString() });
+      setIncomeLogs(logs);
+    } else {
+      const sourceId = Date.now().toString(36)+Math.random().toString(36).slice(2,6)+'s';
+      getIncomeSources().push({
+        id: sourceId, name: item, amount, active: true,
+        paymentMethod: selectedFinPM, note,
+        createdAt: now.toISOString(), updatedAt: now.toISOString()
+      });
+      const logs = getIncomeLogs();
+      logs.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,8), sourceId, amount, date: currentDate, time, paymentMethod: selectedFinPM, note, financeEntryId: financeId, createdAt: now.toISOString() });
+      setIncomeLogs(logs);
+      const idx2 = entries.findIndex(x=>x.id===financeId);
+      if(idx2>-1) entries[idx2].incomeSourceId = sourceId;
+    }
+  }
+
   setFinance(currentDate, entries);
   closeFinanceModal();
   await writeFile();
   renderFinance();
   if(typeof renderBills === 'function') renderBills();
+  if(typeof renderIncomeSources === 'function') renderIncomeSources();
 }
 
 async function deleteFinance(id){
@@ -2651,10 +2762,16 @@ async function deleteFinance(id){
     if(!ok) return;
     unlinkFinanceBill(entry.billId);
   }
+  if(entry && entry.incomeSourceId){
+    const ok = confirm(`"${entry.item}" เป็นแหล่งรายรับอยู่ การลบจะเอาแหล่งรายรับนี้ออกทั้งหมด (ประวัติการรับเงินเดือนอื่นจะยังอยู่เหมือนเดิม) ต้องการลบหรือไม่?`);
+    if(!ok) return;
+    unlinkFinanceIncomeSource(entry.incomeSourceId);
+  }
   setFinance(currentDate, getFinance(currentDate).filter(x=>x.id!==id));
   await writeFile();
   renderFinance();
   if(typeof renderBills === 'function') renderBills();
+  if(typeof renderIncomeSources === 'function') renderIncomeSources();
 }
 
 // ── Payment Method manage modal ──────────────────────
@@ -2721,5 +2838,6 @@ loadFile().then(() => {
   renderQlFilterBar();
   renderQL();
   loadFinPM();
+  loadFinTags();
   renderFinance();
 });
