@@ -298,6 +298,72 @@ async function migrateLegacyDataTo(username, env) {
   await env.TRACKING_TASK_KV.put("migrated", "1");
 }
 
+// ── Per-menu KV split (task / tool[Note] / finance) ──
+// แทนที่จะเก็บข้อมูลทั้งหมดของ user ไว้ใน key เดียว (data:<username>)
+// แยกเป็น 3 key ตามเมนู เพื่อให้แต่ละเมนูเป็นอิสระต่อกัน
+const TASK_OWN_KEYS = new Set(["_logs"]);
+const TOOL_OWN_KEYS = new Set(["_ql", "_qlTags"]);
+const FINANCE_OWN_KEYS = new Set([
+  "_finance", "_bills", "_billPayments", "_incomeSources", "_incomeLogs", "_finPM", "_finTags",
+]);
+
+function menuDataKey(username, menu) {
+  return `data:${username}:${menu}`;
+}
+
+function splitDataByMenu(data) {
+  const task = {}, tool = {}, finance = {};
+  for (const [k, v] of Object.entries(data || {})) {
+    if (FINANCE_OWN_KEYS.has(k)) finance[k] = v;
+    else if (TOOL_OWN_KEYS.has(k)) tool[k] = v;
+    else task[k] = v; // date-keyed task arrays, _logs, and any unknown key default here (safe: never drops data)
+  }
+  return { task, tool, finance };
+}
+
+function mergeMenuData(task, tool, finance) {
+  return { ...(task || {}), ...(tool || {}), ...(finance || {}) };
+}
+
+// อ่านข้อมูล user แบบ merge 3 ก้อนเข้าด้วยกัน — ถ้ายังไม่เคย split (ไม่มี flag splitv2:<username>)
+// จะ migrate จาก data:<username> ก้อนเดียวเดิมแบบ lazy ในจังหวะนี้เลย (เก็บ key เดิมไว้เป็น backup ไม่ลบทิ้ง)
+async function readUserDataSplit(username, env) {
+  const migFlag = await env.TRACKING_TASK_KV.get(`splitv2:${username}`);
+  if (!migFlag) {
+    const oldRaw = await env.TRACKING_TASK_KV.get(`data:${username}`);
+    let oldData = {};
+    try { oldData = oldRaw ? JSON.parse(oldRaw) : {}; } catch (e) { oldData = {}; }
+    const { task, tool, finance } = splitDataByMenu(oldData);
+    await Promise.all([
+      env.TRACKING_TASK_KV.put(menuDataKey(username, "task"), JSON.stringify(task)),
+      env.TRACKING_TASK_KV.put(menuDataKey(username, "tool"), JSON.stringify(tool)),
+      env.TRACKING_TASK_KV.put(menuDataKey(username, "finance"), JSON.stringify(finance)),
+      env.TRACKING_TASK_KV.put(`splitv2:${username}`, "1"),
+    ]);
+    return { task, tool, finance };
+  }
+  const [taskRaw, toolRaw, financeRaw] = await Promise.all([
+    env.TRACKING_TASK_KV.get(menuDataKey(username, "task")),
+    env.TRACKING_TASK_KV.get(menuDataKey(username, "tool")),
+    env.TRACKING_TASK_KV.get(menuDataKey(username, "finance")),
+  ]);
+  let task = {}, tool = {}, finance = {};
+  try { task = taskRaw ? JSON.parse(taskRaw) : {}; } catch (e) { task = {}; }
+  try { tool = toolRaw ? JSON.parse(toolRaw) : {}; } catch (e) { tool = {}; }
+  try { finance = financeRaw ? JSON.parse(financeRaw) : {}; } catch (e) { finance = {}; }
+  return { task, tool, finance };
+}
+
+async function writeUserDataSplit(username, data, env) {
+  const { task, tool, finance } = splitDataByMenu(data);
+  await Promise.all([
+    env.TRACKING_TASK_KV.put(menuDataKey(username, "task"), JSON.stringify(task)),
+    env.TRACKING_TASK_KV.put(menuDataKey(username, "tool"), JSON.stringify(tool)),
+    env.TRACKING_TASK_KV.put(menuDataKey(username, "finance"), JSON.stringify(finance)),
+    env.TRACKING_TASK_KV.put(`splitv2:${username}`, "1"),
+  ]);
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -639,7 +705,13 @@ export default {
         if (dupRaw) {
           const dupRec = JSON.parse(dupRaw);
           const dupData = await env.TRACKING_TASK_KV.get(`data:${email}`);
-          if (dupData) {
+          const dupSplit = await Promise.all([
+            env.TRACKING_TASK_KV.get(menuDataKey(email, "task")),
+            env.TRACKING_TASK_KV.get(menuDataKey(email, "tool")),
+            env.TRACKING_TASK_KV.get(menuDataKey(email, "finance")),
+          ]);
+          const hasSplitData = dupSplit.some((raw) => raw && raw !== "{}");
+          if (dupData || hasSplitData) {
             return jsonResponse({ error: "มีบัญชีอื่นที่ใช้อีเมลนี้อยู่แล้วและมีข้อมูลอยู่ กรุณาติดต่อผู้ดูแลระบบเพื่อรวมบัญชี" }, 409, CORS_HEADERS);
           }
           if (dupRec.authProvider) {
@@ -753,14 +825,15 @@ export default {
           const recordRaw = await env.TRACKING_TASK_KV.get(key.name);
           if (!recordRaw) continue;
           const rec = JSON.parse(recordRaw);
-          const dataRaw = await env.TRACKING_TASK_KV.get(`data:${uname}`);
+          const { task, tool, finance } = await readUserDataSplit(uname, env);
+          const merged = mergeMenuData(task, tool, finance);
           users.push({
             username: uname,
             email: rec.email || "",
             disabled: !!rec.disabled,
             locked: !!rec.locked,
             allowedMenus: Array.isArray(rec.allowedMenus) ? rec.allowedMenus : ALL_MENUS.slice(),
-            stats: computeUsageStats(dataRaw),
+            stats: computeUsageStats(JSON.stringify(merged)),
           });
         }
         cursor = page.cursor;
@@ -789,6 +862,10 @@ export default {
       if (request.method === "DELETE") {
         await env.TRACKING_TASK_KV.delete(`user:${targetUsername}`);
         await env.TRACKING_TASK_KV.delete(`data:${targetUsername}`);
+        await env.TRACKING_TASK_KV.delete(menuDataKey(targetUsername, "task"));
+        await env.TRACKING_TASK_KV.delete(menuDataKey(targetUsername, "tool"));
+        await env.TRACKING_TASK_KV.delete(menuDataKey(targetUsername, "finance"));
+        await env.TRACKING_TASK_KV.delete(`splitv2:${targetUsername}`);
         return jsonResponse({ ok: true }, 200, CORS_HEADERS);
       }
 
@@ -834,25 +911,22 @@ export default {
       }
 
       if (request.method === "GET") {
-        const value = await env.TRACKING_TASK_KV.get(`data:${username}`);
+        const { task, tool, finance } = await readUserDataSplit(username, env);
+        const merged = mergeMenuData(task, tool, finance);
         const allowedMenus = Array.isArray(userRec && userRec.allowedMenus) ? userRec.allowedMenus : ALL_MENUS.slice();
-        return new Response(value || "{}", {
-          status: 200,
-          headers: { "Content-Type": "application/json", "X-Allowed-Menus": allowedMenus.join(","), ...CORS_HEADERS },
-        });
+        return jsonResponse(merged, 200, { "X-Allowed-Menus": allowedMenus.join(","), ...CORS_HEADERS });
       }
 
       if (request.method === "POST") {
-        let body;
+        let body, data;
         try {
           body = await request.text();
-          // Validate it's valid JSON before storing
-          JSON.parse(body);
+          data = JSON.parse(body); // Validate it's valid JSON before storing
         } catch (e) {
           return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
         }
 
-        await env.TRACKING_TASK_KV.put(`data:${username}`, body);
+        await writeUserDataSplit(username, data, env);
         return jsonResponse({ ok: true }, 200, CORS_HEADERS);
       }
 
