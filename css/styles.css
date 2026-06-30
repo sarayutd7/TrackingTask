@@ -2034,31 +2034,52 @@
 
   .fin-subtab-bar {
     flex-wrap: nowrap;
-    background: var(--surface2);
+    background: linear-gradient(180deg, var(--surface2), var(--surface));
     border: 1px solid var(--border);
     border-radius: var(--r-lg);
-    padding: .3rem;
+    padding: .35rem;
     gap: .3rem;
     margin: 0 0 1.1rem;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.3);
   }
   .fin-subtab-bar .ql-filter-btn {
     flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
     text-align: center;
     padding: .7rem 1rem;
-    font-size: .9rem;
+    font-size: .87rem;
     font-weight: 700;
-    border: none;
-    border-radius: var(--r);
+    border: 1px solid transparent;
+    border-radius: calc(var(--r-lg) - .35rem);
     letter-spacing: normal;
+    background: transparent;
+    color: var(--text-3);
+    transition: background .2s ease, color .2s ease, box-shadow .2s ease, transform .15s ease;
   }
+  .fin-subtab-bar .ql-filter-btn:hover { color: var(--text); background: rgba(255,255,255,.05); }
+  .fin-subtab-icon { font-size: 1rem; line-height: 1; }
   .fin-subtab-bar .ql-filter-btn.active {
-    background: var(--navy);
-    border-color: var(--navy);
     color: #fff;
-    box-shadow: 0 4px 14px rgba(59,95,217,.35);
+    transform: translateY(-1px);
+  }
+  .fin-subtab-bar .ql-filter-btn[data-subtab="list"].active {
+    background: linear-gradient(135deg, #6366f1, #4338ca);
+    box-shadow: 0 4px 14px rgba(99,102,241,.4);
+  }
+  .fin-subtab-bar .ql-filter-btn[data-subtab="bills"].active {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    box-shadow: 0 4px 14px rgba(245,158,11,.4);
+  }
+  .fin-subtab-bar .ql-filter-btn[data-subtab="income"].active {
+    background: linear-gradient(135deg, #34d399, #0ea571);
+    box-shadow: 0 4px 14px rgba(52,211,153,.4);
   }
   @media (max-width: 480px) {
-    .fin-subtab-bar .ql-filter-btn { padding: .8rem .6rem; font-size: .95rem; }
+    .fin-subtab-bar .ql-filter-btn { padding: .8rem .5rem; font-size: .8rem; gap: .3rem; }
+    .fin-subtab-icon { font-size: .95rem; }
   }
 
   /* Type pills (income/expense) in modal */
