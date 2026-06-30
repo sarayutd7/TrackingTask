@@ -1423,9 +1423,12 @@ async function submitQlUnlock(){
 const FINPM_KEY = 'dailyTodoFinPM';
 const FINPM_DEFAULT = ['เงินสด','โอน/พร้อมเพย์','บัตรเครดิต','บัตรเดบิต','อื่นๆ'];
 let FINPM = [];
+const FIN_TAG_RECURRING = 'รายจ่ายประจำ';
+const FIN_TAGS = [FIN_TAG_RECURRING, 'บิล', 'shopping'];
 let finActiveFilter = 'all';
 let selectedFinType = 'income';
 let selectedFinPM = '';
+let selectedFinTag = '';
 let finEditId = null;
 let finSlipData = '';
 
@@ -1552,6 +1555,7 @@ function renderFinance(){
 
   body.innerHTML = list.map(({e})=>{
     const pmBadge = e.paymentMethod ? `<span class="fin-pm-badge">${esc(e.paymentMethod)}</span>` : '';
+    const tagBadge = e.tag ? `<span class="fin-pm-badge">${esc(e.tag)}</span>` : '';
     const timeBadge = e.time ? `<span class="fin-card-time">${esc(e.time)}</span>` : '';
     const noteHtml = e.note ? `<div class="fin-card-note">${esc(e.note)}</div>` : '';
     const slipImg = e.slip ? `<img class="fin-slip-thumb" src="${e.slip}" onclick="showImagePreview(this.src)" title="คลิกเพื่อดูรูปขนาดเต็ม">` : '';
@@ -1567,7 +1571,7 @@ function renderFinance(){
           </div>
           <div class="fin-card-amount ${esc(e.type)}">${sign}${finFmtMoney(e.amount)}</div>
         </div>
-        <div class="fin-card-meta">${pmBadge}</div>
+        <div class="fin-card-meta">${pmBadge}${tagBadge}</div>
         ${noteHtml}
       </div>
       <div class="fin-card-actions">
@@ -2408,6 +2412,23 @@ function selectFinPM(pm){
   });
 }
 
+function renderFinTagRow(){
+  const row = document.getElementById('finTagRow');
+  if(!row) return;
+  row.innerHTML = FIN_TAGS.map(tag=>
+    `<button class="fin-pm-pill ${tag===selectedFinTag?'active':''}" data-tag="${esc(tag)}" onclick="selectFinTag('${esc(tag)}')">${esc(tag)}</button>`
+  ).join('');
+}
+
+function selectFinTag(tag){
+  selectedFinTag = (selectedFinTag===tag) ? '' : tag;
+  document.querySelectorAll('#finTagRow .fin-pm-pill').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.tag === selectedFinTag);
+  });
+  const dueDayField = document.getElementById('finBillDueDayField');
+  if(dueDayField) dueDayField.style.display = (selectedFinTag === FIN_TAG_RECURRING) ? '' : 'none';
+}
+
 function finSlipChange(e){
   const file = e.target.files && e.target.files[0];
   if(!file) return;
@@ -2476,7 +2497,18 @@ function openFinanceModal(id=null){
     selectFinType(e.type || 'income');
     selectedFinPM = e.paymentMethod || '';
     renderFinPMRow();
-    finSlipData = e.slip || ''; 
+    selectedFinTag = e.tag || '';
+    renderFinTagRow();
+    const dueDayField = document.getElementById('finBillDueDayField');
+    if(selectedFinTag === FIN_TAG_RECURRING){
+      dueDayField.style.display = '';
+      const bill = e.billId ? getBills().find(b=>b.id===e.billId) : null;
+      document.getElementById('finBillDueDay').value = bill ? bill.dueDay : '';
+    } else {
+      dueDayField.style.display = 'none';
+      document.getElementById('finBillDueDay').value = '';
+    }
+    finSlipData = e.slip || '';
     const preview = document.getElementById('finSlipPreview');
     if(finSlipData){
       preview.src = finSlipData;
@@ -2497,6 +2529,10 @@ function openFinanceModal(id=null){
     selectFinType('income');
     selectedFinPM = '';
     renderFinPMRow();
+    selectedFinTag = '';
+    renderFinTagRow();
+    document.getElementById('finBillDueDayField').style.display = 'none';
+    document.getElementById('finBillDueDay').value = '';
     finRemoveSlip();
   }
   document.getElementById('finSlipInput').value = '';
@@ -2511,6 +2547,15 @@ function closeFinanceModal(){
 }
 function finCloseOnBg(e){ if(e.target===document.getElementById('finOverlay')) closeFinanceModal(); }
 
+function unlinkFinanceBill(billId){
+  setBills(getBills().filter(b=>b.id!==billId));
+  if(DB._billPayments){
+    Object.keys(DB._billPayments).forEach(month=>{
+      DB._billPayments[month] = DB._billPayments[month].filter(p=>p.billId!==billId);
+    });
+  }
+}
+
 async function saveFinance(){
   const item = document.getElementById('finItem').value.trim();
   const amount = parseFloat(document.getElementById('finAmount').value);
@@ -2518,40 +2563,98 @@ async function saveFinance(){
   if(!amount || amount <= 0){ document.getElementById('finAmount').focus(); return; }
   const time = document.getElementById('finTime').value || '';
   const note = document.getElementById('finNote').value.trim();
+  const tag = selectedFinTag;
+  const isRecurring = tag === FIN_TAG_RECURRING;
+  const dueDay = isRecurring ? parseInt(document.getElementById('finBillDueDay').value, 10) : null;
+  if(isRecurring && (!dueDay || dueDay<1 || dueDay>31)){
+    document.getElementById('finBillDueDay').focus();
+    return;
+  }
+
   const entries = getFinance(currentDate);
+  const now = new Date();
+  let existingBillId = null;
+  let financeId;
+
   if(finEditId){
     const idx = entries.findIndex(x=>x.id===finEditId);
-    if(idx>-1){
-      entries[idx] = {
-        ...entries[idx],
-        type: selectedFinType,
-        item, amount, time,
-        paymentMethod: selectedFinPM,
-        note, slip: finSlipData,
-        updatedAt: new Date().toISOString()
-      };
+    if(idx<0) return;
+    existingBillId = entries[idx].billId || null;
+    financeId = entries[idx].id;
+    if(existingBillId && !isRecurring){
+      const ok = confirm(`"${entries[idx].item}" เป็นรายจ่ายประจำอยู่ การเอา tag นี้ออกจะลบรายการรายจ่ายประจำที่ผูกไว้ด้วย (ประวัติการจ่ายเดือนอื่นจะไม่ถูกลบ) ต้องการดำเนินการต่อหรือไม่?`);
+      if(!ok) return;
+      unlinkFinanceBill(existingBillId);
+      existingBillId = null;
     }
-  } else {
-    entries.push({
-      id: Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    entries[idx] = {
+      ...entries[idx],
       type: selectedFinType,
       item, amount, time,
       paymentMethod: selectedFinPM,
       note, slip: finSlipData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      tag, billId: existingBillId,
+      updatedAt: now.toISOString()
+    };
+  } else {
+    financeId = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    entries.push({
+      id: financeId,
+      type: selectedFinType,
+      item, amount, time,
+      paymentMethod: selectedFinPM,
+      note, slip: finSlipData,
+      tag, billId: null,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString()
     });
   }
+
+  if(isRecurring){
+    const month = currentDate.slice(0,7);
+    if(existingBillId){
+      const bills = getBills();
+      const bIdx = bills.findIndex(b=>b.id===existingBillId);
+      if(bIdx>-1) bills[bIdx] = { ...bills[bIdx], name: item, amount, dueDay, paymentMethod: selectedFinPM, note, updatedAt: now.toISOString() };
+      setBills(bills);
+      const payments = getBillPayments(month);
+      const p = payments.find(x=>x.billId===existingBillId);
+      if(p){ p.amount = amount; p.image = finSlipData; }
+      setBillPayments(month, payments);
+    } else {
+      const billId = Date.now().toString(36)+Math.random().toString(36).slice(2,6)+'b';
+      getBills().push({
+        id: billId, name: item, amount, dueDay, active: true, image: '',
+        paymentMethod: selectedFinPM, note,
+        startMonth: month,
+        createdAt: now.toISOString(), updatedAt: now.toISOString()
+      });
+      const payments = getBillPayments(month);
+      payments.push({ billId, paid: true, paidDate: currentDate, paidAmount: amount, financeEntryId: financeId, amount, image: finSlipData });
+      setBillPayments(month, payments);
+      const idx2 = entries.findIndex(x=>x.id===financeId);
+      if(idx2>-1) entries[idx2].billId = billId;
+    }
+  }
+
   setFinance(currentDate, entries);
   closeFinanceModal();
   await writeFile();
   renderFinance();
+  if(typeof renderBills === 'function') renderBills();
 }
 
 async function deleteFinance(id){
+  const entry = getFinance(currentDate).find(x=>x.id===id);
+  if(entry && entry.billId){
+    const ok = confirm(`"${entry.item}" เป็นรายจ่ายประจำอยู่ การลบจะเอารายการรายจ่ายประจำนี้ออกทั้งหมด (รายการที่บันทึกไปแล้วในเดือนอื่นจะยังอยู่เหมือนเดิม) ต้องการลบหรือไม่?`);
+    if(!ok) return;
+    unlinkFinanceBill(entry.billId);
+  }
   setFinance(currentDate, getFinance(currentDate).filter(x=>x.id!==id));
   await writeFile();
   renderFinance();
+  if(typeof renderBills === 'function') renderBills();
 }
 
 // ── Payment Method manage modal ──────────────────────

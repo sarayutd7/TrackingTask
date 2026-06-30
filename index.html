@@ -565,6 +565,17 @@
     </div>
 
     <div class="field">
+      <label>Tag <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
+      <div class="fin-pm-row" id="finTagRow"></div>
+    </div>
+
+    <div class="field" id="finBillDueDayField" style="display:none">
+      <label>วันครบกำหนด (ของทุกเดือน)</label>
+      <input type="number" id="finBillDueDay" min="1" max="31" placeholder="1-31">
+      <span style="font-size:.72rem;color:var(--text-3)">รายการนี้จะถูกตั้งเป็นรายจ่ายประจำ และไปแสดงที่แท็บ "รายจ่ายประจำ" ด้วย</span>
+    </div>
+
+    <div class="field">
       <label>รายละเอียดเพิ่มเติม <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
       <textarea id="finNote" placeholder="บันทึกเพิ่มเติม..."></textarea>
     </div>
