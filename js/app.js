@@ -1450,7 +1450,10 @@ function getBillMonthAmount(bill, month){
 }
 function getBillMonthImage(bill, month){
   const p = findBillPayment(month, bill.id);
-  return (p && p.image != null) ? p.image : (bill.image || '');
+  // payment slip takes priority over bill's own image
+  if(p && p.slip) return p.slip;
+  if(p && p.image != null) return p.image;
+  return bill.image || '';
 }
 
 function loadFinPM(){
@@ -1893,6 +1896,7 @@ async function deleteBill(id){
 
 let billPayBillId = null;
 let selectedBillPayPM = '';
+let billPaySlipData = '';
 
 async function toggleBillPaid(billId){
   const bill = getBills().find(b=>b.id===billId);
@@ -1922,6 +1926,11 @@ function openBillPayModal(billId){
   document.getElementById('billPayTime').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   document.getElementById('billPayNote').value = (bill && bill.note) || '';
   selectedBillPayPM = (bill && bill.paymentMethod) || '';
+  billPaySlipData = '';
+  document.getElementById('billPaySlipInput').value = '';
+  document.getElementById('billPaySlipPreview').src = '';
+  document.getElementById('billPaySlipPreview').style.display = 'none';
+  document.getElementById('billPaySlipRemoveBtn').style.display = 'none';
   renderBillPayPMRow();
   document.getElementById('billPayOverlay').style.display = 'flex';
 }
@@ -1929,6 +1938,27 @@ function openBillPayModal(billId){
 function closeBillPayModal(){
   document.getElementById('billPayOverlay').style.display = 'none';
   billPayBillId = null;
+  billPaySlipData = '';
+}
+
+function billPaySlipChange(e){
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  compressImageToDataURL(file, 800, 0.75).then(dataUrl=>{
+    billPaySlipData = dataUrl;
+    const preview = document.getElementById('billPaySlipPreview');
+    preview.src = dataUrl;
+    preview.style.display = 'inline-block';
+    document.getElementById('billPaySlipRemoveBtn').style.display = 'inline-flex';
+  });
+}
+
+function billPayRemoveSlip(){
+  billPaySlipData = '';
+  document.getElementById('billPaySlipInput').value = '';
+  document.getElementById('billPaySlipPreview').src = '';
+  document.getElementById('billPaySlipPreview').style.display = 'none';
+  document.getElementById('billPaySlipRemoveBtn').style.display = 'none';
 }
 
 function billPayCloseOnBg(e){
@@ -1972,7 +2002,7 @@ async function confirmBillPay(){
     time: payTime,
     paymentMethod: selectedBillPayPM,
     note: payNote || `รายจ่ายประจำ (auto) — ${monthLabelTH(billsViewMonth)}`,
-    slip: '',
+    slip: billPaySlipData,
     createdAt: now.toISOString(),
     updatedAt: now.toISOString(),
     billId: bill.id
@@ -1988,6 +2018,7 @@ async function confirmBillPay(){
   p.paymentMethod = selectedBillPayPM;
   p.payTime = payTime;
   p.payNote = payNote;
+  if(billPaySlipData) p.slip = billPaySlipData;
 
   setBillPayments(billsViewMonth, payments);
   await writeFile();
@@ -2398,21 +2429,31 @@ function finRemoveSlip(){
   document.getElementById('finSlipRemoveBtn').style.display = 'none';
 }
 
-function compressImageToDataURL(file, maxDim, quality){
+function compressImageToDataURL(file, maxDim, quality, maxBytes){
+  const limit = maxBytes || 500 * 1024; // default 500 KB
   return new Promise(resolve=>{
     const img = new Image();
     const reader = new FileReader();
     reader.onload = ()=>{
       img.onload = ()=>{
-        let { width, height } = img;
-        if(width > maxDim || height > maxDim){
-          if(width > height){ height = Math.round(height * maxDim / width); width = maxDim; }
-          else { width = Math.round(width * maxDim / height); height = maxDim; }
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width; canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        const drawAndResolve = (dim, q) => {
+          let { width, height } = img;
+          if(width > dim || height > dim){
+            if(width > height){ height = Math.round(height * dim / width); width = dim; }
+            else { width = Math.round(width * dim / height); height = dim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          let dataUrl = canvas.toDataURL('image/jpeg', q);
+          // if over limit, try reducing quality then dimension
+          if(dataUrl.length > limit * 1.37){
+            if(q > 0.4){ return drawAndResolve(dim, Math.round((q - 0.15) * 10) / 10); }
+            if(dim > 400){ return drawAndResolve(Math.round(dim * 0.7), 0.5); }
+          }
+          resolve(dataUrl);
+        };
+        drawAndResolve(maxDim, quality);
       };
       img.src = reader.result;
     };

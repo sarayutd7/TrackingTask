@@ -687,6 +687,14 @@
         <a class="fin-pm-manage-link" onclick="openFinPMModal()">+ จัดการรูปแบบการจ่าย</a>
       </div>
       <div class="field">
+        <label>สลิป/หลักฐานการจ่าย <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
+        <div class="fin-slip-row">
+          <input type="file" id="billPaySlipInput" accept="image/*" onchange="billPaySlipChange(event)">
+          <img class="fin-slip-preview" id="billPaySlipPreview" alt="slip preview">
+          <button class="btn btn-ghost" id="billPaySlipRemoveBtn" style="display:none" onclick="billPayRemoveSlip()">ลบรูป</button>
+        </div>
+      </div>
+      <div class="field">
         <label>รายการเพิ่มเติม <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
         <textarea id="billPayNote" placeholder="บันทึกเพิ่มเติม..."></textarea>
       </div>
