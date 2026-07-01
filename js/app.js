@@ -1101,7 +1101,7 @@ const qlLinkSvg = `<svg width="11" height="11" fill="none" stroke="currentColor"
 
 const qlEditSvg = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
 const qlDelSvg  = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
-const qlPinSvg  = `<svg width="9" height="9" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 6H21l-5.1 3.7 1.9 6.3L12 14l-5.8 4 1.9-6.3L3 8h6.6z"/></svg>`;
+const qlPinSvg  = `<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>`;
 
 function qlIndexById(id){ return QL.findIndex(x=>x.id===id); }
 
@@ -1463,6 +1463,13 @@ let finSlipData = '';
 
 function getFinance(d){ return (DB._finance && DB._finance[d]) || []; }
 function setFinance(d, arr){ if(!DB._finance) DB._finance = {}; DB._finance[d] = arr; }
+function findFinanceById(id){
+  for(const d of Object.keys(DB._finance||{})){
+    const e = DB._finance[d].find(x=>x.id===id);
+    if(e) return {entry:e, date:d};
+  }
+  return null;
+}
 
 // ── Recurring bills (รายจ่ายประจำ) ────────────────────
 let finSubTab = 'list';
@@ -1542,15 +1549,14 @@ const finEditSvg = `<svg width="9" height="9" fill="none" stroke="currentColor" 
 const finDelSvg  = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
 
 function renderFinance(){
-  const entries = getFinance(currentDate);
-
-  // Summary cards (totals for the whole month being viewed)
+  // Summary cards + list both use the whole month being viewed
   const curMonth = currentDate.slice(0,7);
   const monthEntries = Object.keys(DB._finance||{})
     .filter(d=>d.slice(0,7)===curMonth)
-    .flatMap(d=>DB._finance[d]);
+    .sort((a,b)=>b.localeCompare(a)) // newest date first
+    .flatMap(d=>DB._finance[d].map(e=>({...e, _date:d})));
   let income = 0, expense = 0;
-  monthEntries.forEach(e=>{
+  monthEntries.forEach(e => {
     if(e.type === 'income') income += Number(e.amount)||0;
     else expense += Number(e.amount)||0;
   });
@@ -1582,23 +1588,22 @@ function renderFinance(){
     </div>`;
   }
 
-  // List
+  // List — แสดงทุกรายการของเดือน (ไม่ใช่แค่วันที่เลือก) เรียงจากวันล่าสุดก่อน
   const body = document.getElementById('finBody');
   if(!body) return;
-  const list = (finActiveFilter==='all' ? entries : entries.filter(e=>e.type===finActiveFilter))
-    .map((e,i)=>({e,i:entries.indexOf(e)}))
-    .sort((a,b)=> (a.e.time||'').localeCompare(b.e.time||''));
+  const list = (finActiveFilter==='all' ? monthEntries : monthEntries.filter(e=>e.type===finActiveFilter));
 
   if(!list.length){
-    body.innerHTML = entries.length
+    body.innerHTML = monthEntries.length
       ? '<span class="ql-empty">ไม่มีรายการในตัวกรองนี้</span>'
-      : '<span class="ql-empty">ยังไม่มีรายการ — กด + เพิ่มรายการ เพื่อบันทึก</span>';
+      : '<span class="ql-empty">ยังไม่มีรายการในเดือนนี้ — กด + เพิ่มรายการ เพื่อบันทึก</span>';
     return;
   }
 
-  body.innerHTML = list.map(({e})=>{
+  body.innerHTML = list.map(e=>{
     const pmBadge = e.paymentMethod ? `<span class="fin-pm-badge">${esc(e.paymentMethod)}</span>` : '';
     const tagBadge = e.tag ? `<span class="fin-pm-badge">${esc(e.tag)}</span>` : '';
+    const dateBadge = e._date ? `<span class="fin-card-date-badge">${esc(e._date.slice(5))}</span>` : '';
     const timeBadge = e.time ? `<span class="fin-card-time">${esc(e.time)}</span>` : '';
     const noteHtml = e.note ? `<div class="fin-card-note">${esc(e.note)}</div>` : '';
     const slipImg = e.slip ? `<img class="fin-slip-thumb" src="${e.slip}" onclick="showImagePreview(this.src)" title="คลิกเพื่อดูรูปขนาดเต็ม">` : '';
@@ -1610,7 +1615,7 @@ function renderFinance(){
         <div class="fin-card-top">
           <div>
             <div class="fin-card-item">${esc(e.item)}</div>
-            ${timeBadge}
+            <div style="display:flex;gap:.3rem;align-items:center;flex-wrap:wrap">${dateBadge}${timeBadge}</div>
           </div>
           <div class="fin-card-amount ${esc(e.type)}">${sign}${finFmtMoney(e.amount)}</div>
         </div>
@@ -2579,9 +2584,9 @@ function compressImageToDataURL(file, maxDim, quality, maxBytes){
 function openFinanceModal(id=null){
   finEditId = id;
   renderFinPMRow();
-  const entries = getFinance(currentDate);
   if(id){
-    const e = entries.find(x=>x.id===id);
+    const found = findFinanceById(id);
+    const e = found ? found.entry : null;
     if(!e) return;
     document.getElementById('finModalTitle').textContent = 'แก้ไขรายการ';
     document.getElementById('finItem').value = e.item || '';
@@ -2672,13 +2677,18 @@ async function saveFinance(){
     return;
   }
 
-  const entries = getFinance(currentDate);
   const now = new Date();
   let existingBillId = null;
   let existingIncomeSourceId = null;
   let financeId;
+  let saveDate = currentDate;      // วันที่จะบันทึก: currentDate สำหรับรายการใหม่, editDate สำหรับแก้ไข
+  let entries = getFinance(saveDate);
 
   if(finEditId){
+    const found = findFinanceById(finEditId);
+    if(!found) return;
+    saveDate = found.date;          // บันทึกกลับไปยังวันเดิม ไม่ใช่วันที่เลือกอยู่
+    entries = getFinance(saveDate);
     const idx = entries.findIndex(x=>x.id===finEditId);
     if(idx<0) return;
     existingBillId = entries[idx].billId || null;
@@ -2772,7 +2782,7 @@ async function saveFinance(){
     }
   }
 
-  setFinance(currentDate, entries);
+  setFinance(saveDate, entries);
   closeFinanceModal();
   await writeFile();
   renderFinance();
@@ -2781,7 +2791,8 @@ async function saveFinance(){
 }
 
 async function deleteFinance(id){
-  const entry = getFinance(currentDate).find(x=>x.id===id);
+  const found = findFinanceById(id);
+  const entry = found ? found.entry : null;
   if(entry && entry.billId){
     const ok = confirm(`"${entry.item}" เป็นรายจ่ายประจำอยู่ การลบจะเอารายการรายจ่ายประจำนี้ออกทั้งหมด (รายการที่บันทึกไปแล้วในเดือนอื่นจะยังอยู่เหมือนเดิม) ต้องการลบหรือไม่?`);
     if(!ok) return;
@@ -2792,7 +2803,8 @@ async function deleteFinance(id){
     if(!ok) return;
     unlinkFinanceIncomeSource(entry.incomeSourceId);
   }
-  setFinance(currentDate, getFinance(currentDate).filter(x=>x.id!==id));
+  const delDate = found ? found.date : currentDate;
+  setFinance(delDate, getFinance(delDate).filter(x=>x.id!==id));
   await writeFile();
   renderFinance();
   if(typeof renderBills === 'function') renderBills();
