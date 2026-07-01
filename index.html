@@ -284,6 +284,12 @@
 
     <div id="finIncomePane" style="display:none">
 
+      <div class="bill-month-nav">
+        <button class="btn btn-ghost" onclick="incomeChangeMonth(-1)">‹</button>
+        <span class="bill-month-label" id="incomeMonthLabel"></span>
+        <button class="btn btn-ghost" onclick="incomeChangeMonth(1)">›</button>
+      </div>
+
       <div class="stats" id="incomeStatsGrid"></div>
 
       <div class="fin-toolbar">

@@ -1474,6 +1474,7 @@ function findFinanceById(id){
 // ── Recurring bills (รายจ่ายประจำ) ────────────────────
 let finSubTab = 'list';
 let billsViewMonth = today.slice(0,7);
+let incomeViewMonth = today.slice(0,7);
 let billEditId = null;
 let billImageData = '';
 const BILL_DUE_SOON_DAYS = 4;
@@ -1633,6 +1634,10 @@ function renderFinance(){
 function billsChangeMonth(delta){
   billsViewMonth = shiftMonth(billsViewMonth, delta);
   renderBills();
+}
+function incomeChangeMonth(delta){
+  incomeViewMonth = shiftMonth(incomeViewMonth, delta);
+  renderIncomeSources();
 }
 
 function billRowHtml(bill, payment, dueDateStr, isOverdue, isDueSoon, amount, image){
@@ -2349,8 +2354,10 @@ function incomeSourceRowHtml(source, logsThisMonth, totalThisMonth){
 function renderIncomeSources(){
   const sources = getIncomeSources();
   const logs = getIncomeLogs();
-  const curMonth = today.slice(0,7);
+  const curMonth = incomeViewMonth;
   const logsThisMonth = logs.filter(l=>(l.date||'').slice(0,7) === curMonth);
+  const monthLabelEl = document.getElementById('incomeMonthLabel');
+  if(monthLabelEl) monthLabelEl.textContent = monthLabelTH(curMonth);
 
   const statsEl = document.getElementById('incomeStatsGrid');
   if(statsEl){
