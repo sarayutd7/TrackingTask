@@ -2359,12 +2359,18 @@ function renderIncomeSources(){
   const monthLabelEl = document.getElementById('incomeMonthLabel');
   if(monthLabelEl) monthLabelEl.textContent = monthLabelTH(curMonth);
 
+  // รายการรายรับทั้งหมดจาก _finance (type=income) ของเดือนนี้
+  const allIncomeEntries = Object.keys(DB._finance||{})
+    .filter(d=>d.slice(0,7)===curMonth)
+    .sort((a,b)=>b.localeCompare(a))
+    .flatMap(d=>DB._finance[d].filter(e=>e.type==='income').map(e=>({...e,_date:d})));
+
   const statsEl = document.getElementById('incomeStatsGrid');
   if(statsEl){
-    const totalThisMonth = logsThisMonth.reduce((s,l)=>s+Number(l.amount||0),0);
-    const countThisMonth = logsThisMonth.length;
-    const sortedRecent = logsThisMonth.slice().sort((a,b)=> (b.date+(b.time||'')+(b.createdAt||'')).localeCompare(a.date+(a.time||'')+(a.createdAt||'')));
-    const lastSourceName = sortedRecent.length ? (sources.find(s=>s.id===sortedRecent[0].sourceId)||{}).name || '-' : '-';
+    const totalThisMonth = allIncomeEntries.reduce((s,e)=>s+Number(e.amount||0),0);
+    const countThisMonth = allIncomeEntries.length;
+    const lastEntry = allIncomeEntries[0]; // newest first
+    const lastLabel = lastEntry ? esc(lastEntry.item) : '-';
     statsEl.innerHTML = `
     <div class="stat-card">
       <div class="stat-icon green"><svg width="18" height="18" fill="none" stroke="var(--green)" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.1 1.1-2 3-2s3 .9 3 2-1.3 2-3 2-3 .9-3 2 1.34 2 3 2 3-.9 3-2"/></svg></div>
@@ -2383,23 +2389,61 @@ function renderIncomeSources(){
     <div class="stat-card">
       <div class="stat-icon gray"><svg width="18" height="18" fill="none" stroke="var(--gray)" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
       <div class="stat-body">
-        <div class="stat-num gray" style="font-size:1.1rem">${esc(lastSourceName)}</div>
-        <div class="stat-label">แหล่งล่าสุดที่ได้รับ</div>
+        <div class="stat-num gray" style="font-size:1.1rem">${lastLabel}</div>
+        <div class="stat-label">รายการล่าสุด</div>
       </div>
     </div>`;
   }
 
+  // แหล่งรายรับ (income sources)
   const listEl = document.getElementById('incomeSourceListBody');
-  if(!listEl) return;
-  if(!sources.length){
-    listEl.innerHTML = '<span class="ql-empty">ยังไม่มีแหล่งรายรับ — กด + เพิ่มแหล่งรายรับ</span>';
-    return;
+  if(listEl){
+    if(!sources.length){
+      listEl.innerHTML = '<span class="ql-empty">ยังไม่มีแหล่งรายรับ — กด + เพิ่มแหล่งรายรับ</span>';
+    } else {
+      listEl.innerHTML = sources.map(source=>{
+        const sourceLogsThisMonth = logsThisMonth.filter(l=>l.sourceId===source.id).sort((a,b)=> (b.date+(b.time||'')+(b.createdAt||'')).localeCompare(a.date+(a.time||'')+(a.createdAt||'')));
+        const totalThisMonth = sourceLogsThisMonth.reduce((s,l)=>s+Number(l.amount||0),0);
+        return incomeSourceRowHtml(source, sourceLogsThisMonth, totalThisMonth);
+      }).join('');
+    }
   }
-  listEl.innerHTML = sources.map(source=>{
-    const sourceLogsThisMonth = logsThisMonth.filter(l=>l.sourceId===source.id).sort((a,b)=> (b.date+(b.time||'')+(b.createdAt||'')).localeCompare(a.date+(a.time||'')+(a.createdAt||'')));
-    const totalThisMonth = sourceLogsThisMonth.reduce((s,l)=>s+Number(l.amount||0),0);
-    return incomeSourceRowHtml(source, sourceLogsThisMonth, totalThisMonth);
-  }).join('');
+
+  // รายการรายรับทั้งหมดของเดือน (ทุก entry type=income จาก _finance)
+  const allEntriesSection = document.getElementById('incomeAllEntriesSection');
+  const allEntriesLabel = document.getElementById('incomeAllEntriesLabel');
+  const allEntriesBody = document.getElementById('incomeAllEntriesBody');
+  if(allEntriesBody){
+    if(allEntriesLabel) allEntriesLabel.textContent = `รายการรายรับทั้งหมด — ${monthLabelTH(curMonth)}`;
+    if(!allIncomeEntries.length){
+      allEntriesBody.innerHTML = '<span class="ql-empty">ไม่มีรายรับในเดือนนี้</span>';
+    } else {
+      allEntriesBody.innerHTML = allIncomeEntries.map(e=>{
+        const dateBadge = `<span class="fin-card-date-badge">${esc(e._date.slice(5))}</span>`;
+        const timeBadge = e.time ? `<span class="fin-card-time">${esc(e.time)}</span>` : '';
+        const pmBadge = e.paymentMethod ? `<span class="fin-pm-badge">${esc(e.paymentMethod)}</span>` : '';
+        const noteHtml = e.note ? `<div class="fin-card-note">${esc(e.note)}</div>` : '';
+        return `
+        <div class="fin-card income">
+          <div class="fin-card-main">
+            <div class="fin-card-top">
+              <div>
+                <div class="fin-card-item">${esc(e.item)}</div>
+                <div style="display:flex;gap:.3rem;align-items:center;flex-wrap:wrap">${dateBadge}${timeBadge}</div>
+              </div>
+              <div class="fin-card-amount income">+${finFmtMoney(e.amount)}</div>
+            </div>
+            <div class="fin-card-meta">${pmBadge}</div>
+            ${noteHtml}
+          </div>
+          <div class="fin-card-actions">
+            <button class="fin-card-btn edit" onclick="openFinanceModal('${esc(e.id)}')" title="แก้ไข">${finEditSvg}</button>
+            <button class="fin-card-btn del"  onclick="deleteFinance('${esc(e.id)}')" title="ลบ">${finDelSvg}</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
 }
 
 function openIncomeHistory(sourceId){

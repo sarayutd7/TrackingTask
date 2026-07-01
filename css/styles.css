@@ -1897,6 +1897,16 @@
     padding-top: .35rem;
     border-top: 1px solid var(--border);
   }
+  .fin-section-label {
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: .5rem 0 .3rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: .6rem;
+  }
   .fin-slip-thumb {
     width: 44px; height: 44px;
     object-fit: cover;
