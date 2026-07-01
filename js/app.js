@@ -2865,6 +2865,8 @@ function isEditingNow(){
 let pollTimer = null;
 async function pollServerForUpdates(){
   if(document.hidden || isEditingNow()) return;
+  // ถ้าวันเปลี่ยน (เปิดแอปทิ้งไว้ข้ามคืน) ให้ reload หน้าเพื่อรีเซ็ต today + currentDate ให้ถูกต้อง
+  if(localDateStr(new Date()) !== today){ window.location.reload(); return; }
   try {
     const r = await fetch(API + '/data', { headers: authHeaders() });
     if(r.status === 401){ sessionExpired(); return; }
