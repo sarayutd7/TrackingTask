@@ -1798,23 +1798,24 @@
   .ql-filter-btn.active { background: var(--tag-color, var(--surface3)); color: #fff; border-color: var(--tag-color, var(--border-hover)); }
   .ql-filter-btn.active .ql-filter-count { background: rgba(255,255,255,.25); color: #fff; }
 
-  /* Note tag filter bar — ปุ่มใหญ่ขึ้น กดง่ายขึ้นบนมือถือ */
+  /* Note tag filter bar — horizontal scroll, square-ish chips */
   #qlFilterBar {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
     gap: .5rem;
     margin: .75rem 0 .2rem;
+    padding-bottom: .3rem;
+    scrollbar-width: none;
   }
+  #qlFilterBar::-webkit-scrollbar { display: none; }
   #qlFilterBar .ql-filter-btn {
-    padding: .5rem 1rem;
-    font-size: .8rem;
-    border-radius: 999px;
-    min-height: 38px;
-  }
-  @media (max-width: 640px) {
-    #qlFilterBar .ql-filter-btn {
-      padding: .6rem 1.1rem;
-      font-size: .85rem;
-      min-height: 42px;
-    }
+    flex-shrink: 0;
+    padding: .45rem .9rem;
+    font-size: .78rem;
+    border-radius: 8px;
+    min-height: 36px;
   }
 
   .ql-search-wrap {
