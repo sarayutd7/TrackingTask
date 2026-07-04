@@ -2575,6 +2575,10 @@
     .app-sidebar { min-height: unset; align-self: stretch; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
   }
 
+  /* Align top spacing of Note / Finance tabs with Daily Task */
+  #qlListView,
+  #tabFinance > .fin-subtab-bar { margin-top: 1rem; }
+
   /* ── Note page (inline, no overlay) ── */
   .ql-page-header {
     display: flex;
