@@ -9,47 +9,156 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css?v=20260705-1">
+<style>
+  body { margin: 0; }
+  .adm-shell {
+    display: flex; flex-direction: column;
+    min-height: 100vh;
+    background: var(--bg);
+  }
+  /* Top nav */
+  .adm-nav {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .75rem 1.5rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .adm-nav-brand { display: flex; align-items: center; gap: .5rem; }
+  .adm-nav-dot {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .adm-nav-title { font-size: .95rem; font-weight: 700; color: var(--text-1); }
+  .adm-nav-sep { flex: 1; }
+  /* Content */
+  .adm-content { max-width: 900px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; width: 100%; box-sizing: border-box; }
+  /* Page title */
+  .adm-page-title { font-size: 1.3rem; font-weight: 700; color: var(--text-1); margin-bottom: 1.2rem; display: flex; align-items: center; gap: .5rem; }
+  /* Stats */
+  .adm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; margin-bottom: 1.5rem; }
+  .adm-stat {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem 1.1rem;
+    display: flex; align-items: center; gap: .75rem;
+  }
+  .adm-stat-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .adm-stat-num { font-size: 1.4rem; font-weight: 800; line-height: 1; }
+  .adm-stat-label { font-size: .72rem; color: var(--text-3); margin-top: 2px; }
+  /* Toolbar */
+  .adm-toolbar { display: flex; align-items: center; gap: .6rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  /* User cards */
+  .adm-user-list { display: flex; flex-direction: column; gap: .75rem; }
+  .adm-user-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1rem 1.2rem;
+    transition: border-color .15s;
+  }
+  .adm-user-card:hover { border-color: var(--border-hover); }
+  .adm-user-top { display: flex; align-items: flex-start; gap: .75rem; }
+  .adm-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent) 0%, #9B8CFF 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+  .adm-user-info { flex: 1; min-width: 0; }
+  .adm-user-name { font-size: .95rem; font-weight: 700; color: var(--text-1); }
+  .adm-user-email { font-size: .76rem; color: var(--text-3); margin-top: 2px; }
+  .adm-status-badge {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .7rem; font-weight: 700; padding: .25rem .6rem;
+    border-radius: 6px; flex-shrink: 0;
+  }
+  .adm-status-ok   { background: #16a34a22; color: #16a34a; border: 1px solid #16a34a44; }
+  .adm-status-dis  { background: #ef444422; color: #ef4444; border: 1px solid #ef444444; }
+  .adm-status-lock { background: #f59e0b22; color: #f59e0b; border: 1px solid #f59e0b44; }
+  /* Stats row */
+  .adm-user-stats {
+    display: flex; gap: 1rem; margin: .6rem 0 .6rem 3.25rem;
+    font-size: .76rem; color: var(--text-3); flex-wrap: wrap;
+  }
+  .adm-user-stats b { color: var(--text-1); }
+  /* Permissions */
+  .adm-perms { display: flex; gap: .4rem; flex-wrap: wrap; margin: .4rem 0 .75rem 3.25rem; }
+  .adm-perm-chip {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .3rem .7rem; border-radius: 7px; font-size: .75rem; font-weight: 600;
+    border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text-3); cursor: pointer; transition: all .15s;
+    user-select: none;
+  }
+  .adm-perm-chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .adm-perm-chip .chip-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  /* Actions */
+  .adm-user-actions { display: flex; gap: .5rem; margin-left: 3.25rem; flex-wrap: wrap; }
+  /* Error */
+  .adm-error { font-size: .82rem; color: var(--red); margin-bottom: .75rem; min-height: 1.2rem; }
+  .adm-empty { text-align: center; padding: 2.5rem 1rem; color: var(--text-3); font-size: .88rem; }
+  @media (max-width: 640px) {
+    .adm-content { padding: 1rem .75rem 5rem; }
+    .adm-stats { grid-template-columns: 1fr; }
+    .adm-user-stats, .adm-perms, .adm-user-actions { margin-left: 0; }
+    .adm-nav { padding: .6rem 1rem; }
+  }
+</style>
 </head>
 <body>
-<div class="shell">
+<div class="adm-shell">
 
-  <header>
-    <div class="brand">
-      <div class="brand-dot"></div>
-      <h1>Admin Dashboard</h1>
-    </div>
-    <div class="header-right">
-      <a class="btn" href="index.html">← กลับหน้าหลัก</a>
-    </div>
-  </header>
-
-  <div id="adminDenied" style="display:none;text-align:center;padding:4rem 1rem;color:var(--text-3)">
-    <div style="font-size:2rem;margin-bottom:.5rem">🚫</div>
-    <div style="font-size:1rem;font-weight:600;color:var(--text)">ไม่มีสิทธิ์เข้าถึงหน้านี้</div>
-    <div style="margin-top:.4rem;font-size:.85rem">หน้านี้สำหรับ Super Admin เท่านั้น</div>
-    <a class="btn btn-accent" href="index.html" style="margin-top:1.2rem;display:inline-flex">กลับหน้าหลัก</a>
-  </div>
-
-  <div id="adminContent" style="display:none">
-    <div class="stats" id="adminStatsGrid" style="margin-bottom:1.2rem"></div>
-    <div class="lock-error" id="adminError" style="margin-bottom:.8rem"></div>
-
-    <!-- Search + toolbar -->
-    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.9rem;flex-wrap:wrap">
-      <div class="ql-search-wrap" style="flex:1;min-width:200px">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" class="ql-search-input" id="adminSearchInput" placeholder="ค้นหาชื่อผู้ใช้หรืออีเมล…" oninput="adminSearch(this.value)">
+  <nav class="adm-nav">
+    <div class="adm-nav-brand">
+      <div class="adm-nav-dot">
+        <svg width="14" height="14" fill="none" stroke="white" stroke-width="2.2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </div>
-      <span id="adminSearchCount" style="font-size:.78rem;color:var(--text-3);white-space:nowrap"></span>
-      <button class="btn btn-ghost" style="font-size:.78rem;padding:.4rem .8rem" onclick="loadAdminUsers()">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-        รีเฟรช
-      </button>
+      <span class="adm-nav-title">จัดการ User</span>
+    </div>
+    <div class="adm-nav-sep"></div>
+    <a class="btn btn-ghost" href="index.html" style="font-size:.82rem;padding:.35rem .8rem">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      กลับหน้าหลัก
+    </a>
+  </nav>
+
+  <div class="adm-content">
+
+    <div id="adminDenied" style="display:none;text-align:center;padding:4rem 1rem;color:var(--text-3)">
+      <div style="font-size:2.5rem;margin-bottom:.75rem">🚫</div>
+      <div style="font-size:1.05rem;font-weight:700;color:var(--text)">ไม่มีสิทธิ์เข้าถึงหน้านี้</div>
+      <div style="margin-top:.4rem;font-size:.85rem">หน้านี้สำหรับ Super Admin เท่านั้น</div>
+      <a class="btn btn-accent" href="index.html" style="margin-top:1.5rem;display:inline-flex">กลับหน้าหลัก</a>
     </div>
 
-    <div class="fin-list" id="adminUserList"></div>
-  </div>
+    <div id="adminContent" style="display:none">
 
+      <!-- Stats -->
+      <div class="adm-stats" id="adminStatsGrid"></div>
+
+      <div class="adm-error" id="adminError"></div>
+
+      <!-- Toolbar -->
+      <div class="adm-toolbar">
+        <div class="ql-search-wrap" style="flex:1;min-width:180px">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="ql-search-input" id="adminSearchInput" placeholder="ค้นหาชื่อผู้ใช้หรืออีเมล…" oninput="adminSearch(this.value)">
+        </div>
+        <span id="adminSearchCount" style="font-size:.78rem;color:var(--text-3);white-space:nowrap"></span>
+        <button class="btn btn-ghost" style="font-size:.78rem;padding:.4rem .8rem;gap:.35rem" onclick="loadAdminUsers()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          รีเฟรช
+        </button>
+      </div>
+
+      <div class="adm-user-list" id="adminUserList"></div>
+
+    </div>
+  </div>
 </div>
 
 <script src="js/admin.js?v=20260705-1"></script>

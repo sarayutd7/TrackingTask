@@ -50,27 +50,25 @@ function renderAdminStats(){
   const total = adminUsersCache.length;
   const disabled = adminUsersCache.filter(u=>u.disabled).length;
   const locked = adminUsersCache.filter(u=>u.locked).length;
+  const active = total - disabled - locked;
   document.getElementById('adminStatsGrid').innerHTML = `
-  <div class="stat-card">
-    <div class="stat-icon blue"><svg width="18" height="18" fill="none" stroke="var(--blue)" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg></div>
-    <div class="stat-body">
-      <div class="stat-num blue">${total}</div>
-      <div class="stat-label">ผู้ใช้งานทั้งหมด</div>
+  <div class="adm-stat">
+    <div class="adm-stat-icon" style="background:#3b82f622">
+      <svg width="18" height="18" fill="none" stroke="#3b82f6" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
     </div>
+    <div><div class="adm-stat-num" style="color:#3b82f6">${total}</div><div class="adm-stat-label">ผู้ใช้ทั้งหมด</div></div>
   </div>
-  <div class="stat-card">
-    <div class="stat-icon red"><svg width="18" height="18" fill="none" stroke="var(--red)" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
-    <div class="stat-body">
-      <div class="stat-num red">${disabled}</div>
-      <div class="stat-label">ถูกระงับการใช้งาน</div>
+  <div class="adm-stat">
+    <div class="adm-stat-icon" style="background:#ef444422">
+      <svg width="18" height="18" fill="none" stroke="#ef4444" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
     </div>
+    <div><div class="adm-stat-num" style="color:#ef4444">${disabled}</div><div class="adm-stat-label">ถูกระงับ</div></div>
   </div>
-  <div class="stat-card">
-    <div class="stat-icon gray"><svg width="18" height="18" fill="none" stroke="var(--gray)" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-    <div class="stat-body">
-      <div class="stat-num gray">${locked}</div>
-      <div class="stat-label">ล็อก (เข้าระบบผิดหลายครั้ง)</div>
+  <div class="adm-stat">
+    <div class="adm-stat-icon" style="background:#f59e0b22">
+      <svg width="18" height="18" fill="none" stroke="#f59e0b" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     </div>
+    <div><div class="adm-stat-num" style="color:#f59e0b">${locked}</div><div class="adm-stat-label">ล็อกบัญชี</div></div>
   </div>`;
 }
 
@@ -95,40 +93,42 @@ function renderAdminUsers(){
     : adminUsersCache;
   if(countEl) countEl.textContent = adminSearchQuery ? `แสดง ${filtered.length} / ${adminUsersCache.length} คน` : `${adminUsersCache.length} คน`;
   if(!filtered.length){
-    body.innerHTML = `<span class="ql-empty">ไม่พบผู้ใช้ที่ตรงกับ "${esc(adminSearchQuery)}"</span>`;
+    body.innerHTML = `<div class="adm-empty">ไม่พบผู้ใช้ที่ตรงกับ "${esc(adminSearchQuery)}"</div>`;
     return;
   }
   body.innerHTML = filtered.map(u=>{
-    const statusBadge = u.disabled
-      ? `<span class="bill-status-badge overdue">ถูกระงับ</span>`
-      : (u.locked ? `<span class="bill-status-badge duesoon">ล็อก (เข้าระบบผิดหลายครั้ง)</span>` : `<span class="bill-status-badge paid">ใช้งานได้</span>`);
-    const menuChecks = Object.keys(MENU_LABELS).map(m=>{
-      const checked = (u.allowedMenus||[]).includes(m) ? 'checked' : '';
-      return `<label style="display:inline-flex;align-items:center;gap:.3rem;font-size:.78rem;margin-right:.8rem;cursor:pointer">
-        <input type="checkbox" ${checked} onchange="adminTogglePermission('${esc(u.username)}','${m}',this.checked)">
-        ${esc(MENU_LABELS[m])}
-      </label>`;
+    const initials = (u.username||'?').charAt(0).toUpperCase();
+    const statusCls = u.disabled ? 'adm-status-dis' : (u.locked ? 'adm-status-lock' : 'adm-status-ok');
+    const statusTxt = u.disabled ? '🚫 ระงับ' : (u.locked ? '🔒 ล็อก' : '✓ ใช้งานได้');
+    const perms = Object.keys(MENU_LABELS).map(m=>{
+      const on = (u.allowedMenus||[]).includes(m);
+      return `<span class="adm-perm-chip${on?' on':''}" onclick="adminTogglePermission('${esc(u.username)}','${m}',${!on})">
+        <span class="chip-dot"></span>${esc(MENU_LABELS[m])}
+      </span>`;
     }).join('');
-    const stats = u.stats || { task: 0, note: 0, finance: 0 };
-    const statsRow = `<div style="display:flex;gap:1.2rem;font-size:.78rem;color:var(--text-3);margin:.4rem 0">
-      <span>Daily Task: <b style="color:var(--text)">${stats.task}</b> รายการ</span>
-      <span>Note: <b style="color:var(--text)">${stats.note}</b> รายการ</span>
-      <span>รายรับ-รายจ่าย: <b style="color:var(--text)">${stats.finance}</b> รายการ</span>
-    </div>`;
+    const stats = u.stats || { task:0, note:0, finance:0 };
     return `
-    <div class="fin-card bill-card" style="display:block">
-      <div class="fin-card-top" style="margin-bottom:.4rem">
-        <div>
-          <div class="fin-card-item">${esc(u.username)}</div>
-          <span class="fin-card-time">${esc(u.email||'-')}</span>
+    <div class="adm-user-card">
+      <div class="adm-user-top">
+        <div class="adm-avatar">${initials}</div>
+        <div class="adm-user-info">
+          <div class="adm-user-name">${esc(u.username)}</div>
+          <div class="adm-user-email">${esc(u.email||'-')}</div>
         </div>
-        ${statusBadge}
+        <span class="adm-status-badge ${statusCls}">${statusTxt}</span>
       </div>
-      ${statsRow}
-      <div style="margin:.5rem 0">${menuChecks}</div>
-      <div class="fin-card-actions" style="justify-content:flex-start;gap:.5rem;margin-top:.5rem">
-        <button class="btn btn-ghost" style="padding:.4rem .8rem;font-size:.78rem" onclick="adminToggleDisabled('${esc(u.username)}',${!u.disabled})">${u.disabled ? 'เปิดให้ใช้งาน' : 'ระงับการใช้งาน'}</button>
-        <button class="btn" style="padding:.4rem .8rem;font-size:.78rem;color:var(--red);border-color:var(--red)" onclick="adminDeleteUser('${esc(u.username)}')">ลบบัญชี</button>
+      <div class="adm-user-stats">
+        <span>Task <b>${stats.task}</b></span>
+        <span>Note <b>${stats.note}</b></span>
+        <span>Finance <b>${stats.finance}</b></span>
+      </div>
+      <div class="adm-perms">${perms}</div>
+      <div class="adm-user-actions">
+        <button class="btn btn-ghost" style="font-size:.78rem;padding:.35rem .8rem" onclick="adminToggleDisabled('${esc(u.username)}',${!u.disabled})">
+          ${u.disabled ? 'เปิดใช้งาน' : 'ระงับ'}
+        </button>
+        ${u.locked ? `<button class="btn btn-ghost" style="font-size:.78rem;padding:.35rem .8rem;color:#f59e0b;border-color:#f59e0b44" onclick="adminUnlock('${esc(u.username)}')">ปลดล็อก</button>` : ''}
+        <button class="btn btn-ghost" style="font-size:.78rem;padding:.35rem .8rem;color:var(--red);border-color:#ef444444;margin-left:auto" onclick="adminDeleteUser('${esc(u.username)}')">ลบบัญชี</button>
       </div>
     </div>`;
   }).join('');
