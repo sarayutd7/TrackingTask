@@ -1798,24 +1798,26 @@
   .ql-filter-btn.active { background: var(--tag-color, var(--surface3)); color: #fff; border-color: var(--tag-color, var(--border-hover)); }
   .ql-filter-btn.active .ql-filter-count { background: rgba(255,255,255,.25); color: #fff; }
 
-  /* Note tag filter bar — horizontal scroll, square-ish chips */
+  /* Note tag filter bar — horizontal scroll, square chips */
   #qlFilterBar {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
     overscroll-behavior-x: contain;
     gap: .5rem;
     margin: .75rem 0 .2rem;
     padding-bottom: .3rem;
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
   #qlFilterBar::-webkit-scrollbar { display: none; }
   #qlFilterBar .ql-filter-btn {
-    flex-shrink: 0;
+    flex-shrink: 0 !important;
     padding: .45rem .9rem;
     font-size: .78rem;
-    border-radius: 8px;
+    border-radius: 8px !important;
     min-height: 36px;
+    white-space: nowrap;
   }
 
   .ql-search-wrap {
