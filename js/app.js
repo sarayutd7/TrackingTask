@@ -176,6 +176,24 @@ try {
 // render() ถูกย้ายไปท้าย script เพื่อให้ const declarations ทั้งหมดถูก initialize ก่อน
 
 // ── Tab switching ────────────────────────────────────
+function toggleSidebar(){
+  const isMobile = window.innerWidth <= 768;
+  if(isMobile){
+    const sb = document.getElementById('appSidebar');
+    const bd = document.getElementById('sbBackdrop');
+    const open = sb.classList.toggle('open');
+    if(bd) bd.classList.toggle('open', open);
+  } else {
+    document.querySelector('.shell').classList.toggle('sidebar-collapsed');
+  }
+}
+function closeSidebar(){
+  const sb = document.getElementById('appSidebar');
+  const bd = document.getElementById('sbBackdrop');
+  if(sb) sb.classList.remove('open');
+  if(bd) bd.classList.remove('open');
+}
+
 function switchTab(tab){
   document.getElementById('tabTask').style.display    = tab==='task'    ? '' : 'none';
   document.getElementById('tabTool').style.display    = tab==='tool'    ? '' : 'none';
@@ -192,6 +210,11 @@ function switchTab(tab){
   });
   if(tab==='tool')    renderDL();
   if(tab==='finance'){ renderFinance(); if(finSubTab==='bills') renderBills(); if(finSubTab==='income') renderIncomeSources(); }
+  // update mobile title & close drawer
+  const titles = {task:'Daily Task', tool:'Note', finance:'รายรับ-รายจ่าย'};
+  const titleEl = document.getElementById('mobileTabTitle');
+  if(titleEl) titleEl.textContent = titles[tab] || '';
+  closeSidebar();
 }
 
 // ── Status selector ─────────────────────────────────
