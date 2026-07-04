@@ -2570,7 +2570,7 @@
     /* app-main gets its own padding */
     .app-main { padding: 0; }
     .tab-pane { padding: 0 1.5rem; }
-    .date-display { display: block; }
+    .date-display { display: none; }
     .app-layout { align-items: stretch; }
     .app-sidebar { min-height: unset; align-self: stretch; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
   }
