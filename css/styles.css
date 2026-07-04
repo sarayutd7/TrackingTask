@@ -58,15 +58,21 @@
     --red-dim: rgba(224,108,117,0.15);
   }
 
-  html { font-size: 15px; }
+  html {
+    font-size: 15px;
+    height: 100%;
+    overscroll-behavior: none;
+  }
 
   body {
     background: var(--bg);
     color: var(--text);
     font-family: var(--font);
     min-height: 100vh;
+    height: 100%;
     line-height: 1.6;
     transition: background .25s, color .25s;
+    overscroll-behavior: none;
   }
 
   /* ── Layout ── */
@@ -2365,7 +2371,7 @@
   .sb-date-nav:hover { background: var(--hover-bg); color: var(--text-1); }
 
   /* Main area fills remaining space */
-  .app-main { flex: 1; min-width: 0; }
+  .app-main { flex: 1; min-width: 0; overscroll-behavior: none; }
 
   /* ── Bottom Nav (mobile) ── */
   .bottom-nav-bar {
