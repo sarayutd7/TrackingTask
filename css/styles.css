@@ -1512,8 +1512,11 @@
     flex-shrink: 0;
   }
   .ql-card:hover .ql-card-actions { display: flex; }
-  @media (max-width: 640px) {
-    .ql-card-actions { display: flex; } /* มือถือ: แสดงปุ่มตลอด (hover ไม่ทำงานบน touch) */
+  @media (max-width: 768px) {
+    /* Mobile: hide action buttons, full card is tappable → opens read page */
+    .ql-card-actions { display: none !important; }
+    .ql-card { cursor: pointer; }
+    .ql-card-grid { grid-template-columns: 1fr !important; }
   }
   .ql-card-btn {
     width: 28px; height: 28px;
@@ -2590,6 +2593,9 @@
   .ql-page-title {
     flex: 1;
     font-size: 1rem; font-weight: 700; color: var(--text-1);
+  }
+  .ql-read-actions {
+    display: flex; align-items: center; gap: .4rem; flex-shrink: 0;
   }
   .ql-page-body {
     display: flex; flex-direction: column; gap: .1rem;

@@ -1204,7 +1204,7 @@ function qlCardHtml(item, i){
     : `<button class="ql-card-btn hide" onclick="qlHideNote(${i})" title="ซ่อน Note นี้ (ต้องใส่ PIN เพื่อดูอีกครั้ง)">🔒</button>`;
   const hiddenBadge = wasUnlocked ? `<span class="ql-pin-badge" style="color:var(--text-3)" title="ซ่อนอยู่ — ปลดล็อกแล้วชั่วคราว">🔓 ซ่อนอยู่</span>` : '';
   return `
-  <div class="ql-card${isPinned?' pinned':''}" data-tag="${esc(item.tag||'')}">
+  <div class="ql-card${isPinned?' pinned':''}" data-tag="${esc(item.tag||'')}" onclick="if(window.innerWidth<=768)qlOpenRead(${i})">
     <div class="ql-card-top">
       <div class="ql-card-name-wrap">
         ${pinBadge}
@@ -1295,9 +1295,20 @@ function qlOpenRead(i){
   // related notes
   const relatedEl = document.getElementById('qlReadRelated');
   if(relatedEl) relatedEl.innerHTML = qlRelatedChipsHtml(item);
-  // wire edit button
+  // wire action buttons
   const editBtn = document.getElementById('qlReadEditBtn');
   if(editBtn) editBtn.onclick = ()=>{ qlReadClose(); qlOpenEdit(i); };
+  const delBtn = document.getElementById('qlReadDelBtn');
+  if(delBtn) delBtn.onclick = ()=>{ qlReadClose(); qlDelete(i); };
+  const pinBtn = document.getElementById('qlReadPinBtn');
+  if(pinBtn){
+    const isPinned = !!item.pinned;
+    pinBtn.innerHTML = isPinned
+      ? `<svg width="11" height="11" fill="#f59e0b" stroke="#f59e0b" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>`
+      : `<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>`;
+    pinBtn.classList.toggle('pinned', isPinned);
+    pinBtn.onclick = ()=>{ qlTogglePin(i); qlReadClose(); };
+  }
   qlShowPage('read');
 }
 function qlReadClose(){
