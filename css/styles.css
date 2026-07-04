@@ -2508,15 +2508,15 @@
 
   /* Mobile: show bottom nav, hide sidebar */
   @media (max-width: 768px) {
-    /* Task modal → full-page on mobile */
-    #overlay {
+    /* Task + Column modal → full-page on mobile */
+    #overlay, #colOverlay {
       padding: 0;
       align-items: flex-start;
       background: var(--bg);
       backdrop-filter: none;
       -webkit-backdrop-filter: none;
     }
-    #overlay .modal {
+    #overlay .modal, #colOverlay .modal {
       max-width: 100%;
       width: 100%;
       min-height: 100dvh;
@@ -2525,9 +2525,11 @@
       border: none;
       box-shadow: none;
     }
-    #overlay .modal-header {
+    #overlay .modal-header, #colOverlay .modal-header {
       padding-top: max(1rem, env(safe-area-inset-top));
     }
+    /* Always show column edit button on touch devices */
+    .col-edit-btn { opacity: 1; }
 
     header { display: none !important; }
     .app-sidebar { display: none; }
