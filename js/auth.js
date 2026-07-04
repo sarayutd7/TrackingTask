@@ -214,6 +214,11 @@ function lockHide(){
   } else {
     greetingEl.style.display = 'none';
   }
+  // sync sidebar user info
+  const sbName = document.getElementById('sbUserName');
+  const sbAv   = document.getElementById('sbAvatar');
+  if(sbName) sbName.textContent = loggedIn && uname ? `Hi, ${uname}` : 'TrackingTask';
+  if(sbAv && uname) sbAv.textContent = uname.charAt(0).toUpperCase();
 }
 
 function lockApp(){

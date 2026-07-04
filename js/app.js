@@ -183,6 +183,13 @@ function switchTab(tab){
   document.getElementById('tabBtnTask').classList.toggle('active',    tab==='task');
   document.getElementById('tabBtnTool').classList.toggle('active',    tab==='tool');
   document.getElementById('tabBtnFinance').classList.toggle('active', tab==='finance');
+  // sync sidebar
+  ['task','tool','finance'].forEach(t=>{
+    const sb = document.getElementById('sb-'+t);
+    const bnb = document.getElementById('bnb-'+t);
+    if(sb)  sb.classList.toggle('sb-on',  t===tab);
+    if(bnb) bnb.classList.toggle('bnb-on', t===tab);
+  });
   if(tab==='tool')    renderDL();
   if(tab==='finance'){ renderFinance(); if(finSubTab==='bills') renderBills(); if(finSubTab==='income') renderIncomeSources(); }
 }
@@ -837,8 +844,43 @@ function render(){
   const d = new Date(currentDate+'T00:00:00');
   const isToday = currentDate===today;
   const label = d.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  document.getElementById('dateDisplay').innerHTML =
-    label + (isToday?'<span class="date-today">วันนี้</span>':'');
+  const dateHtml = label + (isToday?'<span class="date-today">วันนี้</span>':'');
+  document.getElementById('dateDisplay').innerHTML = dateHtml;
+  const sbDate = document.getElementById('sbDateDisplay');
+  if(sbDate) sbDate.textContent = label;
+  renderDateStrip();
+}
+
+// Date strip — 7-day week view around currentDate (mobile)
+function renderDateStrip(){
+  const bar = document.getElementById('dateStripBar');
+  if(!bar) return;
+  const cur = new Date(currentDate+'T00:00:00');
+  const DAYS_TH = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  const chips = [];
+  for(let i=-3; i<=3; i++){
+    const dt = new Date(cur);
+    dt.setDate(cur.getDate()+i);
+    const ds = localDateStr(dt);
+    const isCur = ds===currentDate;
+    chips.push(`<button class="ds-chip${isCur?' ds-cur':''}" onclick="setDateFromStrip('${ds}')">
+      <span class="ds-day">${DAYS_TH[dt.getDay()]}</span>
+      <span class="ds-num">${dt.getDate()}</span>
+    </button>`);
+  }
+  bar.innerHTML = chips.join('');
+  // scroll current chip into center
+  setTimeout(()=>{
+    const cur = bar.querySelector('.ds-cur');
+    if(cur) cur.scrollIntoView({inline:'center',block:'nearest'});
+  }, 50);
+}
+
+function setDateFromStrip(ds){
+  currentDate = ds;
+  const dp = document.getElementById('datePicker');
+  if(dp){ dp.value = ds; }
+  render(); renderDL(); renderFinance();
 }
 
 document.addEventListener('keydown', e=>{

@@ -107,29 +107,66 @@
     </div>
   </header>
 
-  <!-- Date display -->
-  <div class="date-display" id="dateDisplay"></div>
+  <!-- App layout: sidebar (desktop) + main content -->
+  <div class="app-layout">
 
-  <!-- Tab Navigation -->
-  <div class="tab-nav">
-    <button class="tab-btn active" id="tabBtnTask" onclick="switchTab('task')">
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      Daily Task
-    </button>
-    <button class="tab-btn" id="tabBtnTool" onclick="switchTab('tool')">
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      Note
-    </button>
-    <button class="tab-btn" id="tabBtnFinance" onclick="switchTab('finance')">
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.1 1.1-2 3-2s3 .9 3 2-1.3 2-3 2-3 .9-3 2 1.34 2 3 2 3-.9 3-2"/></svg>
-      รายรับ-รายจ่าย
-    </button>
-  </div>
+    <!-- Sidebar — desktop only -->
+    <aside class="app-sidebar" id="appSidebar">
+      <div class="sb-brand">
+        <div class="sb-dot">
+          <svg width="15" height="15" fill="none" stroke="white" stroke-width="2.2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
+        <span class="sb-name">TrackingTask</span>
+      </div>
+      <nav class="sb-nav">
+        <div class="sb-item sb-on" id="sb-task" onclick="switchTab('task')">
+          <div class="sb-item-icon">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          </div>
+          <span class="sb-item-label">Daily Task</span>
+        </div>
+        <div class="sb-item" id="sb-tool" onclick="switchTab('tool')">
+          <div class="sb-item-icon">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <span class="sb-item-label">Note</span>
+        </div>
+        <div class="sb-item" id="sb-finance" onclick="switchTab('finance')">
+          <div class="sb-item-icon">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.1 1.1-2 3-2s3 .9 3 2-1.3 2-3 2-3 .9-3 2 1.34 2 3 2 3-.9 3-2"/></svg>
+          </div>
+          <span class="sb-item-label">รายรับ-รายจ่าย</span>
+        </div>
+      </nav>
+      <div class="sb-footer">
+        <div class="sb-avatar" id="sbAvatar">Y</div>
+        <div class="sb-user-info">
+          <div class="sb-user-name" id="sbUserName">Hi, Yut</div>
+          <div class="sb-user-date" id="sbDateDisplay"></div>
+        </div>
+      </div>
+    </aside>
 
-  <!-- Tab 1: Daily Task -->
-  <div class="tab-pane" id="tabTask">
-    <!-- Stats -->
-    <div class="stats" id="statsGrid"></div>
+    <!-- Main content -->
+    <div class="app-main">
+
+      <!-- Date display -->
+      <div class="date-display" id="dateDisplay"></div>
+
+      <!-- Tab Navigation — hidden, replaced by sidebar/bottom-nav -->
+      <div class="tab-nav" aria-hidden="true">
+        <button class="tab-btn active" id="tabBtnTask" onclick="switchTab('task')">Daily Task</button>
+        <button class="tab-btn" id="tabBtnTool" onclick="switchTab('tool')">Note</button>
+        <button class="tab-btn" id="tabBtnFinance" onclick="switchTab('finance')">รายรับ-รายจ่าย</button>
+      </div>
+
+      <!-- Tab 1: Daily Task -->
+      <div class="tab-pane" id="tabTask">
+        <!-- Date strip (mobile) -->
+        <div class="date-strip-bar" id="dateStripBar"></div>
+
+        <!-- Stats -->
+        <div class="stats" id="statsGrid"></div>
 
     <!-- Progress -->
     <div class="progress-wrap">
@@ -308,9 +345,31 @@
 
     </div>
 
-  </div>
+    </div><!-- /tab-pane tabFinance -->
 
-</div>
+    </div><!-- /app-main -->
+  </div><!-- /app-layout -->
+
+  <!-- Bottom nav — mobile only -->
+  <nav class="bottom-nav-bar" id="bottomNavBar">
+    <button class="bnb-item bnb-on" id="bnb-task" onclick="switchTab('task')">
+      <div class="bnb-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+      <span class="bnb-label">Daily Task</span>
+      <span class="bnb-dot"></span>
+    </button>
+    <button class="bnb-item" id="bnb-tool" onclick="switchTab('tool')">
+      <div class="bnb-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+      <span class="bnb-label">Note</span>
+      <span class="bnb-dot"></span>
+    </button>
+    <button class="bnb-item" id="bnb-finance" onclick="switchTab('finance')">
+      <div class="bnb-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.1 1.1-2 3-2s3 .9 3 2-1.3 2-3 2-3 .9-3 2 1.34 2 3 2 3-.9 3-2"/></svg></div>
+      <span class="bnb-label">Finance</span>
+      <span class="bnb-dot"></span>
+    </button>
+  </nav>
+
+</div><!-- /shell -->
 
 <!-- Modal -->
 <div class="overlay" id="overlay" style="display:none">
