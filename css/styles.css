@@ -82,6 +82,30 @@
     padding: 2rem 1.5rem 4rem;
   }
 
+  @media (min-width: 769px) {
+    .shell {
+      height: 100vh;
+      max-height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+    }
+    .app-layout {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .app-main {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+    .app-sidebar {
+      height: 100vh !important;
+      overflow-y: auto;
+    }
+  }
+
   /* ── Header ── */
   header {
     display: flex;
