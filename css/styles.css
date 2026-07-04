@@ -2558,7 +2558,7 @@
     .app-sidebar { display: flex; }
     .bottom-nav-bar { display: none !important; }
     .date-strip-bar { display: none; }
-    .shell { padding-bottom: 2rem; padding-left: 0; padding-right: 0; }
+    .shell { padding-bottom: 0; padding-left: 0; padding-right: 0; }
     /* app-main gets its own padding */
     .app-main { padding: 0 1.5rem; }
     .date-display { display: block; }
