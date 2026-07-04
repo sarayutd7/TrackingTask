@@ -2412,7 +2412,8 @@
   .sb-date-nav:hover { background: var(--hover-bg); color: var(--text-1); }
 
   /* Main area fills remaining space */
-  .app-main { flex: 1; min-width: 0; overscroll-behavior: none; }
+  .app-main { flex: 1; min-width: 0; overscroll-behavior: none; display: flex; flex-direction: column; min-height: 0; }
+  .tab-pane { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
 
   /* ── Bottom Nav (mobile) ── */
   .bottom-nav-bar {
@@ -2541,7 +2542,8 @@
     .app-sidebar { display: none; }
     .bottom-nav-bar { display: flex; }
     .shell { padding-bottom: 80px; padding-left: 0; padding-right: 0; }
-    .app-main { padding: 0 .75rem; }
+    .app-main { padding: 0; }
+    .tab-pane { padding: 0 .75rem; }
     .date-display { display: none; }
     .date-strip-bar {
       display: flex;
@@ -2566,7 +2568,8 @@
     .date-strip-bar { display: none; }
     .shell { padding-bottom: 0; padding-left: 0; padding-right: 0; }
     /* app-main gets its own padding */
-    .app-main { padding: 0 1.5rem; }
+    .app-main { padding: 0; }
+    .tab-pane { padding: 0 1.5rem; }
     .date-display { display: block; }
     .app-layout { align-items: stretch; }
     .app-sidebar { min-height: unset; align-self: stretch; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
@@ -2612,17 +2615,15 @@
   }
   .hamburger-btn:hover { background: var(--hover-bg); color: var(--text-1); }
 
-  /* Mobile top bar */
+  /* Top bar — always visible on both desktop and mobile */
   .mobile-topbar {
-    display: none;
+    display: flex;
     align-items: center;
     gap: .6rem;
-    padding: .6rem .75rem .4rem;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    background: var(--bg);
+    padding: .5rem .75rem;
+    background: var(--surface);
     border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
   }
   .mobile-topbar-title {
     font-size: .9rem; font-weight: 700; color: var(--text-1);
@@ -2640,7 +2641,6 @@
   .sb-backdrop.open { display: block; }
 
   @media (max-width: 768px) {
-    .mobile-topbar { display: flex; }
     /* Sidebar as fixed left drawer on mobile */
     .app-sidebar {
       position: fixed !important;
@@ -2658,7 +2658,6 @@
   }
 
   @media (min-width: 769px) {
-    .mobile-topbar { display: none !important; }
     .sb-backdrop { display: none !important; }
     /* Desktop: toggle sidebar by hiding it */
     .sidebar-collapsed .app-sidebar { display: none !important; }
