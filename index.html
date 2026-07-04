@@ -142,7 +142,22 @@
         <div class="sb-avatar" id="sbAvatar">Y</div>
         <div class="sb-user-info">
           <div class="sb-user-name" id="sbUserName">Hi, Yut</div>
-          <div class="sb-user-date" id="sbDateDisplay"></div>
+          <div class="sb-date-row">
+            <button class="sb-date-nav" onclick="prevDay()" title="วันก่อน">&#8249;</button>
+            <div class="sb-user-date" id="sbDateDisplay"></div>
+            <button class="sb-date-nav" onclick="nextDay()" title="วันถัดไป">&#8250;</button>
+          </div>
+        </div>
+        <div class="sb-actions">
+          <button class="sb-action-btn" id="sbThemeBtn" onclick="toggleTheme()" title="สลับ Light/Dark">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+          <button class="sb-action-btn" id="sbAccountBtn" onclick="openAccountModal()" title="จัดการบัญชี" style="display:none">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+          </button>
+          <button class="sb-action-btn" id="sbLockBtn" onclick="lockApp()" title="ออกจากระบบ" style="display:none">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </button>
         </div>
       </div>
     </aside>

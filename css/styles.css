@@ -2310,7 +2310,22 @@
     display: flex;
     align-items: center;
     gap: .6rem;
+    flex-wrap: wrap;
   }
+  .sb-actions {
+    margin-left: auto;
+    display: flex; align-items: center; gap: .3rem;
+  }
+  .sb-action-btn {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    background: none; border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-3);
+    transition: background .15s, color .15s;
+  }
+  .sb-action-btn:hover { background: var(--hover-bg); color: var(--text-1); }
   .sb-avatar {
     width: 32px; height: 32px;
     border-radius: 50%;
@@ -2324,11 +2339,22 @@
     font-size: .8rem; font-weight: 600; color: var(--text);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+  .sb-date-row {
+    display: flex; align-items: center; gap: .2rem;
+    margin-top: .05rem;
+  }
   .sb-user-date {
     font-size: .68rem; color: var(--text-3);
-    margin-top: .05rem;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    flex: 1;
   }
+  .sb-date-nav {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-3); font-size: .9rem; line-height: 1;
+    padding: 0 2px;
+    transition: color .15s;
+  }
+  .sb-date-nav:hover { color: var(--text-1); }
 
   /* Main area fills remaining space */
   .app-main { flex: 1; min-width: 0; }
@@ -2442,6 +2468,7 @@
 
   /* Desktop: hide bottom nav, show sidebar, remove side padding from shell so sidebar sits flush */
   @media (min-width: 769px) {
+    header { display: none !important; }
     .app-sidebar { display: flex; }
     .bottom-nav-bar { display: none !important; }
     .date-strip-bar { display: none; }
@@ -2450,5 +2477,5 @@
     .app-main { padding: 0 1.5rem; }
     .date-display { display: block; }
     .app-layout { align-items: stretch; }
-    .app-sidebar { min-height: unset; align-self: stretch; position: sticky; top: 0; height: calc(100vh - 80px); overflow-y: auto; }
+    .app-sidebar { min-height: unset; align-self: stretch; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
   }

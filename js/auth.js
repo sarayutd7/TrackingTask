@@ -195,6 +195,10 @@ function lockShow(){
   document.getElementById('headerLockBtn').style.display = 'none';
   document.getElementById('headerAccountBtn').style.display = 'none';
   document.getElementById('headerAdminBtn').style.display = 'none';
+  const _sbLock = document.getElementById('sbLockBtn');
+  const _sbAcc  = document.getElementById('sbAccountBtn');
+  if(_sbLock) _sbLock.style.display = 'none';
+  if(_sbAcc)  _sbAcc.style.display  = 'none';
   document.getElementById('userGreeting').style.display = 'none';
   setTimeout(()=>document.getElementById('lockUser').focus(), 80);
   initOAuthSignIn();
@@ -205,6 +209,10 @@ function lockHide(){
   const loggedIn = !!localStorage.getItem(AUTH_TOKEN_KEY);
   document.getElementById('headerLockBtn').style.display = loggedIn ? '' : 'none';
   document.getElementById('headerAccountBtn').style.display = loggedIn ? '' : 'none';
+  const sbLock = document.getElementById('sbLockBtn');
+  const sbAcc  = document.getElementById('sbAccountBtn');
+  if(sbLock) sbLock.style.display = loggedIn ? '' : 'none';
+  if(sbAcc)  sbAcc.style.display  = loggedIn ? '' : 'none';
   const greetingEl = document.getElementById('userGreeting');
   const uname = localStorage.getItem(AUTH_USER_KEY);
   document.getElementById('headerAdminBtn').style.display = (loggedIn && uname === ADMIN_USERNAME) ? '' : 'none';
