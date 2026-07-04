@@ -216,6 +216,8 @@ function lockHide(){
   const greetingEl = document.getElementById('userGreeting');
   const uname = localStorage.getItem(AUTH_USER_KEY);
   document.getElementById('headerAdminBtn').style.display = (loggedIn && uname === ADMIN_USERNAME) ? '' : 'none';
+  const sbAdmin = document.getElementById('sb-admin');
+  if(sbAdmin) sbAdmin.style.display = (loggedIn && uname === ADMIN_USERNAME) ? '' : 'none';
   if(loggedIn && uname){
     greetingEl.textContent = `Hi, ${uname} วันนี้เป็นอย่างไรบ้าง`;
     greetingEl.style.display = '';

@@ -176,6 +176,64 @@ try {
 // render() ถูกย้ายไปท้าย script เพื่อให้ const declarations ทั้งหมดถูก initialize ก่อน
 
 // ── Tab switching ────────────────────────────────────
+// ── Topbar search ──────────────────────────────────────
+function openTopbarSearch(){
+  const wrap = document.getElementById('topbarSearchWrap');
+  const btn  = document.getElementById('topbarSearchBtn');
+  const inp  = document.getElementById('topbarSearchInput');
+  if(wrap){ wrap.style.display='flex'; btn.style.display='none'; inp.focus(); }
+}
+function closeTopbarSearch(){
+  const wrap = document.getElementById('topbarSearchWrap');
+  const btn  = document.getElementById('topbarSearchBtn');
+  const res  = document.getElementById('topbarSearchResults');
+  if(wrap){ wrap.style.display='none'; btn.style.display=''; }
+  if(res)  res.style.display='none';
+  const inp = document.getElementById('topbarSearchInput');
+  if(inp) inp.value='';
+}
+function topbarSearch(q){
+  const res = document.getElementById('topbarSearchResults');
+  if(!res) return;
+  q = q.trim();
+  if(!q){ res.style.display='none'; return; }
+  const ql = q.toLowerCase();
+  const hits = [];
+  // search tasks (current day ± all days in DB)
+  const allDates = Object.keys(DB._tasks||{});
+  allDates.forEach(date=>{
+    (DB._tasks[date]||[]).forEach(t=>{
+      if((t.title||'').toLowerCase().includes(ql)){
+        hits.push({type:'task', title:t.title, sub:date, action:()=>{
+          currentDate=date;
+          const dp=document.getElementById('datePicker'); if(dp) dp.value=date;
+          render(); renderDL(); renderFinance(); switchTab('task'); closeTopbarSearch();
+        }});
+      }
+    });
+  });
+  // search notes
+  (QL||[]).forEach((item,i)=>{
+    if((item.name||'').toLowerCase().includes(ql)||(item.detail||'').toLowerCase().includes(ql)){
+      hits.push({type:'note', title:item.name, sub:item.tag?qlTagLabel(item.tag):'', action:()=>{
+        switchTab('tool'); setTimeout(()=>qlOpenRead(i),50); closeTopbarSearch();
+      }});
+    }
+  });
+  if(!hits.length){
+    res.innerHTML=`<div class="tsearch-empty">ไม่พบผลลัพธ์สำหรับ "${esc(q)}"</div>`;
+  } else {
+    res.innerHTML = hits.slice(0,20).map((h,i)=>`
+      <div class="tsearch-item" onclick="__tsearchHit(${i})">
+        <span class="tsearch-badge ${h.type}">${h.type==='task'?'Task':'Note'}</span>
+        <div><div class="tsearch-item-title">${esc(h.title)}</div>${h.sub?`<div class="tsearch-item-sub">${esc(h.sub)}</div>`:''}</div>
+      </div>`).join('');
+    window.__tsearchHits = hits;
+  }
+  res.style.display='';
+}
+function __tsearchHit(i){ if(window.__tsearchHits&&window.__tsearchHits[i]) window.__tsearchHits[i].action(); }
+
 function toggleSidebar(){
   const isMobile = window.innerWidth <= 768;
   if(isMobile){

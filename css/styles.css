@@ -2663,3 +2663,51 @@
     .sidebar-collapsed .app-sidebar { display: none !important; }
     .sidebar-collapsed .app-layout { }
   }
+
+  /* ── Topbar search ── */
+  .topbar-search-wrap {
+    flex: 1; display: flex; align-items: center; gap: .4rem;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: .3rem .6rem;
+    min-width: 0;
+  }
+  .topbar-search-input {
+    flex: 1; background: none; border: none; outline: none;
+    font-size: .85rem; color: var(--text-1); font-family: var(--font);
+  }
+  .topbar-search-input::placeholder { color: var(--text-3); }
+  .topbar-search-close {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-3); font-size: .8rem; padding: 0 2px;
+    transition: color .15s;
+  }
+  .topbar-search-close:hover { color: var(--text-1); }
+  .topbar-search-results {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: none;
+    max-height: 360px; overflow-y: auto;
+    z-index: 20;
+  }
+  .tsearch-item {
+    display: flex; align-items: flex-start; gap: .6rem;
+    padding: .6rem .9rem; cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background .12s;
+  }
+  .tsearch-item:last-child { border-bottom: none; }
+  .tsearch-item:hover { background: var(--hover-bg); }
+  .tsearch-badge {
+    font-size: .63rem; font-weight: 700; padding: 1px 6px;
+    border-radius: 4px; flex-shrink: 0; margin-top: 2px;
+    background: var(--surface2); color: var(--text-3);
+  }
+  .tsearch-badge.task  { background: var(--accent); color: #fff; }
+  .tsearch-badge.note  { background: #34d399; color: #000; }
+  .tsearch-item-title  { font-size: .85rem; font-weight: 600; color: var(--text-1); }
+  .tsearch-item-sub    { font-size: .74rem; color: var(--text-3); margin-top: 1px; }
+  .tsearch-empty { padding: 1.2rem; text-align: center; color: var(--text-3); font-size: .83rem; }
+
+  /* Sidebar divider + admin link */
+  .sb-divider { height: 1px; background: var(--border); margin: .4rem .75rem; }
+  .sb-item[href] { text-decoration: none; }
