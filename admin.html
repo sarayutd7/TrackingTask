@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=20260630-3">
+<link rel="stylesheet" href="css/styles.css?v=20260705-1">
 </head>
 <body>
 <div class="shell">
@@ -33,11 +33,25 @@
   <div id="adminContent" style="display:none">
     <div class="stats" id="adminStatsGrid" style="margin-bottom:1.2rem"></div>
     <div class="lock-error" id="adminError" style="margin-bottom:.8rem"></div>
+
+    <!-- Search + toolbar -->
+    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.9rem;flex-wrap:wrap">
+      <div class="ql-search-wrap" style="flex:1;min-width:200px">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="ql-search-input" id="adminSearchInput" placeholder="ค้นหาชื่อผู้ใช้หรืออีเมล…" oninput="adminSearch(this.value)">
+      </div>
+      <span id="adminSearchCount" style="font-size:.78rem;color:var(--text-3);white-space:nowrap"></span>
+      <button class="btn btn-ghost" style="font-size:.78rem;padding:.4rem .8rem" onclick="loadAdminUsers()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        รีเฟรช
+      </button>
+    </div>
+
     <div class="fin-list" id="adminUserList"></div>
   </div>
 
 </div>
 
-<script src="js/admin.js?v=20260630-3"></script>
+<script src="js/admin.js?v=20260705-1"></script>
 </body>
 </html>

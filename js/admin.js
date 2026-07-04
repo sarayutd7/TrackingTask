@@ -12,6 +12,7 @@ function authHeaders(){
 }
 
 let adminUsersCache = [];
+let adminSearchQuery = '';
 
 function denyAccess(){
   document.getElementById('adminDenied').style.display = '';
@@ -73,13 +74,31 @@ function renderAdminStats(){
   </div>`;
 }
 
+function adminSearch(q){
+  adminSearchQuery = q.trim().toLowerCase();
+  renderAdminUsers();
+}
+
 function renderAdminUsers(){
   const body = document.getElementById('adminUserList');
+  const countEl = document.getElementById('adminSearchCount');
   if(!adminUsersCache.length){
     body.innerHTML = '<span class="ql-empty">ไม่มีผู้ใช้งานอื่นในระบบ</span>';
+    if(countEl) countEl.textContent = '';
     return;
   }
-  body.innerHTML = adminUsersCache.map(u=>{
+  const filtered = adminSearchQuery
+    ? adminUsersCache.filter(u=>
+        u.username.toLowerCase().includes(adminSearchQuery) ||
+        (u.email||'').toLowerCase().includes(adminSearchQuery)
+      )
+    : adminUsersCache;
+  if(countEl) countEl.textContent = adminSearchQuery ? `แสดง ${filtered.length} / ${adminUsersCache.length} คน` : `${adminUsersCache.length} คน`;
+  if(!filtered.length){
+    body.innerHTML = `<span class="ql-empty">ไม่พบผู้ใช้ที่ตรงกับ "${esc(adminSearchQuery)}"</span>`;
+    return;
+  }
+  body.innerHTML = filtered.map(u=>{
     const statusBadge = u.disabled
       ? `<span class="bill-status-badge overdue">ถูกระงับ</span>`
       : (u.locked ? `<span class="bill-status-badge duesoon">ล็อก (เข้าระบบผิดหลายครั้ง)</span>` : `<span class="bill-status-badge paid">ใช้งานได้</span>`);
