@@ -2339,22 +2339,30 @@
     font-size: .8rem; font-weight: 600; color: var(--text);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .sb-date-row {
-    display: flex; align-items: center; gap: .2rem;
-    margin-top: .05rem;
-  }
   .sb-user-date {
     font-size: .68rem; color: var(--text-3);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sb-date-box {
+    display: flex; align-items: center;
+    padding: .5rem 1rem .6rem;
+    border-bottom: 1px solid var(--border);
+    gap: .3rem;
+  }
+  .sb-date-label {
     flex: 1;
+    font-size: .78rem; font-weight: 600;
+    color: var(--text-1);
+    text-align: center;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .sb-date-nav {
     background: none; border: none; cursor: pointer;
-    color: var(--text-3); font-size: .9rem; line-height: 1;
-    padding: 0 2px;
-    transition: color .15s;
+    color: var(--text-3); font-size: 1.1rem; line-height: 1;
+    padding: 2px 4px; border-radius: 6px;
+    transition: background .15s, color .15s;
   }
-  .sb-date-nav:hover { color: var(--text-1); }
+  .sb-date-nav:hover { background: var(--hover-bg); color: var(--text-1); }
 
   /* Main area fills remaining space */
   .app-main { flex: 1; min-width: 0; }

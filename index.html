@@ -118,6 +118,11 @@
         </div>
         <span class="sb-name">TrackingTask</span>
       </div>
+      <div class="sb-date-box">
+        <button class="sb-date-nav" onclick="prevDay()" title="วันก่อน">&#8249;</button>
+        <div class="sb-date-label" id="sbDateDisplay"></div>
+        <button class="sb-date-nav" onclick="nextDay()" title="วันถัดไป">&#8250;</button>
+      </div>
       <nav class="sb-nav">
         <div class="sb-item sb-on" id="sb-task" onclick="switchTab('task')">
           <div class="sb-item-icon">
@@ -142,11 +147,6 @@
         <div class="sb-avatar" id="sbAvatar">Y</div>
         <div class="sb-user-info">
           <div class="sb-user-name" id="sbUserName">Hi, Yut</div>
-          <div class="sb-date-row">
-            <button class="sb-date-nav" onclick="prevDay()" title="วันก่อน">&#8249;</button>
-            <div class="sb-user-date" id="sbDateDisplay"></div>
-            <button class="sb-date-nav" onclick="nextDay()" title="วันถัดไป">&#8250;</button>
-          </div>
         </div>
         <div class="sb-actions">
           <button class="sb-action-btn" id="sbThemeBtn" onclick="toggleTheme()" title="สลับ Light/Dark">
