@@ -265,11 +265,19 @@
   .add-col-inline-btn { color: #fff !important; background: var(--blue) !important; border-color: var(--blue) !important; }
   .add-col-inline-btn:hover { background: #3a8eef !important; border-color: #3a8eef !important; }
 
+  .board-scroll-wrap {
+    overflow-x: auto;
+    overflow-y: visible;
+    padding-bottom: .5rem;
+    overscroll-behavior-x: contain;
+  }
+
   .board {
     display: grid;
     /* grid-template-columns set dynamically via JS in renderBoard() */
     gap: .85rem;
     align-items: start;
+    min-width: max-content;
   }
 
   .col {
@@ -278,7 +286,10 @@
     border-radius: var(--r-lg);
     padding: 1rem;
     min-height: 200px;
-    min-width: 0;
+    width: 280px;
+    min-width: 280px;
+    max-width: 340px;
+    box-sizing: border-box;
   }
 
   .col-header {
@@ -1053,7 +1064,7 @@
   ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 99px; }
 
   @media (max-width: 820px) {
-    .board { grid-template-columns: 1fr !important; }
+    .col { width: 260px; min-width: 260px; }
   }
 
   @media (max-width: 680px) {
