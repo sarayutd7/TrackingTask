@@ -2487,3 +2487,29 @@
     .app-layout { align-items: stretch; }
     .app-sidebar { min-height: unset; align-self: stretch; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
   }
+
+  /* ── Note page (inline, no overlay) ── */
+  .ql-page-header {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: 1rem 0 1rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.25rem;
+  }
+  .ql-back-btn {
+    display: flex; align-items: center; gap: .3rem;
+    background: none; border: none; cursor: pointer;
+    color: var(--accent); font-size: .85rem; font-weight: 600;
+    padding: .3rem .5rem; border-radius: 8px;
+    transition: background .15s;
+    flex-shrink: 0;
+  }
+  .ql-back-btn:hover { background: var(--hover-bg); }
+  .ql-page-title {
+    flex: 1;
+    font-size: 1rem; font-weight: 700; color: var(--text-1);
+  }
+  .ql-page-body {
+    display: flex; flex-direction: column; gap: .1rem;
+  }

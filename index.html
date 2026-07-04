@@ -257,27 +257,124 @@
   <!-- Tab 2: Note -->
   <div class="tab-pane" id="tabTool" style="display:none">
 
-    <!-- Tool Links -->
-    <div class="ql-section">
-      <div class="ql-header" onclick="qlToggle()">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-        <span class="ql-title">Notes</span>
-        <button class="ql-add-btn" onclick="event.stopPropagation();qlOpenAdd()">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          เพิ่ม
+    <!-- List view -->
+    <div id="qlListView">
+      <div class="ql-section">
+        <div class="ql-header">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <span class="ql-title">Notes</span>
+          <button class="ql-add-btn" onclick="qlOpenAdd()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            + เพิ่มโน้ต
+          </button>
+        </div>
+        <div class="ql-search-wrap">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="ql-search-input" id="qlSearchInput" placeholder="ค้นหา note…" oninput="qlSetSearch(this.value)">
+        </div>
+        <div class="ql-filter-bar" id="qlFilterBar">
+          <button class="ql-filter-btn active" data-filter="all" onclick="qlSetFilter('all')">ทั้งหมด</button>
+        </div>
+        <div class="ql-body" id="qlBody"></div>
+      </div>
+    </div>
+
+    <!-- Edit / Add page -->
+    <div id="qlEditPage" style="display:none">
+      <div class="ql-page-header">
+        <button class="ql-back-btn" onclick="qlClose()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          กลับ
         </button>
-        <span class="ql-chevron" id="qlChevron">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
-        </span>
+        <span class="ql-page-title" id="qlModalTitle">เพิ่ม Note</span>
+        <button class="btn btn-accent" onclick="qlSave()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          บันทึก
+        </button>
       </div>
-      <div class="ql-search-wrap">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" class="ql-search-input" id="qlSearchInput" placeholder="ค้นหา note (ชื่อ, รายละเอียด, tag)…" oninput="qlSetSearch(this.value)">
+      <div class="ql-page-body">
+        <div class="field">
+          <label>ชื่อ</label>
+          <input type="text" id="qlName" placeholder="เช่น Jira, SharePoint, Figma…" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>URL <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
+          <input type="url" id="qlUrl" placeholder="https://…" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Tag</label>
+          <div class="ql-tag-row" id="qlTagRow"></div>
+          <div class="ql-tag-add-row">
+            <input type="text" id="qlNewTagInput" placeholder="เพิ่ม tag ใหม่…" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();qlTagAdd();}">
+            <button type="button" class="btn btn-ghost" onclick="qlTagAdd()">+ tag</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>ประเภท</label>
+          <div class="ql-filter-bar" id="qlTypeRow" style="margin-bottom:0">
+            <button class="ql-filter-btn" data-type="fleeting" onclick="selectQlType('fleeting')">📝 Fleeting</button>
+            <button class="ql-filter-btn" data-type="permanent" onclick="selectQlType('permanent')">📌 Permanent</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>โน้ตที่เกี่ยวข้อง</label>
+          <div class="ql-related-picker">
+            <input type="text" id="qlRelatedSearchInput" placeholder="ค้นหาโน้ตที่ต้องการเชื่อมโยง…" autocomplete="off"
+              oninput="qlRelatedSearchInputHandler(this.value)"
+              onfocus="qlRelatedSearchInputHandler(this.value)"
+              onblur="setTimeout(()=>{const b=document.getElementById('qlRelatedSuggestions'); if(b) b.style.display='none';}, 150)">
+            <div class="ql-related-suggestions" id="qlRelatedSuggestions" style="display:none"></div>
+          </div>
+          <div class="ql-related-chips-edit" id="qlRelatedChipsEdit"></div>
+        </div>
+        <div class="field">
+          <label>Detail</label>
+          <div class="rte-wrap">
+            <div class="rte-toolbar">
+              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('bold')" title="ตัวหนา"><b style="font-size:.82rem">B</b></button>
+              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('italic')" title="ตัวเอียง"><i style="font-size:.82rem">I</i></button>
+              <span class="rte-sep"></span>
+              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('formatBlock','h3')" title="หัวข้อ" style="font-size:.72rem;font-weight:700">H</button>
+              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('formatBlock','p')" title="ข้อความปกติ" style="font-size:.7rem">¶</button>
+              <span class="rte-sep"></span>
+              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('insertOrderedList')" title="เลขลำดับ" style="font-size:.7rem;font-weight:600">1.</button>
+              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('insertUnorderedList')" title="รายการ" style="font-size:.9rem">•</button>
+              <span class="rte-sep"></span>
+              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('fontSize','2')" title="ขนาดเล็ก"><span class="rte-size-label" style="font-size:.6rem">A</span></button>
+              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('fontSize','3')" title="ขนาดปกติ"><span class="rte-size-label">A</span></button>
+              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('fontSize','5')" title="ขนาดใหญ่"><span class="rte-size-label" style="font-size:.98rem">A</span></button>
+              <span class="rte-sep"></span>
+              <input type="color" class="rte-color-input" title="สีตัวอักษร" value="#ffffff" onmousedown="rteSaveSelection()" oninput="rteApplyColor(this.value)">
+              <span class="rte-sep"></span>
+              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('removeFormat')" title="ล้าง format" style="font-size:.75rem;color:var(--text-3)">✕</button>
+            </div>
+            <div class="rte-body" id="qlDetailBody" contenteditable="true" data-placeholder="รายละเอียด…" onpaste="rteHandlePaste(event)"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>รูปภาพ</label>
+          <input type="file" id="qlImagesInput" accept="image/*" multiple onchange="qlImagesChange(event)">
+          <div class="ql-img-row" id="qlImagesRow"></div>
+        </div>
       </div>
-      <div class="ql-filter-bar" id="qlFilterBar">
-        <button class="ql-filter-btn active" data-filter="all" onclick="qlSetFilter('all')">ทั้งหมด</button>
+    </div>
+
+    <!-- Read page -->
+    <div id="qlReadPage" style="display:none">
+      <div class="ql-page-header">
+        <button class="ql-back-btn" onclick="qlReadClose()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          กลับ
+        </button>
+        <span class="ql-read-title" id="qlReadTitle"></span>
+        <button class="btn btn-ghost" id="qlReadEditBtn" onclick="">แก้ไข</button>
       </div>
-      <div class="ql-body" id="qlBody"></div>
+      <div class="ql-page-body">
+        <div id="qlReadMeta" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:.75rem"></div>
+        <div class="ql-read-detail" id="qlReadDetail"></div>
+        <div id="qlReadImages" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem"></div>
+        <div id="qlReadRelated"></div>
+      </div>
     </div>
 
   </div>

@@ -1295,10 +1295,13 @@ function qlOpenRead(i){
   // related notes
   const relatedEl = document.getElementById('qlReadRelated');
   if(relatedEl) relatedEl.innerHTML = qlRelatedChipsHtml(item);
-  document.getElementById('qlReadOverlay').style.display = 'flex';
+  // wire edit button
+  const editBtn = document.getElementById('qlReadEditBtn');
+  if(editBtn) editBtn.onclick = ()=>{ qlReadClose(); qlOpenEdit(i); };
+  qlShowPage('read');
 }
 function qlReadClose(){
-  document.getElementById('qlReadOverlay').style.display = 'none';
+  qlShowPage('list');
 }
 
 function qlTogglePin(i){
@@ -1360,7 +1363,7 @@ function qlOpenAdd(prefill=null){
   renderQlRelatedRow();
   qlPendingImages = (prefill && prefill.images) ? prefill.images.slice() : [];
   renderQlImagesRow();
-  document.getElementById('qlOverlay').style.display='flex';
+  qlShowPage('edit');
   setTimeout(()=>document.getElementById('qlName').focus(),60);
 }
 
@@ -1381,14 +1384,20 @@ function qlOpenEdit(i){
   renderQlRelatedRow();
   qlPendingImages = (item.images || []).slice();
   renderQlImagesRow();
-  document.getElementById('qlOverlay').style.display='flex';
+  qlShowPage('edit');
   setTimeout(()=>document.getElementById('qlName').focus(),60);
 }
 
+function qlShowPage(page){
+  document.getElementById('qlListView').style.display  = page==='list' ? '' : 'none';
+  document.getElementById('qlEditPage').style.display  = page==='edit' ? '' : 'none';
+  document.getElementById('qlReadPage').style.display  = page==='read' ? '' : 'none';
+}
+
 function qlClose(){
-  document.getElementById('qlOverlay').style.display='none';
   qlEditIdx = -1;
   qlEditId = null;
+  qlShowPage('list');
 }
 
 function qlCloseOnBg(e){
