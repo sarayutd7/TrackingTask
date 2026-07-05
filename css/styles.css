@@ -2572,6 +2572,21 @@
     /* Always show column edit button on touch devices */
     .col-edit-btn { opacity: 1; }
 
+    /* Board: stack columns vertically on mobile */
+    .board-scroll-wrap { overflow-x: visible; overflow-y: visible; padding-bottom: 0; }
+    .board {
+      display: flex !important;
+      flex-direction: column;
+      gap: .75rem;
+      min-width: 0 !important;
+    }
+    .col {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      box-sizing: border-box;
+    }
+
     header { display: none !important; }
     .app-sidebar { display: none; }
     .bottom-nav-bar { display: flex; }
