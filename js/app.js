@@ -726,7 +726,7 @@ function renderBoard(){
   const board = document.getElementById('board');
   if(!board) return;
   // กำหนดจำนวน column ให้เต็มจอ เท่ากันทุก column
-  board.style.gridTemplateColumns = `repeat(${COLS.length}, 280px)`;
+  board.style.gridTemplateColumns = `repeat(${COLS.length}, minmax(240px, 1fr))`;
   board.innerHTML = COLS.map(col=>`
     <div class="col" id="col-${esc(col.id)}">
       <div class="col-header">

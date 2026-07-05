@@ -301,7 +301,7 @@
     /* grid-template-columns set dynamically via JS in renderBoard() */
     gap: .85rem;
     align-items: start;
-    min-width: max-content;
+    min-width: 100%;
   }
 
   .col {
