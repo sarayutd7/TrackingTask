@@ -253,9 +253,19 @@ function closeSidebar(){
 }
 
 function switchTab(tab){
-  document.getElementById('tabTask').style.display    = tab==='task'    ? '' : 'none';
-  document.getElementById('tabTool').style.display    = tab==='tool'    ? '' : 'none';
-  document.getElementById('tabFinance').style.display = tab==='finance' ? '' : 'none';
+  ['tabTask','tabTool','tabFinance'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.classList.remove('active-pane');
+    el.style.display = 'none';
+  });
+  const active = {task:'tabTask',tool:'tabTool',finance:'tabFinance'}[tab];
+  if(active){
+    const el = document.getElementById(active);
+    el.style.display = '';
+    // trigger animation by removing then re-adding the class
+    requestAnimationFrame(()=>{ el.classList.add('active-pane'); });
+  }
   document.getElementById('tabBtnTask').classList.toggle('active',    tab==='task');
   document.getElementById('tabBtnTool').classList.toggle('active',    tab==='tool');
   document.getElementById('tabBtnFinance').classList.toggle('active', tab==='finance');

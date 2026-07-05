@@ -2959,3 +2959,252 @@
   /* Sidebar divider + admin link */
   .sb-divider { height: 1px; background: var(--border); margin: .4rem .75rem; }
   .sb-item[href] { text-decoration: none; }
+
+  /* ═══════════════════════════════════════════════════════
+     ANIMATIONS — Global motion system
+     All durations use CSS variables so we can disable via
+     prefers-reduced-motion in one place.
+  ═══════════════════════════════════════════════════════ */
+
+  :root {
+    --dur-fast:   120ms;
+    --dur-normal: 220ms;
+    --dur-slow:   350ms;
+    --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-std:   cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ── Keyframes ── */
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(.94); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(18px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-18px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes bounceIn {
+    0%   { transform: scale(.7);  opacity: 0; }
+    60%  { transform: scale(1.08); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  @keyframes progressPulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: .6; }
+  }
+  @keyframes dotBounce {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-3px); }
+  }
+
+  /* ── Tab pane switch ── */
+  .tab-pane.active-pane {
+    animation: fadeSlideUp var(--dur-normal) var(--ease-out) both;
+  }
+
+  /* ── Task cards — staggered entrance ── */
+  .card {
+    animation: fadeSlideUp var(--dur-normal) var(--ease-out) both;
+  }
+  /* stagger via nth-child */
+  .card:nth-child(1)  { animation-delay: 0ms; }
+  .card:nth-child(2)  { animation-delay: 40ms; }
+  .card:nth-child(3)  { animation-delay: 80ms; }
+  .card:nth-child(4)  { animation-delay: 120ms; }
+  .card:nth-child(5)  { animation-delay: 160ms; }
+  .card:nth-child(6)  { animation-delay: 200ms; }
+  .card:nth-child(7)  { animation-delay: 240ms; }
+  .card:nth-child(8)  { animation-delay: 280ms; }
+
+  /* ── Card hover lift ── */
+  .card {
+    transition: border-color var(--dur-fast) var(--ease-std),
+                background   var(--dur-fast) var(--ease-std),
+                transform    var(--dur-fast) var(--ease-std),
+                box-shadow   var(--dur-fast) var(--ease-std);
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,.22);
+    border-color: var(--border-hover);
+  }
+  .card:active {
+    transform: scale(.98) translateY(0);
+    box-shadow: none;
+  }
+
+  /* ── Button press ── */
+  button, .btn, .icon-btn, .add-btn, .pf-btn, .sb-item, .ds-chip {
+    transition: transform var(--dur-fast) var(--ease-std),
+                opacity  var(--dur-fast) var(--ease-std),
+                background var(--dur-fast) var(--ease-std),
+                border-color var(--dur-fast) var(--ease-std),
+                color var(--dur-fast) var(--ease-std);
+  }
+  button:active:not(:disabled), .btn:active, .icon-btn:active {
+    transform: scale(.94);
+  }
+
+  /* ── Modal overlay — stronger entrance ── */
+  .overlay {
+    animation: fadeIn var(--dur-fast) var(--ease-std) both;
+  }
+  .overlay .modal {
+    animation: scaleIn var(--dur-normal) var(--ease-spring) both;
+  }
+
+  /* ── Progress bar ── */
+  .progress-fill {
+    transition: width var(--dur-slow) var(--ease-out);
+  }
+
+  /* ── Stats cards ── */
+  .stat-card {
+    animation: fadeSlideUp var(--dur-normal) var(--ease-out) both;
+    transition: transform var(--dur-fast) var(--ease-std),
+                box-shadow var(--dur-fast) var(--ease-std);
+  }
+  .stat-card:nth-child(1) { animation-delay: 0ms; }
+  .stat-card:nth-child(2) { animation-delay: 50ms; }
+  .stat-card:nth-child(3) { animation-delay: 100ms; }
+  .stat-card:nth-child(4) { animation-delay: 150ms; }
+
+  /* ── Mobile sidebar drawer ── */
+  .app-sidebar {
+    transition: transform var(--dur-normal) var(--ease-out);
+  }
+  .sb-backdrop {
+    transition: opacity var(--dur-normal) var(--ease-std);
+  }
+
+  /* ── Bottom nav active dot ── */
+  .bn-item.active .bn-dot {
+    animation: dotBounce 0.4s var(--ease-spring) both;
+  }
+  /* active tab icon */
+  .bn-item.active .bn-icon {
+    animation: bounceIn 0.35s var(--ease-spring) both;
+  }
+
+  /* ── Mobile column tab switch ── */
+  .mb-tab {
+    transition: color var(--dur-fast) var(--ease-std),
+                border-bottom-color var(--dur-normal) var(--ease-std);
+  }
+  /* active tab underline slide via border-bottom */
+  .mb-pane {
+    animation: fadeIn var(--dur-fast) var(--ease-std) both;
+  }
+  .mb-pane.active {
+    animation: fadeSlideUp var(--dur-normal) var(--ease-out) both;
+  }
+
+  /* ── Mobile task cards ── */
+  .mb-task-card {
+    animation: fadeSlideUp var(--dur-normal) var(--ease-out) both;
+    transition: transform var(--dur-fast) var(--ease-std),
+                border-color var(--dur-fast) var(--ease-std),
+                box-shadow var(--dur-fast) var(--ease-std);
+  }
+  .mb-task-card:nth-child(1) { animation-delay: 0ms; }
+  .mb-task-card:nth-child(2) { animation-delay: 50ms; }
+  .mb-task-card:nth-child(3) { animation-delay: 100ms; }
+  .mb-task-card:nth-child(4) { animation-delay: 150ms; }
+  .mb-task-card:nth-child(5) { animation-delay: 200ms; }
+  .mb-task-card:nth-child(6) { animation-delay: 240ms; }
+  .mb-task-card:active {
+    transform: scale(.98);
+    box-shadow: none;
+  }
+
+  /* ── Note / QL cards ── */
+  .ql-card {
+    animation: scaleIn var(--dur-normal) var(--ease-out) both;
+    transition: transform var(--dur-fast) var(--ease-std),
+                box-shadow var(--dur-fast) var(--ease-std),
+                border-color var(--dur-fast) var(--ease-std);
+  }
+  .ql-card:nth-child(1) { animation-delay: 0ms; }
+  .ql-card:nth-child(2) { animation-delay: 40ms; }
+  .ql-card:nth-child(3) { animation-delay: 80ms; }
+  .ql-card:nth-child(4) { animation-delay: 120ms; }
+  .ql-card:nth-child(5) { animation-delay: 160ms; }
+  .ql-card:nth-child(6) { animation-delay: 200ms; }
+  .ql-card:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 8px 24px rgba(0,0,0,.2);
+  }
+  .ql-card:active { transform: scale(.97); }
+
+  /* ── Sidebar nav items ── */
+  .sb-item {
+    transition: background var(--dur-fast) var(--ease-std),
+                color var(--dur-fast) var(--ease-std),
+                transform var(--dur-fast) var(--ease-std);
+  }
+  .sb-item:hover  { transform: translateX(3px); }
+  .sb-item:active { transform: translateX(3px) scale(.97); }
+
+  /* ── Date strip chips ── */
+  .ds-chip {
+    transition: background var(--dur-fast) var(--ease-std),
+                color var(--dur-fast) var(--ease-std),
+                transform var(--dur-normal) var(--ease-spring);
+  }
+  .ds-chip.ds-cur {
+    animation: bounceIn 0.3s var(--ease-spring) both;
+  }
+
+  /* ── Priority filter pills ── */
+  .pf-btn, .mb-pf-pill, .ql-filter-btn {
+    transition: background var(--dur-fast) var(--ease-std),
+                color var(--dur-fast) var(--ease-std),
+                border-color var(--dur-fast) var(--ease-std),
+                transform var(--dur-fast) var(--ease-std);
+  }
+  .pf-btn:active, .mb-pf-pill:active { transform: scale(.94); }
+
+  /* ── Add task / new item buttons ── */
+  .add-btn, .mb-add-btn, .ql-add-btn {
+    transition: background var(--dur-fast) var(--ease-std),
+                color var(--dur-fast) var(--ease-std),
+                border-color var(--dur-fast) var(--ease-std),
+                transform var(--dur-fast) var(--ease-std);
+  }
+  .add-btn:hover, .mb-add-btn:hover, .ql-add-btn:hover { transform: translateY(-1px); }
+  .add-btn:active, .mb-add-btn:active, .ql-add-btn:active { transform: scale(.96); }
+
+  /* ── Finance tabs ── */
+  .fin-subtab {
+    transition: background var(--dur-fast) var(--ease-std),
+                color var(--dur-fast) var(--ease-std),
+                border-color var(--dur-fast) var(--ease-std);
+  }
+
+  /* ── Toast ── */
+  .status-bar {
+    transition: opacity var(--dur-fast) var(--ease-std),
+                transform var(--dur-fast) var(--ease-std);
+  }
+
+  /* ══ prefers-reduced-motion — disable all animations ══ */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
