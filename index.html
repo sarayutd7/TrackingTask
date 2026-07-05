@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=20260705-4">
+<link rel="stylesheet" href="css/styles.css?v=20260705-5">
 </head>
 <body>
 <div class="shell">
@@ -224,7 +224,7 @@
     <!-- Priority Filter Bar -->
     <div class="priority-filter-bar" id="priorityFilterBar"></div>
 
-    <!-- Board -->
+    <!-- Board (desktop) -->
     <div class="board-header-row">
       <button class="add-col-inline-btn" onclick="openColAdd()">
         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="18" rx="1"/><path d="M19 9v6M16 12h6" stroke-width="2" stroke-linecap="round"/></svg>
@@ -233,6 +233,12 @@
     </div>
     <div class="board-scroll-wrap">
       <div class="board" id="board"></div>
+    </div>
+
+    <!-- Mobile board (Tab Switch) -->
+    <div id="mobileBoard" class="mobile-board">
+      <div class="mb-tab-bar" id="mbTabBar"></div>
+      <div id="mbPanes"></div>
     </div>
 
     <!-- Daily Log -->
@@ -1257,6 +1263,6 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://alcdn.msauth.net/browser/3.18.0/js/msal-browser.min.js"></script>
 <script src="js/auth.js?v=20260705-1"></script>
-<script src="js/app.js?v=20260705-3"></script>
+<script src="js/app.js?v=20260705-4"></script>
 </body>
 </html>

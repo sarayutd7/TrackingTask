@@ -876,6 +876,126 @@ function renderPriorityFilterBar(tasks){
     }).join('');
 }
 
+// ── Mobile Board (Tab Switch) ─────────────────────────
+let mbActiveCol = '';
+let mbActivePriority = {};  // colId → priority filter
+
+function mbColorVar(color){
+  const map={purple:'var(--accent)',amber:'var(--amber)',green:'var(--green)',blue:'var(--blue)',pink:'var(--pink)',teal:'var(--teal)',gray:'var(--gray)'};
+  return map[color]||map.gray;
+}
+
+function renderMobileBoard(g, tasks){
+  const tabBar = document.getElementById('mbTabBar');
+  const panesEl = document.getElementById('mbPanes');
+  if(!tabBar||!panesEl) return;
+
+  // default active tab to first col
+  if(!mbActiveCol || !COLS.find(c=>c.id===mbActiveCol)) mbActiveCol = COLS[0]?.id||'';
+
+  // ── Tab bar ──
+  tabBar.innerHTML = COLS.map(col=>{
+    const count = (g[col.id]||[]).length;
+    const active = col.id===mbActiveCol ? ' active' : '';
+    return `<div class="mb-tab c-${col.color}${active}" onclick="mbSwitchTab('${esc(col.id)}')">
+      ${esc(col.name)}
+      <span class="mb-tab-count">${count}</span>
+    </div>`;
+  }).join('');
+
+  // ── Panes ──
+  const moveSvgNext = `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+  const moveSvgBack = `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.17"/></svg>`;
+  const priorityDots={critical:'🔴',high:'🟠',medium:'🟡',low:'🔵',lowest:'⚪'};
+  const priorityLabels={critical:'Critical',high:'High',medium:'Medium',low:'Low',lowest:'Lowest'};
+
+  panesEl.innerHTML = COLS.map((col, colIdx)=>{
+    const all = g[col.id]||[];
+    const isLast = colIdx===COLS.length-1;
+    const nextCol = COLS[colIdx+1];
+    const nextId  = nextCol?.id||COLS[0]?.id;
+    const active  = col.id===mbActiveCol ? ' active' : '';
+    const pFilter = mbActivePriority[col.id]||'';
+
+    // priority counts for this pane
+    const pCounts={};
+    PRIORITIES.forEach(p=>{ pCounts[p.id]=0; });
+    all.forEach(t=>{ if(t.priority&&pCounts[t.priority]!==undefined) pCounts[t.priority]++; });
+    const hasPriority = PRIORITIES.some(p=>pCounts[p.id]>0);
+
+    const pfBar = hasPriority ? `<div class="mb-pf-bar">
+      <div class="mb-pf-pill${!pFilter?' active':''}" onclick="mbSetPriority('${esc(col.id)}','')">ทั้งหมด ${all.length}</div>
+      ${PRIORITIES.filter(p=>pCounts[p.id]>0).map(p=>`
+      <div class="mb-pf-pill${pFilter===p.id?' active':''}" onclick="mbSetPriority('${esc(col.id)}','${p.id}')">
+        ${p.dot} ${p.label} ${pCounts[p.id]}
+      </div>`).join('')}
+    </div>` : '';
+
+    const filtered = pFilter ? all.filter(t=>(t.priority||'')===pFilter) : all;
+    const sorted = filtered.slice().sort((a,b)=>{
+      if(!a.timeStart&&!b.timeStart) return 0;
+      if(!a.timeStart) return 1; if(!b.timeStart) return -1;
+      return a.timeStart.localeCompare(b.timeStart);
+    });
+
+    const cardsHtml = sorted.length ? sorted.map(t=>{
+      const pbadge = t.priority&&priorityLabels[t.priority]
+        ? `<span class="priority-badge ${t.priority}">${priorityLabels[t.priority]}</span>` : '';
+      const timeRange = (t.timeStart||t.timeEnd)
+        ? `<span class="mb-task-time">🕙 ${esc(t.timeStart||'?')} - ${esc(t.timeEnd||'?')}</span>` : '';
+      const moveSvg  = isLast ? moveSvgBack : moveSvgNext;
+      const moveTitle= isLast ? 'ย้อนกลับ' : (nextCol?nextCol.name:'→');
+      const done = isLast ? ' done' : '';
+      return `<div class="mb-task-card c-${col.color}" onclick="openModal('${esc(col.id)}','${t.id}')">
+        <div class="mb-task-top">
+          <span class="mb-task-title${done}">${esc(t.title)}</span>
+          <div class="mb-move-btn" title="${esc(moveTitle)}" onclick="event.stopPropagation();moveTask('${t.id}','${nextId}')">${moveSvg}</div>
+        </div>
+        <div class="mb-task-meta">
+          ${pbadge}${timeRange}
+          <span class="mb-task-time">${fmtTime(t.updatedAt)}</span>
+        </div>
+      </div>`;
+    }).join('')
+    : `<div style="padding:.6rem .1rem;font-size:.8rem;color:var(--text-3)">${pFilter?'ไม่มีงานใน filter นี้':'ยังไม่มีงาน'}</div>`;
+
+    const moreBtn = `<div class="mb-pane-more" onclick="openColEdit('${esc(col.id)}')" title="แก้ไข / ลบ column">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+    </div>`;
+
+    return `<div class="mb-pane${active}" id="mbPane-${esc(col.id)}">
+      ${pfBar}
+      <div class="mb-pane-header">
+        <span class="mb-pane-dot" style="background:${mbColorVar(col.color)}"></span>
+        <span class="mb-pane-label">${esc(col.name)}</span>
+        ${moreBtn}
+      </div>
+      <div class="mb-task-list">${cardsHtml}</div>
+      <button class="mb-add-btn" onclick="openModal('${esc(col.id)}')">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        เพิ่มงาน
+      </button>
+      <div class="mb-pane-spacer"></div>
+    </div>`;
+  }).join('');
+}
+
+function mbSwitchTab(colId){
+  mbActiveCol = colId;
+  document.querySelectorAll('.mb-tab').forEach(el=>{
+    const id = el.getAttribute('onclick').match(/'([^']+)'/)?.[1];
+    if(id) el.classList.toggle('active', id===colId);
+  });
+  document.querySelectorAll('.mb-pane').forEach(el=>{
+    el.classList.toggle('active', el.id==='mbPane-'+colId);
+  });
+}
+
+function mbSetPriority(colId, priority){
+  mbActivePriority[colId] = priority;
+  render();
+}
+
 function render(){
   const tasks = getTasks(currentDate);
   const g = {};
@@ -911,6 +1031,7 @@ function render(){
   });
 
   renderStats(g);
+  renderMobileBoard(g, tasks);
 
   // Progress: นับ "completed" col เป็น done, ไม่นับ col ที่ชื่อมี "back" ใน denominator
   const backlogCols = COLS.filter(c=>/back/i.test(c.name)).map(c=>c.id);
