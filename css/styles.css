@@ -310,9 +310,8 @@
     border-radius: var(--r-lg);
     padding: 1rem;
     min-height: 200px;
-    width: 280px;
-    min-width: 280px;
-    max-width: 340px;
+    min-width: 0;
+    width: 100%;
     box-sizing: border-box;
   }
 
