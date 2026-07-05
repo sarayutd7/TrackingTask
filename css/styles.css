@@ -2694,7 +2694,7 @@
     header { display: none !important; }
     .app-sidebar { display: none; }
     .bottom-nav-bar { display: flex; }
-    .shell { padding-bottom: 80px; padding-left: 0; padding-right: 0; }
+    .shell { padding-top: 0; padding-bottom: 80px; padding-left: 0; padding-right: 0; }
     .app-main { padding: 0; }
     .tab-pane { padding: 0 .75rem; }
     .date-display { display: none; }
