@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=20260705-2">
+<link rel="stylesheet" href="css/styles.css?v=20260705-3">
 </head>
 <body>
 <div class="shell">
@@ -291,24 +291,21 @@
 
     <!-- List view -->
     <div id="qlListView">
-      <div class="ql-section">
-        <div class="ql-header">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          <span class="ql-title">Notes</span>
-          <button class="ql-add-btn" onclick="qlOpenAdd()">
-            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            เพิ่มโน้ต
-          </button>
-        </div>
-        <div class="ql-search-wrap">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" class="ql-search-input" id="qlSearchInput" placeholder="ค้นหา note…" oninput="qlSetSearch(this.value)">
-        </div>
-        <div class="ql-filter-bar" id="qlFilterBar">
-          <button class="ql-filter-btn active" data-filter="all" onclick="qlSetFilter('all')">ทั้งหมด</button>
-        </div>
-        <div class="ql-body" id="qlBody"></div>
+      <div class="ql-top-row">
+        <span class="ql-heading">Notes</span>
+        <button class="ql-add-btn" onclick="qlOpenAdd()">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          เพิ่มโน้ต
+        </button>
       </div>
+      <div class="ql-search-wrap">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="ql-search-input" id="qlSearchInput" placeholder="ค้นหาโน้ต…" oninput="qlSetSearch(this.value)">
+      </div>
+      <div class="ql-filter-bar" id="qlFilterBar">
+        <button class="ql-filter-btn active" data-filter="all" onclick="qlSetFilter('all')">ทั้งหมด</button>
+      </div>
+      <div id="qlBody"></div>
     </div>
 
     <!-- Edit / Add page -->
@@ -318,76 +315,169 @@
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
           กลับ
         </button>
-        <span class="ql-page-title" id="qlModalTitle">เพิ่ม Note</span>
+        <span class="ql-page-title" id="qlModalTitle">เพิ่มโน้ต</span>
         <button class="btn btn-accent" onclick="qlSave()">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
           บันทึก
         </button>
       </div>
       <div class="ql-page-body">
-        <div class="field">
-          <label>ชื่อ</label>
-          <input type="text" id="qlName" placeholder="เช่น Jira, SharePoint, Figma…" autocomplete="off">
-        </div>
-        <div class="field">
-          <label>URL <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
-          <input type="url" id="qlUrl" placeholder="https://…" autocomplete="off">
-        </div>
-        <div class="field">
-          <label>Tag</label>
-          <div class="ql-tag-row" id="qlTagRow"></div>
-          <div class="ql-tag-add-row">
-            <input type="text" id="qlNewTagInput" placeholder="เพิ่ม tag ใหม่…" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();qlTagAdd();}">
-            <button type="button" class="btn btn-ghost" onclick="qlTagAdd()">+ tag</button>
+
+        <!-- Color preview strip -->
+        <div class="ql-color-strip nc-plain" id="qlColorStrip">
+          <span class="ql-color-strip-name" id="qlColorStripName">ชื่อโน้ต…</span>
+          <div class="ql-color-swatches">
+            <div class="ql-swatch sw-purple" title="Purple" onclick="qlSetColor('purple',this)"></div>
+            <div class="ql-swatch sw-green"  title="Green"  onclick="qlSetColor('green',this)"></div>
+            <div class="ql-swatch sw-yellow" title="Yellow" onclick="qlSetColor('yellow',this)"></div>
+            <div class="ql-swatch sw-red"    title="Red"    onclick="qlSetColor('red',this)"></div>
+            <div class="ql-swatch sw-plain active"  title="ไม่มีสี" onclick="qlSetColor('plain',this)"></div>
           </div>
         </div>
-        <div class="field">
-          <label>ประเภท</label>
-          <div class="ql-filter-bar" id="qlTypeRow" style="margin-bottom:0">
-            <button class="ql-filter-btn" data-type="fleeting" onclick="selectQlType('fleeting')">📝 Fleeting</button>
-            <button class="ql-filter-btn" data-type="permanent" onclick="selectQlType('permanent')">📌 Permanent</button>
+
+        <!-- Basic info card -->
+        <div class="ql-edit-card">
+          <div class="ql-edit-card-header">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            ข้อมูลโน้ต
           </div>
-        </div>
-        <div class="field">
-          <label>โน้ตที่เกี่ยวข้อง</label>
-          <div class="ql-related-picker">
-            <input type="text" id="qlRelatedSearchInput" placeholder="ค้นหาโน้ตที่ต้องการเชื่อมโยง…" autocomplete="off"
-              oninput="qlRelatedSearchInputHandler(this.value)"
-              onfocus="qlRelatedSearchInputHandler(this.value)"
-              onblur="setTimeout(()=>{const b=document.getElementById('qlRelatedSuggestions'); if(b) b.style.display='none';}, 150)">
-            <div class="ql-related-suggestions" id="qlRelatedSuggestions" style="display:none"></div>
-          </div>
-          <div class="ql-related-chips-edit" id="qlRelatedChipsEdit"></div>
-        </div>
-        <div class="field">
-          <label>Detail</label>
-          <div class="rte-wrap">
-            <div class="rte-toolbar">
-              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('bold')" title="ตัวหนา"><b style="font-size:.82rem">B</b></button>
-              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('italic')" title="ตัวเอียง"><i style="font-size:.82rem">I</i></button>
-              <span class="rte-sep"></span>
-              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('formatBlock','h3')" title="หัวข้อ" style="font-size:.72rem;font-weight:700">H</button>
-              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('formatBlock','p')" title="ข้อความปกติ" style="font-size:.7rem">¶</button>
-              <span class="rte-sep"></span>
-              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('insertOrderedList')" title="เลขลำดับ" style="font-size:.7rem;font-weight:600">1.</button>
-              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('insertUnorderedList')" title="รายการ" style="font-size:.9rem">•</button>
-              <span class="rte-sep"></span>
-              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('fontSize','2')" title="ขนาดเล็ก"><span class="rte-size-label" style="font-size:.6rem">A</span></button>
-              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('fontSize','3')" title="ขนาดปกติ"><span class="rte-size-label">A</span></button>
-              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('fontSize','5')" title="ขนาดใหญ่"><span class="rte-size-label" style="font-size:.98rem">A</span></button>
-              <span class="rte-sep"></span>
-              <input type="color" class="rte-color-input" title="สีตัวอักษร" value="#ffffff" onmousedown="rteSaveSelection()" oninput="rteApplyColor(this.value)">
-              <span class="rte-sep"></span>
-              <button class="rte-btn" onmousedown="event.preventDefault();rteExec('removeFormat')" title="ล้าง format" style="font-size:.75rem;color:var(--text-3)">✕</button>
+          <div class="ql-edit-card-body">
+            <div class="field">
+              <label>ชื่อ</label>
+              <input type="text" id="qlName" placeholder="ชื่อโน้ต…" autocomplete="off"
+                oninput="document.getElementById('qlColorStripName').textContent=this.value||'ชื่อโน้ต…'">
             </div>
-            <div class="rte-body" id="qlDetailBody" contenteditable="true" data-placeholder="รายละเอียด…" onpaste="rteHandlePaste(event)"></div>
+            <div class="field">
+              <label>URL <span style="font-weight:400;color:var(--text-3);font-size:.75rem">(ไม่บังคับ)</span></label>
+              <input type="url" id="qlUrl" placeholder="https://…" autocomplete="off">
+            </div>
           </div>
         </div>
-        <div class="field">
-          <label>รูปภาพ</label>
-          <input type="file" id="qlImagesInput" accept="image/*" multiple onchange="qlImagesChange(event)">
-          <div class="ql-img-row" id="qlImagesRow"></div>
+
+        <!-- Tag card -->
+        <div class="ql-edit-card">
+          <div class="ql-edit-card-header">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            แท็ก
+          </div>
+          <div class="ql-edit-card-body">
+            <div class="ql-tag-row" id="qlTagRow"></div>
+            <div class="ql-tag-add-row">
+              <input type="text" id="qlNewTagInput" placeholder="เพิ่มแท็กใหม่…" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();qlTagAdd();}">
+              <button type="button" class="btn btn-ghost" onclick="qlTagAdd()">+ แท็ก</button>
+            </div>
+          </div>
         </div>
+
+        <!-- Type + Pin/Hide card -->
+        <div class="ql-edit-card">
+          <div class="ql-edit-card-header">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            ประเภท & ตัวเลือก
+          </div>
+          <div class="ql-edit-card-body">
+            <div>
+              <div style="font-size:.75rem;font-weight:600;color:var(--text-3);margin-bottom:.5rem">ประเภทโน้ต</div>
+              <div class="ql-type-picker" id="qlTypeRow">
+                <div class="ql-type-card fleeting active" data-type="fleeting" onclick="selectQlType('fleeting')">
+                  <div class="ql-type-icon">📝</div>
+                  <div class="ql-type-name">Fleeting</div>
+                  <div class="ql-type-desc">จดไว้ชั่วคราว</div>
+                </div>
+                <div class="ql-type-card permanent" data-type="permanent" onclick="selectQlType('permanent')">
+                  <div class="ql-type-icon">📌</div>
+                  <div class="ql-type-name">Permanent</div>
+                  <div class="ql-type-desc">อ้างอิงบ่อย เก็บระยะยาว</div>
+                </div>
+              </div>
+            </div>
+            <div class="ql-toggle-row">
+              <div class="ql-toggle-card pin" id="qlPinToggle" onclick="qlToggleEditPin()">
+                <span class="ql-toggle-icon">📌</span>
+                <div class="ql-toggle-info">
+                  <div class="ql-toggle-name">ปักหมุด</div>
+                  <div class="ql-toggle-desc">แสดงด้านบนเสมอ</div>
+                </div>
+                <div class="ql-toggle-switch"></div>
+              </div>
+              <div class="ql-toggle-card hide" id="qlHideToggle" onclick="qlToggleEditHide()">
+                <span class="ql-toggle-icon">🔒</span>
+                <div class="ql-toggle-info">
+                  <div class="ql-toggle-name">ซ่อน</div>
+                  <div class="ql-toggle-desc">ต้องใส่ PIN เพื่อดู</div>
+                </div>
+                <div class="ql-toggle-switch"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Related notes -->
+        <div class="ql-edit-card">
+          <div class="ql-edit-card-header">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            โน้ตที่เกี่ยวข้อง
+          </div>
+          <div class="ql-edit-card-body">
+            <div class="ql-related-picker">
+              <input type="text" id="qlRelatedSearchInput" placeholder="ค้นหาโน้ตที่ต้องการเชื่อมโยง…" autocomplete="off"
+                oninput="qlRelatedSearchInputHandler(this.value)"
+                onfocus="qlRelatedSearchInputHandler(this.value)"
+                onblur="setTimeout(()=>{const b=document.getElementById('qlRelatedSuggestions'); if(b) b.style.display='none';}, 150)">
+              <div class="ql-related-suggestions" id="qlRelatedSuggestions" style="display:none"></div>
+            </div>
+            <div class="ql-related-chips-edit" id="qlRelatedChipsEdit"></div>
+          </div>
+        </div>
+
+        <!-- Detail RTE -->
+        <div class="ql-edit-card">
+          <div class="ql-edit-card-header">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="13" y1="18" x2="3" y2="18"/></svg>
+            รายละเอียด
+          </div>
+          <div class="ql-edit-card-body" style="padding:.6rem .9rem .75rem">
+            <div class="rte-wrap">
+              <div class="rte-toolbar">
+                <button class="rte-btn" onmousedown="event.preventDefault();rteExec('bold')" title="ตัวหนา"><b style="font-size:.82rem">B</b></button>
+                <button class="rte-btn" onmousedown="event.preventDefault();rteExec('italic')" title="ตัวเอียง"><i style="font-size:.82rem">I</i></button>
+                <span class="rte-sep"></span>
+                <button class="rte-btn" onmousedown="event.preventDefault();rteExec('formatBlock','h3')" title="หัวข้อ" style="font-size:.72rem;font-weight:700">H</button>
+                <button class="rte-btn" onmousedown="event.preventDefault();rteExec('formatBlock','p')" title="ข้อความปกติ" style="font-size:.7rem">¶</button>
+                <span class="rte-sep"></span>
+                <button class="rte-btn" onmousedown="event.preventDefault();rteExec('insertOrderedList')" title="เลขลำดับ" style="font-size:.7rem;font-weight:600">1.</button>
+                <button class="rte-btn" onmousedown="event.preventDefault();rteExec('insertUnorderedList')" title="รายการ" style="font-size:.9rem">•</button>
+                <span class="rte-sep"></span>
+                <button class="rte-btn" onmousedown="event.preventDefault();rteExec('fontSize','2')" title="ขนาดเล็ก"><span class="rte-size-label" style="font-size:.6rem">A</span></button>
+                <button class="rte-btn" onmousedown="event.preventDefault();rteExec('fontSize','3')" title="ขนาดปกติ"><span class="rte-size-label">A</span></button>
+                <button class="rte-btn" onmousedown="event.preventDefault();rteExec('fontSize','5')" title="ขนาดใหญ่"><span class="rte-size-label" style="font-size:.98rem">A</span></button>
+                <span class="rte-sep"></span>
+                <input type="color" class="rte-color-input" title="สีตัวอักษร" value="#ffffff" onmousedown="rteSaveSelection()" oninput="rteApplyColor(this.value)">
+                <span class="rte-sep"></span>
+                <button class="rte-btn" onmousedown="event.preventDefault();rteExec('removeFormat')" title="ล้าง format" style="font-size:.75rem;color:var(--text-3)">✕</button>
+              </div>
+              <div class="rte-body" id="qlDetailBody" contenteditable="true" data-placeholder="รายละเอียด…" onpaste="rteHandlePaste(event)"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Images -->
+        <div class="ql-edit-card">
+          <div class="ql-edit-card-header">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            รูปภาพ
+          </div>
+          <div class="ql-edit-card-body">
+            <label class="ql-img-drop" for="qlImagesInput">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span>แตะเพื่อเลือกรูป</span>
+              <span style="font-size:.7rem;opacity:.7">รองรับ JPG, PNG, WEBP</span>
+            </label>
+            <input type="file" id="qlImagesInput" accept="image/*" multiple onchange="qlImagesChange(event)" style="display:none">
+            <div class="ql-img-row" id="qlImagesRow"></div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -1167,6 +1257,6 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://alcdn.msauth.net/browser/3.18.0/js/msal-browser.min.js"></script>
 <script src="js/auth.js?v=20260705-1"></script>
-<script src="js/app.js?v=20260705-1"></script>
+<script src="js/app.js?v=20260705-3"></script>
 </body>
 </html>

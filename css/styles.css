@@ -1202,45 +1202,36 @@
   .dl-mood-pill.active { border-color: var(--accent); background: rgba(74,158,255,.14); }
 
   /* ── Quick Links ── */
-  .ql-section {
-    margin-bottom: 1.5rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--r-lg);
-    padding: .7rem 1rem .8rem;
-  }
-  .ql-header {
+  /* ── Note list top row ── */
+  .ql-top-row {
     display: flex;
     align-items: center;
-    gap: .5rem;
-    cursor: pointer;
-    user-select: none;
+    gap: .75rem;
+    margin-bottom: 1rem;
   }
-  .ql-title {
-    font-size: .73rem;
-    font-weight: 600;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    color: var(--text-2);
+  .ql-heading {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
     flex: 1;
   }
   .ql-add-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: transparent;
-    color: var(--text-3);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: .5rem 1rem;
-    font-size: .85rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: .45rem 1rem;
+    font-size: .82rem;
     font-weight: 600;
     cursor: pointer;
     font-family: var(--font);
-    transition: color .15s, border-color .15s;
+    transition: opacity .15s;
+    flex-shrink: 0;
   }
-  .ql-add-btn { background: var(--green) !important; color: #fff !important; border-color: var(--green) !important; }
-  .ql-add-btn:hover { background: #3da876 !important; }
+  .ql-add-btn:hover { opacity: .85; }
   .ql-img-row {
     display: flex;
     flex-wrap: wrap;
@@ -1287,71 +1278,94 @@
     margin-top: .65rem;
   }
   .ql-body.collapsed { display: none; }
-  .ql-card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: .65rem;
-  }
-  .ql-card-grid + .ql-card-grid,
-  .ql-card-grid + .ql-subsection,
-  .ql-subsection + .ql-card-grid,
-  .ql-subsection + .ql-subsection {
-    margin-top: .8rem;
-  }
-  .ql-subsection {
-    margin: 0;
-    padding: .55rem .65rem .65rem;
-    background: var(--surface2);
-  }
-  .ql-subsection .ql-card-grid { margin-top: .5rem; }
-  .ql-subsection-header {
+  /* ── Note section label ── */
+  .ql-section-label {
     display: flex;
     align-items: center;
-    gap: .4rem;
-    font-size: .71rem;
+    gap: .5rem;
+    font-size: .7rem;
     font-weight: 700;
-    letter-spacing: .04em;
+    letter-spacing: .07em;
     text-transform: uppercase;
-  }
-  .ql-subsection-count {
-    background: rgba(255,255,255,.08);
-    border-radius: 999px;
-    padding: 1px 7px;
-    font-size: .67rem;
-    font-weight: 700;
-  }
-  .ql-subsection-pinned { border-color: rgba(245,158,11,.4); }
-  .ql-subsection-pinned .ql-subsection-header { color: #f59e0b; }
-  .ql-subsection-hidden { border-color: rgba(136,150,165,.4); }
-  .ql-subsection-hidden .ql-subsection-header { color: var(--text-3); }
-  .ql-empty {
-    font-size: .75rem;
     color: var(--text-3);
-    padding: 2px 0;
+    margin: 1.2rem 0 .65rem;
   }
+  .ql-section-label:first-child { margin-top: 0; }
+  .ql-section-label .sl-line {
+    flex: 1; height: 1px; background: var(--border);
+  }
+  /* ── Note card grid ── */
+  .ql-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: .75rem;
+  }
+  .ql-card-grid + .ql-section-label { margin-top: 1.4rem; }
+  .ql-empty {
+    font-size: .82rem;
+    color: var(--text-3);
+    text-align: center;
+    padding: 3rem 1rem;
+  }
+  /* ── Note card base ── */
   .ql-card {
     position: relative;
     background: var(--surface2);
     border: 1px solid var(--border);
-    border-left: 3px solid var(--border);
-    border-radius: var(--r);
-    padding: .75rem .9rem .8rem .85rem;
+    border-radius: 16px;
+    padding: 1rem 1.05rem .85rem;
     display: flex;
     flex-direction: column;
-    gap: .35rem;
-    transition: border-color .15s, box-shadow .15s;
+    gap: .5rem;
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+    cursor: default;
   }
-  .ql-card:hover { border-color: var(--border-hover); box-shadow: 0 2px 10px rgba(0,0,0,.15); }
-  /* left accent border per tag */
-  .ql-card[data-tag="system"]    { border-left-color: #2dd4c4; }
-  .ql-card[data-tag="document"]  { border-left-color: #7c6ff7; }
-  .ql-card[data-tag="knowledge"] { border-left-color: #34d399; }
-  .ql-card[data-tag="other"]     { border-left-color: #8896a5; }
+  .ql-card:hover { border-color: var(--border-hover); box-shadow: 0 6px 20px rgba(0,0,0,.16); transform: translateY(-1px); }
+  /* card color variants */
+  .ql-card.nc-purple { background: rgba(124,111,247,.1); border-color: rgba(124,111,247,.22); }
+  .ql-card.nc-green  { background: rgba(77,186,135,.1);  border-color: rgba(77,186,135,.22);  }
+  .ql-card.nc-yellow { background: rgba(232,198,76,.1);  border-color: rgba(232,198,76,.22);  }
+  .ql-card.nc-red    { background: rgba(224,108,117,.1); border-color: rgba(224,108,117,.22); }
+  .ql-card.nc-plain  { background: var(--surface2); border-color: var(--border); }
+  /* pinned: accent top line */
+  .ql-card.is-pinned::before {
+    content: '';
+    position: absolute; top: 0; left: 1rem; right: 1rem;
+    height: 2px; border-radius: 0 0 3px 3px;
+    background: var(--yellow); opacity: .75;
+  }
+  /* locked card */
+  .ql-card.is-locked {
+    background: var(--surface2) !important;
+    border-color: var(--border) !important;
+    border-style: dashed !important;
+    cursor: default;
+  }
+  .ql-card.is-locked:hover { transform: none; box-shadow: none; }
 
   .ql-card-top {
     display: flex;
     align-items: flex-start;
     gap: .4rem;
+  }
+  .ql-card-badges { display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; flex: 1; min-width: 0; }
+  .ql-card-tag-chip {
+    display: inline-flex; align-items: center;
+    font-size: .64rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    padding: .18rem .5rem; border-radius: 5px;
+  }
+  .ql-card-hidden-chip {
+    display: inline-flex; align-items: center; gap: .25rem;
+    font-size: .64rem; font-weight: 700;
+    padding: .18rem .45rem; border-radius: 5px;
+    background: rgba(90,89,104,.25); color: var(--text-3);
+  }
+  .ql-card-pin-dot {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: rgba(232,198,76,.15);
+    border: 1px solid rgba(232,198,76,.3);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
   }
   .ql-card-name-wrap { flex: 1; min-width: 0; }
   .ql-card-name {
@@ -1359,11 +1373,8 @@
     font-size: .9rem;
     font-weight: 700;
     color: var(--text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
     line-height: 1.35;
+    word-break: break-word;
   }
   .ql-open-btn {
     display: inline-flex;
@@ -1387,18 +1398,63 @@
     text-overflow: ellipsis;
   }
   .ql-open-btn:hover { background: rgba(124,111,247,.22); border-color: var(--accent); color: #a99fff; }
+  /* card footer (date + actions) */
+  .ql-card-footer {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    margin-top: auto;
+    padding-top: .45rem;
+    border-top: 1px solid var(--border);
+  }
+  .ql-card-date { font-size: .68rem; color: var(--text-3); flex: 1; font-variant-numeric: tabular-nums; }
+  /* new-note dashed card */
+  .ql-new-card {
+    border-radius: 16px;
+    padding: 1rem;
+    border: 1.5px dashed var(--border-hover);
+    cursor: pointer;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: .45rem; min-height: 110px;
+    color: var(--text-3);
+    transition: border-color .15s, background .15s, color .15s;
+  }
+  .ql-new-card:hover { border-color: var(--accent); background: rgba(124,111,247,.08); color: var(--accent); }
+  .ql-new-card span { font-size: .8rem; font-weight: 600; }
+  /* locked card body */
+  .ql-card-locked-body {
+    display: flex; flex-direction: column;
+    align-items: center; gap: .55rem;
+    text-align: center; padding: .6rem 0 .3rem;
+  }
+  .ql-lock-circle {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--surface3); border: 1px solid var(--border-hover);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-3);
+  }
+  .ql-card-locked-text { font-size: .82rem; font-weight: 600; color: var(--text-2); }
+  .ql-card-locked-sub  { font-size: .72rem; color: var(--text-3); }
+  .ql-unlock-btn {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .3rem .75rem; border-radius: 8px;
+    border: 1px solid var(--border-hover); background: var(--surface3);
+    color: var(--text-2); font-size: .74rem; font-weight: 600; cursor: pointer;
+    transition: border-color .15s, color .15s; font-family: var(--font);
+  }
+  .ql-unlock-btn:hover { border-color: var(--accent); color: var(--accent); }
   .ql-card-detail {
     font-size: .76rem;
-    color: var(--text-3);
+    color: var(--text-2);
     word-break: break-word;
-    line-height: 1.5;
-    margin-top: .15rem;
+    line-height: 1.55;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     overflow: hidden;
   }
-  .ql-card-detail * { display: inline; } /* แสดงเป็น preview ข้อความสั้นๆ ไม่ต้องคง format เต็มของ rich text */
+  .ql-card-detail * { display: inline; }
   .ql-card-detail img { display: none; }
   .ql-expand-btn {
     display: inline-flex;
@@ -1513,10 +1569,9 @@
   }
   .ql-card:hover .ql-card-actions { display: flex; }
   @media (max-width: 768px) {
-    /* Mobile: hide action buttons, full card is tappable → opens read page */
     .ql-card-actions { display: none !important; }
     .ql-card { cursor: pointer; }
-    .ql-card-grid { grid-template-columns: 1fr !important; }
+    .ql-card-grid { grid-template-columns: 1fr 1fr !important; }
   }
   .ql-card-btn {
     width: 28px; height: 28px;
@@ -1546,31 +1601,10 @@
   .ql-card-btn.unhide            { color: var(--text-3); }
   .ql-card-btn.hide:hover        { background: var(--surface3); color: var(--text); }
   .ql-card-btn.unhide:hover      { background: var(--surface3); color: var(--text); }
-  .ql-card.pinned { border-left-color: #f59e0b !important; }
-  .ql-card-locked {
-    align-items: center;
-    justify-content: center;
-    min-height: 90px;
-  }
-  .ql-card-locked-body {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: .35rem;
-    width: 100%;
-    text-align: center;
-  }
-  .ql-card-locked-icon { font-size: 1.3rem; }
-  .ql-card-locked-text { font-size: .76rem; color: var(--text-3); }
-  .ql-unlock-btn { font-size: .72rem; padding: .3rem .8rem; }
   .ql-pin-badge {
-    font-size: .65rem;
-    color: #f59e0b;
-    font-weight: 700;
-    letter-spacing: .04em;
-    display: flex;
-    align-items: center;
-    gap: 3px;
+    font-size: .65rem; color: var(--yellow);
+    font-weight: 700; letter-spacing: .04em;
+    display: flex; align-items: center; gap: 3px;
   }
 
   /* ── QL Tag pills (modal) ── */
@@ -2578,6 +2612,96 @@
   /* Align top spacing of Note / Finance tabs with Daily Task */
   #qlListView,
   #tabFinance > .fin-subtab-bar { margin-top: 1rem; }
+
+  /* ── Note edit form cards ── */
+  .ql-edit-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; margin-bottom: .75rem;
+  }
+  .ql-edit-card-header {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .65rem 1rem .5rem;
+    border-bottom: 1px solid var(--border);
+    font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .ql-edit-card-body { padding: .75rem 1rem .85rem; display: flex; flex-direction: column; gap: .65rem; }
+  /* color strip */
+  .ql-color-strip {
+    border-radius: 14px; padding: .85rem 1rem .75rem;
+    border: 1px solid; display: flex; align-items: center; gap: .75rem;
+    margin-bottom: .75rem; transition: all .2s;
+  }
+  .ql-color-strip.nc-purple { background: rgba(124,111,247,.1); border-color: rgba(124,111,247,.25); }
+  .ql-color-strip.nc-green  { background: rgba(77,186,135,.1);  border-color: rgba(77,186,135,.25); }
+  .ql-color-strip.nc-yellow { background: rgba(232,198,76,.1);  border-color: rgba(232,198,76,.25); }
+  .ql-color-strip.nc-red    { background: rgba(224,108,117,.1); border-color: rgba(224,108,117,.25); }
+  .ql-color-strip.nc-plain  { background: var(--surface); border-color: var(--border); }
+  .ql-color-strip-name { font-size: .82rem; font-weight: 600; color: var(--text-2); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ql-color-swatches { display: flex; gap: .4rem; flex-shrink: 0; }
+  .ql-swatch {
+    width: 20px; height: 20px; border-radius: 50%; cursor: pointer;
+    border: 2px solid transparent; transition: transform .15s, border-color .15s;
+    position: relative; flex-shrink: 0;
+  }
+  .ql-swatch:hover { transform: scale(1.2); }
+  .ql-swatch.active { border-color: var(--text); }
+  .sw-purple { background: #7c6ff7; }
+  .sw-green  { background: #4dba87; }
+  .sw-yellow { background: #e8c64c; }
+  .sw-red    { background: #e06c75; }
+  .sw-plain  { background: var(--surface3); border: 1.5px solid var(--border-hover) !important; }
+  /* type picker */
+  .ql-type-picker { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; }
+  .ql-type-card {
+    border: 1.5px solid var(--border); border-radius: 11px;
+    padding: .65rem .85rem; cursor: pointer; transition: all .15s;
+    display: flex; flex-direction: column; gap: .25rem;
+  }
+  .ql-type-card:hover { border-color: var(--border-hover); }
+  .ql-type-card.active.fleeting  { border-color: var(--accent); background: rgba(124,111,247,.1); }
+  .ql-type-card.active.permanent { border-color: var(--yellow); background: rgba(232,198,76,.1); }
+  .ql-type-icon { font-size: 1rem; }
+  .ql-type-name { font-size: .8rem; font-weight: 700; }
+  .ql-type-desc { font-size: .7rem; color: var(--text-3); }
+  .ql-type-card.active.fleeting  .ql-type-name { color: var(--accent); }
+  .ql-type-card.active.permanent .ql-type-name { color: var(--yellow); }
+  /* toggle cards */
+  .ql-toggle-row { display: flex; gap: .55rem; }
+  .ql-toggle-card {
+    flex: 1; border: 1.5px solid var(--border); border-radius: 11px;
+    padding: .65rem .85rem; cursor: pointer;
+    display: flex; align-items: center; gap: .55rem; transition: all .15s;
+  }
+  .ql-toggle-card:hover { border-color: var(--border-hover); }
+  .ql-toggle-card.on.pin  { border-color: var(--yellow); background: rgba(232,198,76,.1); }
+  .ql-toggle-card.on.hide { border-color: var(--text-3); background: rgba(90,89,104,.1); }
+  .ql-toggle-icon { font-size: .95rem; }
+  .ql-toggle-info { flex: 1; }
+  .ql-toggle-name { font-size: .8rem; font-weight: 700; }
+  .ql-toggle-card.on.pin  .ql-toggle-name { color: var(--yellow); }
+  .ql-toggle-card.on.hide .ql-toggle-name { color: var(--text-2); }
+  .ql-toggle-desc { font-size: .68rem; color: var(--text-3); margin-top: .1rem; }
+  .ql-toggle-switch {
+    width: 30px; height: 17px; border-radius: 9px;
+    background: var(--surface3); position: relative; flex-shrink: 0; transition: background .15s;
+  }
+  .ql-toggle-card.on .ql-toggle-switch { background: var(--accent); }
+  .ql-toggle-card.on.pin  .ql-toggle-switch { background: var(--yellow); }
+  .ql-toggle-switch::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 13px; height: 13px; border-radius: 50%; background: #fff; transition: transform .15s;
+  }
+  .ql-toggle-card.on .ql-toggle-switch::after { transform: translateX(13px); }
+  /* image drop zone */
+  .ql-img-drop {
+    border: 1.5px dashed var(--border-hover); border-radius: 10px;
+    padding: 1.1rem; text-align: center; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: .3rem;
+    color: var(--text-3); transition: border-color .15s, background .15s, color .15s;
+  }
+  .ql-img-drop:hover { border-color: var(--accent); background: rgba(124,111,247,.07); color: var(--accent); }
+  .ql-img-drop span { font-size: .78rem; font-weight: 600; }
 
   /* ── Note page (inline, no overlay) ── */
   .ql-page-header {

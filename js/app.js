@@ -1040,6 +1040,9 @@ let selectedQlTag  = '';
 let selectedQlType = 'fleeting';
 let selectedQlRelated = [];
 let qlSearchQuery = '';
+let qlSelectedColor = 'plain';
+let qlEditPinned = false;
+let qlEditHidden = false;
 
 function qlSetSearch(value){
   qlSearchQuery = value.trim().toLowerCase();
@@ -1073,6 +1076,7 @@ function loadQL(){
     if(!item.noteType){ item.noteType = 'fleeting'; backfilled = true; }
     if(!Array.isArray(item.relatedIds)){ item.relatedIds = []; backfilled = true; }
     if(typeof item.hidden !== 'boolean'){ item.hidden = false; backfilled = true; }
+    if(!item.color){ item.color = 'plain'; backfilled = true; }
   });
   if(backfilled) saveQL();
 }
@@ -1144,15 +1148,21 @@ function qlTagRemove(id){
 
 function renderQlFilterBar(){
   const bar = document.getElementById('qlFilterBar');
-  const allActive = qlActiveFilter==='all' ? ' active' : '';
+  const pinned = QL.filter(item=>item.pinned && !item.hidden).length;
+  const hidden = QL.filter(item=>item.hidden).length;
+  const allActive   = qlActiveFilter==='all'    ? ' active' : '';
+  const pinActive   = qlActiveFilter==='pinned' ? ' active' : '';
+  const hideActive  = qlActiveFilter==='hidden' ? ' active' : '';
   const allBtn = `<button class="ql-filter-btn${allActive}" data-filter="all" onclick="qlSetFilter('all')"><span class="ql-filter-dot" style="background:var(--text-3)"></span>ทั้งหมด<span class="ql-filter-count">${QL.length}</span></button>`;
+  const pinBtn = pinned ? `<button class="ql-filter-btn${pinActive}" data-filter="pinned" style="--tag-color:#e8c64c;--tag-bg:#e8c64c1F" onclick="qlSetFilter('pinned')"><span class="ql-filter-dot"></span>ปักหมุด<span class="ql-filter-count">${pinned}</span></button>` : '';
+  const hideBtn = hidden ? `<button class="ql-filter-btn${hideActive}" data-filter="hidden" style="--tag-color:#8890a8;--tag-bg:#8890a81F" onclick="qlSetFilter('hidden')"><span class="ql-filter-dot"></span>ซ่อนอยู่<span class="ql-filter-count">${hidden}</span></button>` : '';
   const tagBtns = QL_TAGS.map(tag=>{
     const color = qlTagColor(tag.id);
     const count = QL.filter(item=>(item.tag||'')===tag.id).length;
     const active = qlActiveFilter===tag.id ? ' active' : '';
     return `<button class="ql-filter-btn${active}" data-filter="${esc(tag.id)}" style="--tag-color:${color};--tag-bg:${color}1F" onclick="qlSetFilter('${tag.id}')"><span class="ql-filter-dot"></span>${esc(tag.label)}<span class="ql-filter-count">${count}</span></button>`;
   }).join('');
-  bar.innerHTML = allBtn + tagBtns;
+  bar.innerHTML = allBtn + pinBtn + hideBtn + tagBtns;
 }
 
 function selectQlTag(tag){
@@ -1162,8 +1172,8 @@ function selectQlTag(tag){
 
 function selectQlType(type){
   selectedQlType = type;
-  document.querySelectorAll('#qlTypeRow .ql-filter-btn').forEach(btn=>{
-    btn.classList.toggle('active', btn.dataset.type === type);
+  document.querySelectorAll('#qlTypeRow .ql-type-card').forEach(card=>{
+    card.classList.toggle('active', card.dataset.type === type);
   });
 }
 
@@ -1241,98 +1251,119 @@ function qlRelatedChipsHtml(item, max=Infinity){
   return `<div class="ql-related-row">${chips}${moreHtml}</div>`;
 }
 
+function qlFmtDate(ts){
+  if(!ts) return '';
+  const d = new Date(ts);
+  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  return `${d.getDate()} ${months[d.getMonth()]} · ${hh}:${mm}`;
+}
+
 function qlCardHtml(item, i){
+  const color = item.color || 'plain';
   const isLocked = item.hidden && !qlUnlockedIds.has(item.id);
   if(isLocked){
     return `
-    <div class="ql-card ql-card-locked">
+    <div class="ql-card nc-plain is-locked">
       <div class="ql-card-locked-body">
-        <span class="ql-card-locked-icon">🔒</span>
-        <span class="ql-card-locked-text">Note นี้ถูกซ่อนไว้</span>
-        <button class="btn btn-ghost ql-unlock-btn" onclick="qlRequestUnlock(${i})">ใส่ PIN เพื่อดู</button>
+        <div class="ql-lock-circle">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div class="ql-card-locked-text">${esc(item.name)}</div>
+        <div class="ql-card-locked-sub">ต้องใส่ PIN เพื่อดู</div>
+        <button class="ql-unlock-btn" onclick="qlRequestUnlock(${i})">ปลดล็อก</button>
+      </div>
+      <div class="ql-card-footer">
+        <span class="ql-card-date">${qlFmtDate(item.createdAt)}</span>
       </div>
     </div>`;
   }
-  const tagLabel = item.tag ? qlTagLabel(item.tag) : '';
-  const tagBadge = tagLabel
-    ? `<span class="ql-tag-badge" style="--tag-color:${qlTagColor(item.tag)};--tag-bg:${qlTagColor(item.tag)}1F">● ${esc(tagLabel)}</span>`
+  const tagLabel  = item.tag ? qlTagLabel(item.tag) : '';
+  const tagColor  = item.tag ? qlTagColor(item.tag) : '';
+  const tagChip   = tagLabel
+    ? `<span class="ql-card-tag-chip" style="background:${tagColor}1F;color:${tagColor};border:1px solid ${tagColor}44">${esc(tagLabel)}</span>`
+    : '';
+  const wasUnlocked = !!item.hidden;
+  const hiddenChip = wasUnlocked
+    ? `<span class="ql-card-hidden-chip"><svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>ซ่อนอยู่</span>`
+    : '';
+  const isPinned  = !!item.pinned;
+  const pinDot    = isPinned
+    ? `<div class="ql-card-pin-dot" title="ปักหมุด"><svg width="9" height="9" fill="var(--yellow)" viewBox="0 0 24 24"><path d="M12 2l2.4 6.4H21l-5.5 4 2.1 6.6L12 15l-5.6 4.1 2.1-6.7L3 8.4h7.6z"/></svg></div>`
     : '';
   const isPermanent = item.noteType === 'permanent';
-  const hasUrl = item.url && item.url.trim();
-  const openBtn = hasUrl
-    ? `<a class="ql-open-btn" href="${esc(item.url)}" target="_blank" rel="noopener" title="${esc(item.url)}">${qlLinkSvg} เปิด Link</a>`
+  const hasUrl    = item.url && item.url.trim();
+  const openBtn   = hasUrl
+    ? `<a class="ql-open-btn" href="${esc(item.url)}" target="_blank" rel="noopener">${qlLinkSvg} เปิด Link</a>`
     : '';
   const detailHtml = item.detail
     ? `<div class="ql-card-detail">${/<[a-z][\s\S]*>/i.test(item.detail) ? sanitizeRichHTML(item.detail) : esc(item.detail)}</div>`
     : '';
-  const imgCount = (item.images && item.images.length) || 0;
+  const imgCount  = (item.images && item.images.length) || 0;
   const imagesHtml = imgCount
     ? `<div class="ql-img-row"><img class="ql-img-thumb" src="${esc(item.images[0])}" onclick="qlOpenRead(${i})">${imgCount>1?`<span class="ql-img-count-badge" onclick="qlOpenRead(${i})">+${imgCount-1}</span>`:''}</div>`
     : '';
   const relatedHtml = qlRelatedChipsHtml(item, 2);
-  const hasExpandable = item.detail || imgCount || (item.relatedIds && item.relatedIds.length);
-  const expandBtn = hasExpandable
-    ? `<button class="ql-card-btn expand" onclick="qlOpenRead(${i})" title="ขยาย"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>`
-    : '';
   const summarizeBtn = !isPermanent
     ? `<button class="ql-card-btn summarize" onclick="qlSummarizeToPermanent(${i})" title="สรุปเป็นโน้ตถาวร">✍️</button>`
     : '';
-  const isPinned = !!item.pinned;
-  const pinBadge = isPinned ? `<span class="ql-pin-badge">${qlPinSvg}</span>` : '';
-  const wasUnlocked = !!item.hidden; // ซ่อนอยู่แต่ปลดล็อกแล้วใน session นี้
   const hideBtn = wasUnlocked
-    ? `<button class="ql-card-btn unhide" onclick="qlUnhideNote(${i})" title="เลิกซ่อน Note นี้">🔓</button>`
-    : `<button class="ql-card-btn hide" onclick="qlHideNote(${i})" title="ซ่อน Note นี้ (ต้องใส่ PIN เพื่อดูอีกครั้ง)">🔒</button>`;
-  const hiddenBadge = wasUnlocked ? `<span class="ql-pin-badge" style="color:var(--text-3)" title="ซ่อนอยู่ — ปลดล็อกแล้วชั่วคราว">🔓 ซ่อนอยู่</span>` : '';
+    ? `<button class="ql-card-btn unhide" onclick="qlUnhideNote(${i})" title="เลิกซ่อน">🔓</button>`
+    : `<button class="ql-card-btn hide" onclick="qlHideNote(${i})" title="ซ่อน">🔒</button>`;
   return `
-  <div class="ql-card${isPinned?' pinned':''}" data-tag="${esc(item.tag||'')}" onclick="if(window.innerWidth<=768)qlOpenRead(${i})">
+  <div class="ql-card nc-${color}${isPinned?' is-pinned':''}" data-tag="${esc(item.tag||'')}" onclick="if(window.innerWidth<=768)qlOpenRead(${i})">
     <div class="ql-card-top">
-      <div class="ql-card-name-wrap">
-        ${pinBadge}
-        <span class="ql-notetype-badge${isPermanent?' permanent':''}" title="${isPermanent?'Permanent':'Fleeting'}">${isPermanent?'📌':'📝'}</span>
-        <div class="ql-card-name" title="${esc(item.name)}">${esc(item.name)}</div>
-      </div>
-      <div class="ql-card-actions">
-        <button class="ql-card-btn pin${isPinned?' pinned':''}" onclick="qlTogglePin(${i})" title="${isPinned?'ถอดหมุด':'ปักหมุด'}">${qlPinSvg}</button>
-        ${hideBtn}
-        ${summarizeBtn}
-        ${expandBtn}
-        <button class="ql-card-btn edit" onclick="qlOpenEdit(${i})" title="แก้ไข">${qlEditSvg}</button>
-        <button class="ql-card-btn del"  onclick="qlDelete(${i})"   title="ลบ">${qlDelSvg}</button>
-      </div>
+      <div class="ql-card-badges">${tagChip}${hiddenChip}</div>
+      ${pinDot}
     </div>
-    ${(tagBadge || hiddenBadge) ? `<div class="ql-card-meta-row" style="margin-top:.25rem">${tagBadge}${hiddenBadge}</div>` : ''}
+    <div class="ql-card-name">${esc(item.name)}</div>
     ${openBtn}
     ${detailHtml}
     ${imagesHtml}
     ${relatedHtml}
+    <div class="ql-card-footer">
+      <span class="ql-card-date">${qlFmtDate(item.createdAt)}</span>
+      <div class="ql-card-actions">
+        <button class="ql-card-btn pin${isPinned?' pinned':''}" onclick="qlTogglePin(${i})" title="${isPinned?'ถอดหมุด':'ปักหมุด'}">${qlPinSvg}</button>
+        ${hideBtn}
+        ${summarizeBtn}
+        <button class="ql-card-btn edit" onclick="qlOpenEdit(${i})" title="แก้ไข">${qlEditSvg}</button>
+        <button class="ql-card-btn del"  onclick="qlDelete(${i})"   title="ลบ">${qlDelSvg}</button>
+      </div>
+    </div>
   </div>`;
 }
 
-function qlSectionHtml(items, label, icon, cls){
-  if(!items.length) return '';
-  const header = label
-    ? `<div class="ql-subsection-header"><span class="ql-subsection-icon">${icon}</span><span class="ql-subsection-label">${esc(label)}</span><span class="ql-subsection-count">${items.length}</span></div>`
-    : '';
-  const cards = items.map(({item,i})=>qlCardHtml(item,i)).join('');
-  return `<div class="ql-section ql-subsection ql-subsection-${cls}">${header}<div class="ql-card-grid">${cards}</div></div>`;
+function qlSectionLabel(label, icon){
+  return `<div class="ql-section-label"><span>${icon}</span><span>${esc(label)}</span><span class="sl-line"></span></div>`;
 }
 
 function renderQL(){
   const body = document.getElementById('qlBody');
-  const filtered = (qlActiveFilter === 'all'
-    ? QL.map((item,i)=>({item,i}))
-    : QL.map((item,i)=>({item,i})).filter(({item})=>(item.tag||'') === qlActiveFilter)
-  ).filter(({item})=>{
-     const isLocked = item.hidden && !qlUnlockedIds.has(item.id);
-     return isLocked ? !qlSearchQuery : qlMatchesSearch(item); // note ที่ซ่อนไว้ไม่ให้ค้นหาเจอเนื้อหาก่อนปลดล็อก
-   });
+
+  let allItems = QL.map((item,i)=>({item,i}));
+
+  // filter by active filter
+  if(qlActiveFilter === 'pinned'){
+    allItems = allItems.filter(({item})=>item.pinned && !item.hidden);
+  } else if(qlActiveFilter === 'hidden'){
+    allItems = allItems.filter(({item})=>item.hidden);
+  } else if(qlActiveFilter !== 'all'){
+    allItems = allItems.filter(({item})=>(item.tag||'') === qlActiveFilter);
+  }
+
+  // search filter
+  const filtered = allItems.filter(({item})=>{
+    const isLocked = item.hidden && !qlUnlockedIds.has(item.id);
+    return isLocked ? !qlSearchQuery : qlMatchesSearch(item);
+  });
 
   if(!filtered.length){
-    if(qlSearchQuery) body.innerHTML = '<span class="ql-empty">ไม่พบ note ที่ตรงกับ "' + esc(qlSearchQuery) + '"</span>';
+    if(qlSearchQuery) body.innerHTML = `<div class="ql-empty">ไม่พบโน้ตที่ตรงกับ "${esc(qlSearchQuery)}"</div>`;
     else body.innerHTML = QL.length
-      ? '<span class="ql-empty">ไม่มี link ใน tag นี้</span>'
-      : '<span class="ql-empty">ยังไม่มี link — กด + เพิ่ม เพื่อเพิ่ม Note</span>';
+      ? `<div class="ql-empty">ไม่มีโน้ตในกลุ่มนี้</div>`
+      : `<div class="ql-empty">ยังไม่มีโน้ต — กด เพิ่มโน้ต เพื่อเริ่มต้น</div>`;
     return;
   }
 
@@ -1340,11 +1371,26 @@ function renderQL(){
   const hiddenGroup = filtered.filter(({item})=> item.hidden);
   const normalGroup = filtered.filter(({item})=> !item.pinned && !item.hidden);
 
-  const pinnedHtml = qlSectionHtml(pinnedGroup, 'ปักหมุด', '📌', 'pinned');
-  const normalHtml = normalGroup.length ? `<div class="ql-card-grid">${normalGroup.map(({item,i})=>qlCardHtml(item,i)).join('')}</div>` : '';
-  const hiddenHtml = qlSectionHtml(hiddenGroup, 'ซ่อนอยู่', '🔒', 'hidden');
+  let html = '';
 
-  body.innerHTML = pinnedHtml + normalHtml + hiddenHtml;
+  if(pinnedGroup.length){
+    html += qlSectionLabel('ปักหมุด','📌');
+    html += `<div class="ql-card-grid">${pinnedGroup.map(({item,i})=>qlCardHtml(item,i)).join('')}</div>`;
+  }
+  if(normalGroup.length){
+    if(pinnedGroup.length) html += qlSectionLabel('โน้ตทั้งหมด','📝');
+    const newCard = `<div class="ql-new-card" onclick="qlOpenAdd()"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>เพิ่มโน้ตใหม่</span></div>`;
+    html += `<div class="ql-card-grid">${normalGroup.map(({item,i})=>qlCardHtml(item,i)).join('')}${newCard}</div>`;
+  } else if(!pinnedGroup.length && !hiddenGroup.length){
+    const newCard = `<div class="ql-new-card" onclick="qlOpenAdd()"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>เพิ่มโน้ตใหม่</span></div>`;
+    html += `<div class="ql-card-grid">${newCard}</div>`;
+  }
+  if(hiddenGroup.length){
+    html += qlSectionLabel('ซ่อนอยู่','🔒');
+    html += `<div class="ql-card-grid">${hiddenGroup.map(({item,i})=>qlCardHtml(item,i)).join('')}</div>`;
+  }
+
+  body.innerHTML = html;
 }
 
 function qlOpenRead(i){
@@ -1440,11 +1486,43 @@ function qlImageRemove(i){
   renderQlImagesRow();
 }
 
+function qlSetColor(color, el){
+  qlSelectedColor = color;
+  document.querySelectorAll('.ql-swatch').forEach(s=>s.classList.remove('active'));
+  if(el) el.classList.add('active');
+  const strip = document.getElementById('qlColorStrip');
+  if(strip){ strip.className = 'ql-color-strip nc-' + color; }
+}
+function qlToggleEditPin(){
+  qlEditPinned = !qlEditPinned;
+  document.getElementById('qlPinToggle').classList.toggle('on', qlEditPinned);
+}
+function qlToggleEditHide(){
+  qlEditHidden = !qlEditHidden;
+  document.getElementById('qlHideToggle').classList.toggle('on', qlEditHidden);
+}
+function qlResetEditToggles(pinned, hidden, color){
+  qlEditPinned = !!pinned;
+  qlEditHidden = !!hidden;
+  const pt = document.getElementById('qlPinToggle');
+  const ht = document.getElementById('qlHideToggle');
+  if(pt) pt.classList.toggle('on', qlEditPinned);
+  if(ht) ht.classList.toggle('on', qlEditHidden);
+  const c = color || 'plain';
+  qlSelectedColor = c;
+  document.querySelectorAll('.ql-swatch').forEach(s=>s.classList.remove('active'));
+  const sw = document.querySelector(`.sw-${c}`);
+  if(sw) sw.classList.add('active');
+  const strip = document.getElementById('qlColorStrip');
+  if(strip) strip.className = 'ql-color-strip nc-' + c;
+}
+
 function qlOpenAdd(prefill=null){
   qlEditIdx = -1;
   qlEditId = null;
-  document.getElementById('qlModalTitle').textContent = 'เพิ่ม Note';
+  document.getElementById('qlModalTitle').textContent = 'เพิ่มโน้ต';
   document.getElementById('qlName').value = (prefill && prefill.name) || '';
+  document.getElementById('qlColorStripName').textContent = (prefill && prefill.name) || 'ชื่อโน้ต…';
   document.getElementById('qlUrl').value = (prefill && prefill.url) || '';
   rteSetHTML('qlDetailBody', (prefill && prefill.detail) || '');
   selectedQlTag = (prefill && prefill.tag) || '';
@@ -1455,6 +1533,7 @@ function qlOpenAdd(prefill=null){
   renderQlRelatedRow();
   qlPendingImages = (prefill && prefill.images) ? prefill.images.slice() : [];
   renderQlImagesRow();
+  qlResetEditToggles(false, false, 'plain');
   qlShowPage('edit');
   setTimeout(()=>document.getElementById('qlName').focus(),60);
 }
@@ -1464,8 +1543,9 @@ function qlOpenEdit(i){
   if(!item) return;
   qlEditIdx = i;
   qlEditId = item.id;
-  document.getElementById('qlModalTitle').textContent = 'แก้ไข Note';
+  document.getElementById('qlModalTitle').textContent = 'แก้ไขโน้ต';
   document.getElementById('qlName').value   = item.name   || '';
+  document.getElementById('qlColorStripName').textContent = item.name || 'ชื่อโน้ต…';
   document.getElementById('qlUrl').value    = item.url    || '';
   rteSetHTML('qlDetailBody', item.detail || '');
   selectedQlTag = item.tag || '';
@@ -1476,6 +1556,7 @@ function qlOpenEdit(i){
   renderQlRelatedRow();
   qlPendingImages = (item.images || []).slice();
   renderQlImagesRow();
+  qlResetEditToggles(item.pinned, item.hidden, item.color);
   qlShowPage('edit');
   setTimeout(()=>document.getElementById('qlName').focus(),60);
 }
@@ -1503,13 +1584,15 @@ function qlSave(){
   if(!name){ document.getElementById('qlName').focus(); return; }
   if(qlEditIdx >= 0){
     const existing = QL[qlEditIdx];
-    QL[qlEditIdx] = { ...existing, name, url, tag: selectedQlTag, detail, images: qlPendingImages.slice(), noteType: selectedQlType, relatedIds: selectedQlRelated.slice() };
+    QL[qlEditIdx] = { ...existing, name, url, tag: selectedQlTag, detail, images: qlPendingImages.slice(), noteType: selectedQlType, relatedIds: selectedQlRelated.slice(), color: qlSelectedColor, pinned: qlEditPinned, hidden: qlEditHidden };
+    if(qlEditHidden) qlUnlockedIds.delete(existing.id);
   } else {
     const id = Date.now().toString(36)+Math.random().toString(36).slice(2,8);
-    QL.push({ id, name, url, tag: selectedQlTag, detail, images: qlPendingImages.slice(), noteType: selectedQlType, relatedIds: selectedQlRelated.slice() });
+    QL.push({ id, name, url, tag: selectedQlTag, detail, images: qlPendingImages.slice(), noteType: selectedQlType, relatedIds: selectedQlRelated.slice(), color: qlSelectedColor, pinned: qlEditPinned, hidden: qlEditHidden, createdAt: Date.now() });
   }
   saveQL();
   renderQL();
+  renderQlFilterBar();
   qlClose();
 }
 
