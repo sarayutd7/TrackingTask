@@ -389,7 +389,7 @@ function colDelete(){
   const col = COLS.find(c=>c.id===editColId);
   if(!col) return;
   let taskCount = 0;
-  Object.values(DB).forEach(arr=>{ taskCount+=arr.filter(t=>t.status===editColId).length; });
+  Object.values(DB).forEach(arr=>{ if(Array.isArray(arr)) taskCount+=arr.filter(t=>t.status===editColId).length; });
   if(taskCount>0){
     if(!confirm(`Column "${col.name}" มี ${taskCount} task อยู่\nลบ column และย้าย task ไปที่ column แรกไหม?`)) return;
     const targetId = COLS.find(c=>c.id!==editColId)?.id;
