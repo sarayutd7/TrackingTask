@@ -1171,12 +1171,15 @@ let selectedQlTag  = '';
 let selectedQlType = 'fleeting';
 let selectedQlRelated = [];
 let qlSearchQuery = '';
+let qlPage = 1;
+const QL_PAGE_SIZE = 20;
 let qlSelectedColor = 'plain';
 let qlEditPinned = false;
 let qlEditHidden = false;
 
 function qlSetSearch(value){
   qlSearchQuery = value.trim().toLowerCase();
+  qlPage = 1;
   renderQL();
 }
 
@@ -1357,7 +1360,13 @@ function qlRemoveRelatedPick(id){
 
 function qlSetFilter(filter){
   qlActiveFilter = filter;
+  qlPage = 1;
   renderQlFilterBar();
+  renderQL();
+}
+
+function qlLoadMore(){
+  qlPage++;
   renderQL();
 }
 
@@ -1512,7 +1521,13 @@ function renderQL(){
   if(normalGroup.length){
     if(pinnedGroup.length) html += qlSectionLabel('โน้ตทั้งหมด','📝');
     const newCard = `<div class="ql-new-card" onclick="qlOpenAdd()"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>เพิ่มโน้ตใหม่</span></div>`;
-    html += `<div class="ql-card-grid">${newCard}${normalGroup.map(({item,i})=>qlCardHtml(item,i)).join('')}</div>`;
+    const pageSlice = normalGroup.slice(0, qlPage * QL_PAGE_SIZE);
+    const hasMore = normalGroup.length > pageSlice.length;
+    html += `<div class="ql-card-grid">${newCard}${pageSlice.map(({item,i})=>qlCardHtml(item,i)).join('')}</div>`;
+    if(hasMore){
+      const remaining = normalGroup.length - pageSlice.length;
+      html += `<div class="ql-load-more-wrap"><button class="btn btn-ghost ql-load-more-btn" onclick="qlLoadMore()">ดูเพิ่มเติม (${remaining} รายการ)</button></div>`;
+    }
   } else if(!pinnedGroup.length && !hiddenGroup.length){
     const newCard = `<div class="ql-new-card" onclick="qlOpenAdd()"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>เพิ่มโน้ตใหม่</span></div>`;
     html += `<div class="ql-card-grid">${newCard}</div>`;

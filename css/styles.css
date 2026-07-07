@@ -1421,6 +1421,9 @@
   }
   .ql-new-card:hover { border-color: var(--accent); background: rgba(124,111,247,.08); color: var(--accent); }
   .ql-new-card span { font-size: .8rem; font-weight: 600; }
+  .ql-load-more-wrap { display: flex; justify-content: center; margin: 1rem 0 .5rem; }
+  .ql-load-more-btn { font-size: .8rem; color: var(--text-2); border: 1px solid var(--border); border-radius: 999px; padding: .4rem 1.2rem; }
+  .ql-load-more-btn:hover { color: var(--accent); border-color: var(--accent); }
   /* locked card body */
   .ql-card-locked-body {
     display: flex; flex-direction: column;
