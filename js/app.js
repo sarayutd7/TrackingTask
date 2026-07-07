@@ -598,7 +598,7 @@ function shortUrl(url){
   } catch(_){ return url.slice(0,30)+'…'; }
 }
 
-const linkSvg = `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+const linkSvg = `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
 function fmtTime(iso){
   if(!iso) return '';
   return new Date(iso).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
@@ -744,12 +744,12 @@ function renderBoard(){
         <span class="col-title">${esc(col.name)}</span>
         <span class="col-count ${col.color}" id="badge-${esc(col.id)}">0</span>
         <button class="col-edit-btn" onclick="event.stopPropagation();openColEdit('${esc(col.id)}')" title="แก้ไข column">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
         </button>
       </div>
       <div id="list-${esc(col.id)}"></div>
       <button class="add-btn" onclick="openModal('${esc(col.id)}')">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         เพิ่มงาน
       </button>
     </div>
@@ -764,7 +764,7 @@ function renderStats(g){
     purple:`<svg width="18" height="18" fill="none" stroke="var(--accent)" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-dasharray="3 3"/></svg>`,
     amber: `<svg width="18" height="18" fill="none" stroke="var(--amber)"  stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>`,
     green: `<svg width="18" height="18" fill="none" stroke="var(--green)"  stroke-width="1.8" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
-    blue:  `<svg width="18" height="18" fill="none" stroke="var(--blue)"   stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
+    blue:  `<svg width="18" height="18" fill="none" stroke="var(--blue)"   stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
     pink:  `<svg width="18" height="18" fill="none" stroke="var(--pink)"   stroke-width="1.8" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
     teal:  `<svg width="18" height="18" fill="none" stroke="var(--teal)"   stroke-width="1.8" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
     gray:  `<svg width="18" height="18" fill="none" stroke="var(--gray)"   stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>`,
@@ -810,15 +810,15 @@ function renderCard(t){
   const colIdx = COLS.findIndex(x=>x.id===t.status);
   const isLast = colIdx===COLS.length-1;
   const moveSvg = isLast
-    ? `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.17"/></svg>`
-    : `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+    ? `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.45"/></svg>`
+    : `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
 
   const priorityLabels = {critical:'Critical',high:'High',medium:'Medium',low:'Low',lowest:'Lowest'};
   const priorityBadge = t.priority && priorityLabels[t.priority]
     ? `<span class="priority-badge ${t.priority}">${priorityLabels[t.priority]}</span>`
     : '';
 
-  const clockSvg = `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+  const clockSvg = `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
   const timeRangeHtml = (t.timeStart || t.timeEnd)
     ? `<div class="card-time-range">${clockSvg} ${esc(t.timeStart||'?')} - ${esc(t.timeEnd||'?')}</div>`
     : '';
@@ -831,10 +831,10 @@ function renderCard(t){
     <div class="card-footer">
       <span class="card-time">${fmtTime(t.updatedAt)}</span>
       <div class="card-actions" onclick="event.stopPropagation()">
-        ${!isLast ? `<button class="icon-btn sched" title="ย้ายไปวันอื่น" onclick="openReschedule('${t.id}')"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14" stroke-linecap="round" stroke-width="2.5"/><path d="M16 14l-3 3 3 3"/><line x1="13" y1="17" x2="19" y2="17"/></svg></button>` : ''}
+        ${!isLast ? `<button class="icon-btn sched" title="ย้ายไปวันอื่น" onclick="openReschedule('${t.id}')"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2.5"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 12 13 15 16"/></svg></button>` : ''}
         <button class="icon-btn move" title="${esc(moveTitle)}" onclick="moveTask('${t.id}','${nextId}')">${moveSvg}</button>
         <button class="icon-btn del" title="ลบ" onclick="deleteTask('${t.id}')">
-          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
         </button>
       </div>
     </div>
@@ -914,8 +914,8 @@ function renderMobileBoard(g, tasks){
   }).join('');
 
   // ── Panes ──
-  const moveSvgNext = `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
-  const moveSvgBack = `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.17"/></svg>`;
+  const moveSvgNext = `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+  const moveSvgBack = `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.45"/></svg>`;
   const priorityDots={critical:'🔴',high:'🟠',medium:'🟡',low:'🔵',lowest:'⚪'};
   const priorityLabels={critical:'Critical',high:'High',medium:'Medium',low:'Low',lowest:'Lowest'};
 
@@ -970,7 +970,7 @@ function renderMobileBoard(g, tasks){
     : `<div style="padding:.6rem .1rem;font-size:.8rem;color:var(--text-3)">${pFilter?'ไม่มีงานใน filter นี้':'ยังไม่มีงาน'}</div>`;
 
     const moreBtn = `<div class="mb-pane-more" onclick="openColEdit('${esc(col.id)}')" title="แก้ไข / ลบ column">
-      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
     </div>`;
 
     return `<div class="mb-pane${active}" id="mbPane-${esc(col.id)}">
@@ -982,7 +982,7 @@ function renderMobileBoard(g, tasks){
       </div>
       <div class="mb-task-list">${cardsHtml}</div>
       <button class="mb-add-btn" onclick="openModal('${esc(col.id)}')">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         เพิ่มงาน
       </button>
       <div class="mb-pane-spacer"></div>
@@ -1370,11 +1370,11 @@ function qlLoadMore(){
   renderQL();
 }
 
-const qlLinkSvg = `<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`;
+const qlLinkSvg = `<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`;
 
-const qlEditSvg = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-const qlDelSvg  = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
-const qlPinSvg  = `<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>`;
+const qlEditSvg = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+const qlDelSvg  = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+const qlPinSvg  = `<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>`;
 
 function qlIndexById(id){ return QL.findIndex(x=>x.id===id); }
 
@@ -1408,7 +1408,7 @@ function qlCardHtml(item, i){
     <div class="ql-card nc-plain is-locked">
       <div class="ql-card-locked-body">
         <div class="ql-lock-circle">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2.5"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         </div>
         <div class="ql-card-locked-text">${esc(item.name)}</div>
         <div class="ql-card-locked-sub">ต้องใส่ PIN เพื่อดู</div>
@@ -1426,7 +1426,7 @@ function qlCardHtml(item, i){
     : '';
   const wasUnlocked = !!item.hidden;
   const hiddenChip = wasUnlocked
-    ? `<span class="ql-card-hidden-chip"><svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>ซ่อนอยู่</span>`
+    ? `<span class="ql-card-hidden-chip"><svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2.5"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>ซ่อนอยู่</span>`
     : '';
   const isPinned  = !!item.pinned;
   const pinDot    = isPinned
@@ -1468,7 +1468,7 @@ function qlCardHtml(item, i){
         <button class="ql-card-btn pin${isPinned?' pinned':''}" onclick="qlTogglePin(${i})" title="${isPinned?'ถอดหมุด':'ปักหมุด'}">${qlPinSvg}</button>
         ${hideBtn}
         ${summarizeBtn}
-        <button class="ql-card-btn view" onclick="qlOpenRead(${i})" title="ดูรายละเอียด"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        <button class="ql-card-btn view" onclick="qlOpenRead(${i})" title="ดูรายละเอียด"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
         <button class="ql-card-btn edit" onclick="qlOpenEdit(${i})" title="แก้ไข">${qlEditSvg}</button>
         <button class="ql-card-btn del"  onclick="qlDelete(${i})"   title="ลบ">${qlDelSvg}</button>
       </div>
@@ -1520,7 +1520,7 @@ function renderQL(){
   }
   if(normalGroup.length){
     if(pinnedGroup.length) html += qlSectionLabel('โน้ตทั้งหมด','📝');
-    const newCard = `<div class="ql-new-card" onclick="qlOpenAdd()"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>เพิ่มโน้ตใหม่</span></div>`;
+    const newCard = `<div class="ql-new-card" onclick="qlOpenAdd()"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>เพิ่มโน้ตใหม่</span></div>`;
     const pageSlice = normalGroup.slice(0, qlPage * QL_PAGE_SIZE);
     const hasMore = normalGroup.length > pageSlice.length;
     html += `<div class="ql-card-grid">${newCard}${pageSlice.map(({item,i})=>qlCardHtml(item,i)).join('')}</div>`;
@@ -1529,7 +1529,7 @@ function renderQL(){
       html += `<div class="ql-load-more-wrap"><button class="btn btn-ghost ql-load-more-btn" onclick="qlLoadMore()">ดูเพิ่มเติม (${remaining} รายการ)</button></div>`;
     }
   } else if(!pinnedGroup.length && !hiddenGroup.length){
-    const newCard = `<div class="ql-new-card" onclick="qlOpenAdd()"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>เพิ่มโน้ตใหม่</span></div>`;
+    const newCard = `<div class="ql-new-card" onclick="qlOpenAdd()"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>เพิ่มโน้ตใหม่</span></div>`;
     html += `<div class="ql-card-grid">${newCard}</div>`;
   }
   if(hiddenGroup.length){
@@ -1578,8 +1578,8 @@ function qlOpenRead(i){
   if(pinBtn){
     const isPinned = !!item.pinned;
     pinBtn.innerHTML = isPinned
-      ? `<svg width="11" height="11" fill="#f59e0b" stroke="#f59e0b" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>`
-      : `<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>`;
+      ? `<svg width="11" height="11" fill="#f59e0b" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+      : `<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
     pinBtn.classList.toggle('pinned', isPinned);
     pinBtn.onclick = ()=>{ qlTogglePin(i); qlReadClose(); };
   }
@@ -1919,8 +1919,8 @@ function finSetSubTab(tab){
   if(tab==='income') renderIncomeSources();
 }
 
-const finEditSvg = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-const finDelSvg  = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
+const finEditSvg = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+const finDelSvg  = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
 
 function renderFinance(){
   // Summary cards + list both use the whole month being viewed
@@ -1940,21 +1940,21 @@ function renderFinance(){
     statsEl.style.gridTemplateColumns = 'repeat(3, 1fr)';
     statsEl.innerHTML = `
     <div class="stat-card">
-      <div class="stat-icon green"><svg width="18" height="18" fill="none" stroke="var(--green)" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+      <div class="stat-icon green"><svg width="18" height="18" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
       <div class="stat-body">
         <div class="stat-num green">${finFmtMoney(income)}</div>
         <div class="stat-label">รายรับเดือนนี้</div>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon red"><svg width="18" height="18" fill="none" stroke="var(--red)" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg></div>
+      <div class="stat-icon red"><svg width="18" height="18" fill="none" stroke="var(--red)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
       <div class="stat-body">
         <div class="stat-num red">${finFmtMoney(expense)}</div>
         <div class="stat-label">รายจ่ายเดือนนี้</div>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon ${balance>=0?'blue':'red'}"><svg width="18" height="18" fill="none" stroke="${balance>=0?'var(--blue)':'var(--red)'}" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+      <div class="stat-icon ${balance>=0?'blue':'red'}"><svg width="18" height="18" fill="none" stroke="${balance>=0?'var(--blue)':'var(--red)'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
       <div class="stat-body">
         <div class="stat-num ${balance>=0?'blue':'red'}">${finFmtMoney(balance)}</div>
         <div class="stat-label">คงเหลือเดือนนี้</div>
@@ -2044,8 +2044,8 @@ function billRowHtml(bill, payment, dueDateStr, isOverdue, isDueSoon, amount, im
     <div class="fin-card-actions">
       <button class="fin-card-btn" onclick="toggleBillPaid('${esc(bill.id)}')" title="${paid?'ยกเลิกจ่าย':'มาร์คว่าจ่ายแล้ว'}">
         ${paid
-          ? `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
-          : `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`}
+          ? `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
+          : `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`}
       </button>
       <button class="fin-card-btn edit" onclick="openBillModal('${esc(bill.id)}')" title="แก้ไข">${finEditSvg}</button>
       <button class="fin-card-btn del"  onclick="deleteBill('${esc(bill.id)}')" title="ลบ">${finDelSvg}</button>
@@ -2095,35 +2095,35 @@ function renderBills(){
   if(statsEl){
     statsEl.innerHTML = `
     <div class="stat-card">
-      <div class="stat-icon navy"><svg width="18" height="18" fill="none" stroke="var(--navy)" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+      <div class="stat-icon navy"><svg width="18" height="18" fill="none" stroke="var(--navy)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2.5"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
       <div class="stat-body">
         <div class="stat-num navy">${finFmtMoney(totalMonthly)}</div>
         <div class="stat-label">ค่าใช้จ่ายประจำ/เดือน</div>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon blue"><svg width="18" height="18" fill="none" stroke="var(--blue)" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="stat-icon blue"><svg width="18" height="18" fill="none" stroke="var(--blue)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
       <div class="stat-body">
         <div class="stat-num blue">${finFmtMoney(paidSoFar)}</div>
         <div class="stat-label">จ่ายไปแล้ว</div>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon ${remaining>0?'amber':'blue'}"><svg width="18" height="18" fill="none" stroke="${remaining>0?'var(--amber)':'var(--blue)'}" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+      <div class="stat-icon ${remaining>0?'amber':'blue'}"><svg width="18" height="18" fill="none" stroke="${remaining>0?'var(--amber)':'var(--blue)'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
       <div class="stat-body">
         <div class="stat-num ${remaining>0?'amber':'blue'}">${finFmtMoney(remaining)}</div>
         <div class="stat-label">เหลืออีก</div>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon ${dueSoonCount>0?'yellow':'gray'}"><svg width="18" height="18" fill="none" stroke="${dueSoonCount>0?'var(--yellow)':'var(--gray)'}" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="stat-icon ${dueSoonCount>0?'yellow':'gray'}"><svg width="18" height="18" fill="none" stroke="${dueSoonCount>0?'var(--yellow)':'var(--gray)'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
       <div class="stat-body">
         <div class="stat-num ${dueSoonCount>0?'yellow':'gray'}">${dueSoonCount}</div>
         <div class="stat-label">ใกล้ถึงกำหนด (${BILL_DUE_SOON_DAYS} วัน)</div>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon ${overdueCount>0?'red':'gray'}"><svg width="18" height="18" fill="none" stroke="${overdueCount>0?'var(--red)':'var(--gray)'}" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <div class="stat-icon ${overdueCount>0?'red':'gray'}"><svg width="18" height="18" fill="none" stroke="${overdueCount>0?'var(--red)':'var(--gray)'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="currentColor"/></svg></div>
       <div class="stat-body">
         <div class="stat-num ${overdueCount>0?'red':'gray'}">${overdueCount}</div>
         <div class="stat-label">เกินกำหนดแล้ว</div>
@@ -2707,10 +2707,10 @@ function incomeSourceRowHtml(source, logsThisMonth, totalThisMonth){
     </div>
     <div class="fin-card-actions">
       <button class="fin-card-btn" onclick="openIncomeLogModal('${esc(source.id)}')" title="บันทึกว่าได้รับ">
-        <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
       <button class="fin-card-btn" onclick="openIncomeHistory('${esc(source.id)}')" title="ดูประวัติการรับ">
-        <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
       </button>
       <button class="fin-card-btn edit" onclick="openIncomeSourceModal('${esc(source.id)}')" title="แก้ไข">${finEditSvg}</button>
       <button class="fin-card-btn del"  onclick="deleteIncomeSource('${esc(source.id)}')" title="ลบ">${finDelSvg}</button>
@@ -2740,21 +2740,21 @@ function renderIncomeSources(){
     const lastLabel = lastEntry ? esc(lastEntry.item) : '-';
     statsEl.innerHTML = `
     <div class="stat-card">
-      <div class="stat-icon green"><svg width="18" height="18" fill="none" stroke="var(--green)" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.1 1.1-2 3-2s3 .9 3 2-1.3 2-3 2-3 .9-3 2 1.34 2 3 2 3-.9 3-2"/></svg></div>
+      <div class="stat-icon green"><svg width="18" height="18" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.1 1.1-2 3-2s3 .9 3 2-1.3 2-3 2-3 .9-3 2 1.34 2 3 2 3-.9 3-2"/></svg></div>
       <div class="stat-body">
         <div class="stat-num green">${finFmtMoney(totalThisMonth)}</div>
         <div class="stat-label">รายรับเดือนนี้</div>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon blue"><svg width="18" height="18" fill="none" stroke="var(--blue)" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+      <div class="stat-icon blue"><svg width="18" height="18" fill="none" stroke="var(--blue)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
       <div class="stat-body">
         <div class="stat-num blue">${countThisMonth}</div>
         <div class="stat-label">จำนวนครั้งเดือนนี้</div>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon gray"><svg width="18" height="18" fill="none" stroke="var(--gray)" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="stat-icon gray"><svg width="18" height="18" fill="none" stroke="var(--gray)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
       <div class="stat-body">
         <div class="stat-num gray" style="font-size:1.1rem">${lastLabel}</div>
         <div class="stat-label">รายการล่าสุด</div>
