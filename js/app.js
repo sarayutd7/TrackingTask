@@ -3334,6 +3334,17 @@ function startAutoRefresh(){
   document.addEventListener('visibilitychange', () => { if(!document.hidden) pollServerForUpdates(); });
 }
 
+// ── App version ──
+async function loadAppVersion(){
+  try {
+    const r = await fetch('/version.json');
+    if(!r.ok) return;
+    const data = await r.json();
+    const el = document.getElementById('appVersion');
+    if(el && data.version) el.textContent = 'v' + data.version;
+  } catch(e){}
+}
+
 // ── Initial render (ต้องอยู่ท้ายสุด เพื่อให้ const ทุกตัวถูก initialize ก่อน) ──
 loadCols();
 renderBoard();
@@ -3351,3 +3362,4 @@ loadFile().then(() => {
   renderFinance();
   startAutoRefresh();
 });
+loadAppVersion();
