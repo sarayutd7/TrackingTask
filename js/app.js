@@ -1512,7 +1512,7 @@ function renderQL(){
   if(normalGroup.length){
     if(pinnedGroup.length) html += qlSectionLabel('โน้ตทั้งหมด','📝');
     const newCard = `<div class="ql-new-card" onclick="qlOpenAdd()"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>เพิ่มโน้ตใหม่</span></div>`;
-    html += `<div class="ql-card-grid">${normalGroup.map(({item,i})=>qlCardHtml(item,i)).join('')}${newCard}</div>`;
+    html += `<div class="ql-card-grid">${newCard}${normalGroup.map(({item,i})=>qlCardHtml(item,i)).join('')}</div>`;
   } else if(!pinnedGroup.length && !hiddenGroup.length){
     const newCard = `<div class="ql-new-card" onclick="qlOpenAdd()"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>เพิ่มโน้ตใหม่</span></div>`;
     html += `<div class="ql-card-grid">${newCard}</div>`;
