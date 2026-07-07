@@ -2436,10 +2436,10 @@ async function confirmBillPay(){
   if(billPaySlipData) p.slip = billPaySlipData;
 
   setBillPayments(billsViewMonth, payments);
-  await writeFile();
   closeBillPayModal();
   renderBills();
   if(typeof renderFinance === 'function') renderFinance();
+  await writeFile();
 }
 
 // ── รายรับ (Income Sources + Log การรับ) ─────────
@@ -2645,17 +2645,11 @@ async function confirmIncomeLog(){
 
     const logId = recordIncomeReceipt(source, { amount, date, time, paymentMethod: selectedIncomeLogPM, note });
 
-    await writeFile();
-
-    if(!getIncomeLogs().some(l=>l.id===logId)){
-      if(errorEl) errorEl.textContent = 'เกิดข้อผิดพลาดระหว่างบันทึก กรุณาลองใหม่';
-      return;
-    }
-
     closeIncomeLogModal();
     renderIncomeSources();
     if(typeof renderFinance === 'function') renderFinance();
     showToast('บันทึกว่าได้รับเงินสำเร็จ ✅');
+    await writeFile();
   } catch(e){
     console.error('confirmIncomeLog error:', e);
     if(errorEl) errorEl.textContent = 'เกิดข้อผิดพลาดในการบันทึก กรุณาลองใหม่';
