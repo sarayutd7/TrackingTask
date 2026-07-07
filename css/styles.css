@@ -2851,6 +2851,7 @@
   }
   .ql-read-actions {
     display: flex; align-items: center; gap: .4rem; flex-shrink: 0;
+    margin-left: auto;
   }
   .ql-page-body {
     display: flex; flex-direction: column; gap: .1rem;
