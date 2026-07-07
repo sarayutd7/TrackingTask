@@ -2969,10 +2969,17 @@ function compressImageToDataURL(file, maxDim, quality, maxBytes){
           canvas.width = width; canvas.height = height;
           canvas.getContext('2d').drawImage(img, 0, 0, width, height);
           let dataUrl = canvas.toDataURL('image/jpeg', q);
-          // if over limit, try reducing quality then dimension
           if(dataUrl.length > limit * 1.37){
             if(q > 0.4){ return drawAndResolve(dim, Math.round((q - 0.15) * 10) / 10); }
-            if(dim > 400){ return drawAndResolve(Math.round(dim * 0.7), 0.5); }
+            if(dim > 100){ return drawAndResolve(Math.round(dim * 0.7), 0.4); }
+            // last resort: binary-search quality at current dim until fits
+            let lo = 0.1, hi = 0.4;
+            while(hi - lo > 0.02){
+              const mid = Math.round(((lo + hi) / 2) * 100) / 100;
+              dataUrl = canvas.toDataURL('image/jpeg', mid);
+              if(dataUrl.length > limit * 1.37) hi = mid; else lo = mid;
+            }
+            dataUrl = canvas.toDataURL('image/jpeg', lo);
           }
           resolve(dataUrl);
         };
