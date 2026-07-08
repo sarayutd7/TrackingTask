@@ -1,5 +1,5 @@
 {
-  "version": "1.0.3",
+  "version": "1.0.4",
   "releaseDate": "2026-07-08",
-  "changelog": "Aurora UI redesign — indigo-violet gradient theme, glassmorphism cards, glow effects, Aurora admin panel"
+  "changelog": "Aurora UI fix — card opacity increased, weather canvas dimmed for readability"
 }

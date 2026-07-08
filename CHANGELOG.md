@@ -7,6 +7,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.0.4] — 2026-07-08
+
+### Fixed — Aurora UI Readability
+
+- `#weatherBg` canvas opacity reduced to `0.45` so animation doesn't overwhelm content
+- `.card` (task cards): background changed from near-transparent `rgba(255,255,255,0.03)` → `rgba(15,17,23,0.82)` + `backdrop-filter: blur(8px)` for readable frosted-glass look
+- `.col` (kanban columns): `rgba(15,17,23,0.72)` + blur + indigo border — prevents weather bleed-through
+- `.stat-card`: `rgba(15,17,23,0.80)` + stronger indigo border `rgba(99,102,241,0.2)`
+- `.ql-card` (note cards): `rgba(15,17,23,0.82)` + indigo border — same treatment
+- `.fin-card` (finance rows): `rgba(15,17,23,0.82)` + indigo left accent `rgba(99,102,241,0.3)`
+
 ## [1.0.3] — 2026-07-08
 
 ### Changed — Aurora UI Redesign (all 4 menus)
