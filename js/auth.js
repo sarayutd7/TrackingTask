@@ -2,7 +2,7 @@
 const AUTH_TOKEN_KEY = 'trackingTaskToken';
 const AUTH_USER_KEY = 'trackingTaskUser';
 const AUTH_MENUS_KEY = 'trackingTaskAllowedMenus';
-const ADMIN_USERNAME = 'Yut';
+const AUTH_IS_ADMIN_KEY = 'trackingTaskIsAdmin';
 const MENU_TAB_BTN = { task: 'tabBtnTask', tool: 'tabBtnTool', finance: 'tabBtnFinance' };
 
 // ── Sign in with Google / Microsoft ──────────────────
@@ -136,7 +136,7 @@ async function microsoftSignIn(){
 }
 
 function getAllowedMenus(){
-  if(localStorage.getItem(AUTH_USER_KEY) === ADMIN_USERNAME) return ['task','tool','finance'];
+  if(localStorage.getItem(AUTH_IS_ADMIN_KEY) === '1') return ['task','tool','finance'];
   try {
     const arr = JSON.parse(localStorage.getItem(AUTH_MENUS_KEY) || '["task","tool","finance"]');
     return Array.isArray(arr) && arr.length ? arr : ['task','tool','finance'];
@@ -215,9 +215,10 @@ function lockHide(){
   if(sbAcc)  sbAcc.style.display  = loggedIn ? '' : 'none';
   const greetingEl = document.getElementById('userGreeting');
   const uname = localStorage.getItem(AUTH_USER_KEY);
-  document.getElementById('headerAdminBtn').style.display = (loggedIn && uname === ADMIN_USERNAME) ? '' : 'none';
+  const isAdmin = loggedIn && localStorage.getItem(AUTH_IS_ADMIN_KEY) === '1';
+  document.getElementById('headerAdminBtn').style.display = isAdmin ? '' : 'none';
   const sbAdmin = document.getElementById('sb-admin');
-  if(sbAdmin) sbAdmin.style.display = (loggedIn && uname === ADMIN_USERNAME) ? '' : 'none';
+  if(sbAdmin) sbAdmin.style.display = isAdmin ? '' : 'none';
   if(loggedIn && uname){
     greetingEl.textContent = `Hi, ${uname} วันนี้เป็นอย่างไรบ้าง`;
     greetingEl.style.display = '';
@@ -234,6 +235,7 @@ function lockHide(){
 function lockApp(){
   localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem(AUTH_USER_KEY);
+  localStorage.removeItem(AUTH_IS_ADMIN_KEY);
   DB = {};
   render();
   renderDL();
@@ -304,6 +306,7 @@ async function lockSubmit(){
     localStorage.setItem(AUTH_TOKEN_KEY, data.token);
     localStorage.setItem(AUTH_USER_KEY, data.username);
     localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(data.allowedMenus || ['task','tool','finance']));
+    localStorage.setItem(AUTH_IS_ADMIN_KEY, data.isAdmin ? '1' : '0');
     errorEl.textContent='';
     if(isRegister) showToast('สมัครสมาชิกสำเร็จ 🔓');
     if(data.mustResetPin){

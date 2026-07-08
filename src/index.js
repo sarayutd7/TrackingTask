@@ -524,7 +524,7 @@ export default {
       // record เก่าก่อนมีฟีเจอร์นี้จะไม่มี field mustResetPin เลย -> ถือว่าต้อง reset เป็น PIN 6 หลักก่อนใช้งานต่อ
       const mustResetPin = userRec.mustResetPin !== false;
       const allowedMenus = Array.isArray(userRec.allowedMenus) ? userRec.allowedMenus : ALL_MENUS.slice();
-      return jsonResponse({ token, username, mustResetPin, allowedMenus }, 200, CORS_HEADERS);
+      return jsonResponse({ token, username, mustResetPin, allowedMenus, isAdmin: ADMIN_USERNAMES.has(username) }, 200, CORS_HEADERS);
     }
 
     if (url.pathname === "/verify-pin" && request.method === "POST") {
@@ -600,10 +600,13 @@ export default {
       if (recordRaw) {
         const userRec = JSON.parse(recordRaw);
         if (userRec.email && typeof email === "string" && email.trim().toLowerCase() === userRec.email.trim().toLowerCase()) {
-          const code = String(Math.floor(100000 + Math.random() * 900000));
+          const arr = new Uint32Array(1);
+          crypto.getRandomValues(arr);
+          const code = String(100000 + (arr[0] % 900000));
           const now = Math.floor(Date.now() / 1000);
           userRec.resetCode = code;
           userRec.resetCodeExpires = now + 15 * 60; // 15 นาที
+          userRec.resetCodeAttempts = 0;
           await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
           const meta = getRequestMeta(request);
           await sendEmail(env, {
@@ -642,7 +645,19 @@ export default {
       }
       const userRec = JSON.parse(recordRaw);
       const now = Math.floor(Date.now() / 1000);
-      if (!userRec.resetCode || typeof code !== "string" || code !== userRec.resetCode || !userRec.resetCodeExpires || now > userRec.resetCodeExpires) {
+      if (!userRec.resetCode || typeof code !== "string" || !userRec.resetCodeExpires || now > userRec.resetCodeExpires) {
+        return jsonResponse({ error: "รหัสยืนยันไม่ถูกต้องหรือหมดอายุ" }, 400, CORS_HEADERS);
+      }
+      if (code !== userRec.resetCode) {
+        userRec.resetCodeAttempts = (userRec.resetCodeAttempts || 0) + 1;
+        if (userRec.resetCodeAttempts >= 5) {
+          delete userRec.resetCode;
+          delete userRec.resetCodeExpires;
+          delete userRec.resetCodeAttempts;
+          await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
+          return jsonResponse({ error: "รหัสยืนยันถูกลองผิดเกินจำนวนครั้งที่อนุญาต กรุณาขอรหัสใหม่" }, 400, CORS_HEADERS);
+        }
+        await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
         return jsonResponse({ error: "รหัสยืนยันไม่ถูกต้องหรือหมดอายุ" }, 400, CORS_HEADERS);
       }
       const { salt, hash } = await hashPassword(newPin);
@@ -653,6 +668,7 @@ export default {
       userRec.locked = false;
       delete userRec.resetCode;
       delete userRec.resetCodeExpires;
+      delete userRec.resetCodeAttempts;
       await env.TRACKING_TASK_KV.put(`user:${username}`, JSON.stringify(userRec));
       return jsonResponse({ ok: true }, 200, CORS_HEADERS);
     }

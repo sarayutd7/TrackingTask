@@ -1,4 +1,4 @@
-const CACHE = 'trackingtask-v1';
+const CACHE = 'trackingtask-v2';
 const ASSETS = [
   '/index.html',
   '/css/styles.css',

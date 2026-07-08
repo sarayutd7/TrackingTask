@@ -637,6 +637,10 @@ function sanitizeRichHTML(html){
           if(!allowed){ child.removeAttribute(attr.name); return; }
           if(name === 'href' || name === 'src'){
             if(/^\s*(javascript:|data:text\/html)/i.test(attr.value)) child.removeAttribute(attr.name);
+            if(name === 'src' && child.tagName === 'IMG' && !/^data:image\//i.test(attr.value)) {
+              child.removeAttribute(attr.name);
+              return;
+            }
           }
           if(name === 'style'){
             const safe = rteSanitizeStyle(attr.value);
@@ -1980,7 +1984,7 @@ function renderFinance(){
     const dateBadge = e._date ? `<span class="fin-card-date-badge">${esc(e._date.slice(5))}</span>` : '';
     const timeBadge = e.time ? `<span class="fin-card-time">${esc(e.time)}</span>` : '';
     const noteHtml = e.note ? `<div class="fin-card-note">${esc(e.note)}</div>` : '';
-    const slipImg = e.slip ? `<img class="fin-slip-thumb" src="${e.slip}" onclick="showImagePreview(this.src)" title="คลิกเพื่อดูรูปขนาดเต็ม">` : '';
+    const slipImg = e.slip ? `<img class="fin-slip-thumb" src="${esc(e.slip)}" onclick="showImagePreview(this.src)" title="คลิกเพื่อดูรูปขนาดเต็ม">` : '';
     const sign = e.type==='income' ? '+' : '-';
     return `
     <div class="fin-card ${esc(e.type)}">
@@ -2023,7 +2027,7 @@ function billRowHtml(bill, payment, dueDateStr, isOverdue, isDueSoon, amount, im
         ? `<span class="bill-status-badge duesoon">ใกล้ถึงกำหนด</span>`
         : `<span class="bill-status-badge pending">ยังไม่จ่าย</span>`;
   const inactiveBadge = bill.active ? '' : `<span class="fin-pm-badge">หยุดใช้งาน</span>`;
-  const imageThumb = image ? `<img class="fin-slip-thumb" src="${image}" onclick="showImagePreview(this.src)" title="คลิกเพื่อดูรูปขนาดเต็ม">` : '';
+  const imageThumb = image ? `<img class="fin-slip-thumb" src="${esc(image)}" onclick="showImagePreview(this.src)" title="คลิกเพื่อดูรูปขนาดเต็ม">` : '';
   const pmBadge = (paid && payment && payment.paymentMethod) ? `<span class="fin-pm-badge">${esc(payment.paymentMethod)}</span>` : '';
   const payTimeBadge = (paid && payment && payment.payTime) ? `<span class="fin-card-time">จ่ายเวลา ${esc(payment.payTime)}</span>` : '';
   const payNoteHtml = (paid && payment && payment.payNote) ? `<div class="fin-card-note">${esc(payment.payNote)}</div>` : '';
