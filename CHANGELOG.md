@@ -7,6 +7,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.0.2] — 2026-07-08
+
+### Added
+- **Weather wallpaper animation:** canvas-based background that changes dynamically with the current weather (sun, cloud, rain, fog, thunder, snow) using GPS + Open-Meteo. Includes crepuscular rays, aurora borealis, branching lightning, 6-arm snowflake crystals, city silhouette, and splash ripples. Previous weather state restored immediately from `sessionStorage` on page load.
+- **Frosted glass UI:** sidebar, topbar, cards, modals, and daily-log section now use `backdrop-filter: blur` over the weather canvas for a cohesive layered look.
+- **Weather icon in mobile topbar:** `#dlWeatherTopbar` shows live temperature + WMO icon next to the page title on mobile.
+- **Premium mood icons:** 6 SVG face icons (44×44 px) with springy `cubic-bezier(.34,1.56,.64,1)` transition and per-mood colour variables, replacing the previous emoji buttons.
+- **Changelog modal:** version badge (`#appVersion`) is now clickable and opens a full changelog overlay.
+
+### Changed
+- **Performance — stale-while-revalidate:** `loadFile()` now renders from `localStorage` cache instantly, then fetches the KV snapshot in the background and re-renders only when data has changed. Result: app is interactive immediately on login instead of waiting for the Cloudflare round-trip.
+- **Continuous sync:** tab becomes visible → re-fetch from KV (silent); 60-second polling interval while the tab is active.
+- **DL debounce:** `saveDL()` debounces `writeFile()` to 1.5 s — avoids a KV write on every keystroke in the daily-log textareas.
+- Version badge (`#appVersion`) changed from `<span>` to `<button>` element for accessibility and click handling.
+- Topbar search button hidden by default.
+
 ## [1.0.1] — 2026-07-08
 
 ### Security Patch

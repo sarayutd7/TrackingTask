@@ -49,7 +49,15 @@ function dbCacheKey(){ return userKey('dailyTodoPro'); }
 // ลบแคชเก่าที่ไม่ผูกกับ account ทิ้งทั้งหมด (ของ bug เดิม ก่อนแก้)
 ['dailyTodoPro','dailyTodoCols','dailyTodoLog','dailyTodoQL','dailyTodoQLTags','dailyTodoFinPM'].forEach(k=>localStorage.removeItem(k));
 
-async function loadFile(){
+async function loadFile({ silent = false } = {}){
+  // Optimistic: load from localStorage cache immediately so UI renders instantly
+  const key = dbCacheKey();
+  if (key && !silent) {
+    try {
+      const cached = localStorage.getItem(key);
+      if (cached) DB = JSON.parse(cached);
+    } catch(_) {}
+  }
   try {
     const r = await fetch(API + '/data', { headers: authHeaders() });
     if(r.status === 401){ sessionExpired(); return; }
@@ -65,12 +73,10 @@ async function loadFile(){
       localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(menusHeader.split(',').filter(Boolean)));
       if(typeof applyMenuPermissions === 'function') applyMenuPermissions();
     }
-    const key = dbCacheKey();
-    if(key) localStorage.setItem(key, JSON.stringify(DB)); // local backup เฉพาะ account นี้
+    if(key) localStorage.setItem(key, JSON.stringify(DB));
   } catch(_){
-    const key = dbCacheKey();
     try { DB = key ? JSON.parse(localStorage.getItem(key)||'{}') : {}; } catch(_){ DB = {}; }
-    showStatus('⚠️ โหลดจาก browser (offline)', 'warn');
+    if (!silent) showStatus('⚠️ โหลดจาก browser (offline)', 'warn');
   }
 }
 
@@ -1122,11 +1128,13 @@ function loadDL(){
   const fromFile = (DB._logs && typeof DB._logs==='object') ? DB._logs : {};
   DL = Object.assign({}, fromLS, fromFile);
 }
+let _saveDLTimer = null;
 function saveDL(){
   if(!DB._logs) DB._logs = {};
   Object.assign(DB._logs, DL);
   const key = userKey(DL_KEY); if(key) localStorage.setItem(key, JSON.stringify(DL));
-  writeFile();
+  clearTimeout(_saveDLTimer);
+  _saveDLTimer = setTimeout(() => writeFile(), 1500);
 }
 
 function renderDL(){
@@ -3373,6 +3381,7 @@ function loadWeather() {
     const cached = JSON.parse(sessionStorage.getItem(WX_KEY) || 'null');
     if (cached && (Date.now() - cached.ts) < 30 * 60 * 1000) {
       render(cached.temp, cached.code);
+      if (window.setWeatherBg) window.setWeatherBg(cached.code);
       return;
     }
   } catch(_) {}
@@ -3388,6 +3397,7 @@ function loadWeather() {
       const code = data.current.weathercode;
       sessionStorage.setItem(WX_KEY, JSON.stringify({ ts: Date.now(), temp, code }));
       render(temp, code);
+      if (window.setWeatherBg) window.setWeatherBg(code);
     } catch(_) {}
   }, () => {});
 }
@@ -3461,5 +3471,335 @@ loadFile().then(() => {
   renderFinance();
   startAutoRefresh();
 });
+// ── Weather Background Animation ──────────────────────────────────────────────
+(function initWeatherBg() {
+  const cv = document.getElementById('weatherBg');
+  if (!cv) return;
+  const cx = cv.getContext('2d');
+
+  const SKY = {
+    sun:     [[250,200,80],[255,140,50],[95,185,240],[200,235,255]],
+    cloud:   [[60,85,120],[95,120,155],[145,170,200],[195,215,228]],
+    rain:    [[18,32,60],[30,52,95],[45,72,115],[55,85,125]],
+    fog:     [[165,178,192],[192,205,215],[215,225,232],[232,238,242]],
+    thunder: [[8,8,18],[16,14,38],[28,20,55],[38,25,70]],
+    snow:    [[18,28,65],[42,65,115],[80,115,165],[145,180,215]],
+  };
+
+  let curW = 'sun', tarW = 'sun';
+  let tProg = 1, tStart = 0;
+  const T_DUR = 1400;
+  let curSky = SKY.sun.map(c=>[...c]);
+  let fromSky = SKY.sun.map(c=>[...c]), toSky = SKY.sun.map(c=>[...c]);
+  let W, H;
+
+  const DPR = () => Math.min(devicePixelRatio, 2);
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  let RAIN=[], HEAVY_RAIN=[], SNOW_P=[], CLOUDS=[], FOG_P=[], STARS=[], DUST=[], SPLASHES=[];
+  let ltFlash=0, ltBolts=[], ltTimer=0, ltGlow=0, lastLt=0;
+  let sunT=0, windPhase=0, auroraT=0;
+
+  function resize() {
+    const dpr = DPR();
+    W = cv.width  = window.innerWidth  * dpr;
+    H = cv.height = window.innerHeight * dpr;
+    cv.style.width  = window.innerWidth  + 'px';
+    cv.style.height = window.innerHeight + 'px';
+    initParticles();
+  }
+
+  function initParticles() {
+    const dpr = DPR();
+    STARS = Array.from({length:180}, () => ({
+      x: rand(0,W), y: rand(0,H*.65), r: rand(.5,1.8)*dpr,
+      alpha: rand(.3,.9), twinkle: rand(.01,.04), phase: rand(0,Math.PI*2),
+    }));
+    DUST = Array.from({length:60}, () => ({
+      x: rand(0,W), y: rand(H*.1,H*.7), r: rand(1,3)*dpr,
+      alpha: rand(.05,.22), vx: rand(-.3,.3)*dpr, vy: rand(-.15,.1)*dpr,
+    }));
+    CLOUDS = Array.from({length:9}, (_,i) => ({
+      x: rand(-W*.3,W*1.3), y: rand(H*.04,H*.45),
+      scale: rand(.6,1.4), speed: rand(.15,.45)*dpr*(Math.random()<.5?1:-1),
+      alpha: rand(.45,.78), layer: i<4?0:1,
+      blobs: Array.from({length:Math.floor(rand(5,9))}, () => ({
+        ox: rand(-90,90)*dpr, oy: rand(-45,35)*dpr, r: rand(40,90)*dpr,
+      })),
+    }));
+    RAIN = Array.from({length:280}, () => ({
+      x: rand(0,W), y: rand(0,H), speed: rand(18,28)*dpr, len: rand(20,38)*dpr, a: rand(.15,.45),
+    }));
+    HEAVY_RAIN = Array.from({length:420}, () => ({
+      x: rand(0,W), y: rand(0,H), speed: rand(22,36)*dpr, len: rand(24,48)*dpr, a: rand(.12,.4),
+    }));
+    SPLASHES = Array.from({length:40}, () => newSplash());
+    SNOW_P = Array.from({length:200}, () => newSnow(true));
+    FOG_P = Array.from({length:10}, (_,i) => ({
+      x: rand(-W*.5,W), y: H*(0.18+i*.08),
+      speed: rand(.08,.22)*dpr*(i%2?1:-1),
+      w: rand(W*.4,W*.9), h: rand(55,120)*dpr, a: rand(.07,.18),
+    }));
+  }
+
+  function newSplash(x, y) {
+    return { x: x??rand(0,W), y: y??H, maxR: rand(4,12)*DPR(), a: rand(.3,.6), life: 0, decay: rand(.018,.035) };
+  }
+  function newSnow(init) {
+    return {
+      x: rand(0,W), y: init ? rand(0,H) : -10*DPR(),
+      r: rand(2,6)*DPR(), speed: rand(.8,2.2)*DPR(),
+      drift: rand(-.5,.5)*DPR(), angle: rand(0,Math.PI*2),
+      spin: rand(-.015,.015), a: rand(.55,1), arms: Math.random()<.5,
+    };
+  }
+
+  function lerp3(a,b,t) { return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t]; }
+  function rgb([r,g,b], a=1) { return `rgba(${r|0},${g|0},${b|0},${a})`; }
+
+  function drawSky() {
+    const g = cx.createLinearGradient(0,0,0,H);
+    [0,.35,.7,1].forEach((p,i) => g.addColorStop(p, rgb(curSky[i])));
+    cx.fillStyle = g; cx.fillRect(0,0,W,H);
+  }
+
+  function drawStars(alpha, ts) {
+    if (alpha < .01) return;
+    STARS.forEach(s => {
+      const a = s.alpha * (.6+.4*Math.sin(ts*.001*s.twinkle+s.phase)) * alpha;
+      cx.fillStyle = `rgba(255,255,255,${a})`;
+      cx.beginPath(); cx.arc(s.x,s.y,s.r,0,Math.PI*2); cx.fill();
+    });
+  }
+
+  function drawSun(alpha, ts) {
+    if (alpha < .01) return;
+    sunT = ts * .001;
+    const sx = W*.5, sy = H*.26, dpr = DPR(), R = 56*dpr;
+    cx.save(); cx.globalAlpha = alpha;
+    for (let i=0; i<20; i++) {
+      const angle = (i/20)*Math.PI*2 + sunT*.12;
+      const pulse = .5+.5*Math.sin(sunT*1.3+i*.6);
+      const len   = R*3.5+pulse*R*2.5;
+      const sw    = Math.PI*.018;
+      cx.save(); cx.translate(sx,sy); cx.rotate(angle);
+      const rg = cx.createLinearGradient(0,0,len,0);
+      rg.addColorStop(0,`rgba(255,240,120,${.38*pulse})`);
+      rg.addColorStop(1,'rgba(255,200,60,0)');
+      cx.fillStyle=rg;
+      cx.beginPath();
+      cx.moveTo(R*.8,-Math.tan(sw)*R*.8); cx.lineTo(len,-Math.tan(sw*.5)*len*.6);
+      cx.lineTo(len,Math.tan(sw*.5)*len*.6); cx.lineTo(R*.8,Math.tan(sw)*R*.8);
+      cx.closePath(); cx.fill(); cx.restore();
+    }
+    const halo = cx.createRadialGradient(sx,sy,R*.8,sx,sy,R*5.5);
+    halo.addColorStop(0,'rgba(255,220,80,.38)'); halo.addColorStop(.4,'rgba(255,160,40,.18)'); halo.addColorStop(1,'rgba(255,100,30,0)');
+    cx.fillStyle=halo; cx.beginPath(); cx.arc(sx,sy,R*5.5,0,Math.PI*2); cx.fill();
+    for (let r=0; r<3; r++) {
+      const phase = ((ts*.0007+r*.33)%1);
+      cx.strokeStyle=`rgba(255,230,100,${(1-phase)*alpha*.22})`;
+      cx.lineWidth=(3-r)*dpr;
+      cx.beginPath(); cx.arc(sx,sy,R*(1.2+phase*3.5),0,Math.PI*2); cx.stroke();
+    }
+    const disc = cx.createRadialGradient(sx-R*.2,sy-R*.2,0,sx,sy,R);
+    disc.addColorStop(0,'#FFFDE0'); disc.addColorStop(.6,'#FFE060'); disc.addColorStop(1,'#FFB830');
+    cx.fillStyle=disc; cx.beginPath(); cx.arc(sx,sy,R,0,Math.PI*2); cx.fill();
+    DUST.forEach(d => {
+      d.x+=d.vx; d.y+=d.vy;
+      if(d.x<0)d.x=W; if(d.x>W)d.x=0; if(d.y<0)d.y=H*.7; if(d.y>H*.7)d.y=0;
+      cx.fillStyle=`rgba(255,235,160,${d.alpha*alpha})`;
+      cx.beginPath(); cx.arc(d.x,d.y,d.r,0,Math.PI*2); cx.fill();
+    });
+    cx.restore();
+  }
+
+  function drawClouds(alpha, dark=false) {
+    if (alpha < .01) return;
+    cx.save();
+    [0,1].forEach(layer => {
+      CLOUDS.filter(c=>c.layer===layer).forEach(cl => {
+        cl.x += cl.speed;
+        if(cl.x>W*1.4) cl.x=-W*.4; if(cl.x<-W*.4) cl.x=W*1.4;
+        cx.fillStyle = dark ? `rgba(35,40,65,${cl.alpha*alpha})` : `rgba(255,255,255,${cl.alpha*alpha})`;
+        cx.beginPath();
+        cl.blobs.forEach(b => cx.arc(cl.x+b.ox*cl.scale, cl.y+b.oy*cl.scale, b.r*cl.scale, 0, Math.PI*2));
+        cx.fill();
+      });
+    });
+    cx.restore();
+  }
+
+  function drawRain(drops, alpha, color) {
+    if (alpha < .01) return;
+    cx.save(); cx.lineCap='round'; cx.strokeStyle=color; cx.lineWidth=1.3*DPR();
+    drops.forEach(d => {
+      d.y+=d.speed; d.x-=d.speed*.22;
+      if(d.y>H){ d.y=-d.len; d.x=rand(0,W); }
+      cx.globalAlpha=alpha*d.a;
+      cx.beginPath(); cx.moveTo(d.x,d.y); cx.lineTo(d.x-d.speed*.11, d.y+d.len); cx.stroke();
+    });
+    cx.restore();
+  }
+
+  function drawSplashes(alpha) {
+    if (alpha < .01) return;
+    cx.save();
+    SPLASHES.forEach((s,i) => {
+      s.life+=s.decay;
+      const a=s.a*(1-s.life)*alpha;
+      if(a<.01||s.life>=1){ SPLASHES[i]=newSplash(); return; }
+      cx.strokeStyle=`rgba(190,215,255,${a})`; cx.lineWidth=1.2*DPR(); cx.globalAlpha=1;
+      cx.beginPath(); cx.ellipse(s.x,H-3*DPR(),s.maxR*s.life,s.maxR*s.life*.3,0,0,Math.PI*2); cx.stroke();
+    });
+    cx.restore();
+  }
+
+  function drawFog(alpha) {
+    if (alpha < .01) return;
+    cx.save();
+    FOG_P.forEach(f => {
+      f.x+=f.speed;
+      if(f.x>W+f.w) f.x=-f.w; if(f.x<-f.w) f.x=W+f.w;
+      const g=cx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.w*.6);
+      g.addColorStop(0,`rgba(225,232,238,${f.a*alpha})`);
+      g.addColorStop(1,'rgba(225,232,238,0)');
+      cx.fillStyle=g; cx.fillRect(f.x-f.w*.7,f.y-f.h,f.w*1.4,f.h*2);
+    });
+    const gf=cx.createLinearGradient(0,H*.75,0,H);
+    gf.addColorStop(0,'rgba(230,238,244,0)'); gf.addColorStop(1,`rgba(230,238,244,${.5*alpha})`);
+    cx.fillStyle=gf; cx.fillRect(0,H*.75,W,H*.25);
+    cx.restore();
+  }
+
+  function boltPts(x1,y1,x2,y2,d,pts=[]) {
+    if(d===0){pts.push([x1,y1,x2,y2]);return pts;}
+    const mx=(x1+x2)/2+(Math.random()-.5)*(y2-y1)*.5, my=(y1+y2)/2;
+    boltPts(x1,y1,mx,my,d-1,pts); boltPts(mx,my,x2,y2,d-1,pts);
+    if(Math.random()<.35&&d>1) boltPts(mx,my,mx+(Math.random()-.5)*80*DPR(),my+(Math.random()*.25+.1)*H,d-2,pts);
+    return pts;
+  }
+  function triggerLt() {
+    ltFlash=1; ltGlow=1;
+    const bx=rand(W*.1,W*.9);
+    ltBolts=boltPts(bx,0,bx+(Math.random()-.5)*60*DPR(),H*(.5+Math.random()*.25),6);
+  }
+
+  function drawLightning(alpha) {
+    if(alpha<.01||ltFlash<.02) return;
+    cx.save();
+    cx.fillStyle=`rgba(160,140,255,${ltFlash*.22*alpha})`; cx.fillRect(0,0,W,H);
+    cx.fillStyle=`rgba(200,180,255,${ltGlow*.35*alpha})`; cx.fillRect(0,0,W,H*.45);
+    ltBolts.forEach(([x1,y1,x2,y2])=>{
+      cx.strokeStyle=`rgba(240,235,255,${ltFlash*alpha})`; cx.lineWidth=1.8*DPR();
+      cx.shadowColor='#C8B4FF'; cx.shadowBlur=20*DPR();
+      cx.beginPath(); cx.moveTo(x1,y1); cx.lineTo(x2,y2); cx.stroke();
+    });
+    cx.restore();
+    ltFlash=Math.max(0,ltFlash-.055); ltGlow=Math.max(0,ltGlow-.035);
+  }
+
+  function drawSnow(alpha) {
+    if(alpha<.01) return;
+    windPhase+=.008;
+    const wx=Math.sin(windPhase)*.8*DPR();
+    cx.save();
+    SNOW_P.forEach((s,i)=>{
+      s.y+=s.speed; s.x+=s.drift+wx; s.angle+=s.spin;
+      if(s.y>H+10*DPR()) SNOW_P[i]=newSnow(false);
+      cx.globalAlpha=s.a*alpha; cx.fillStyle='rgba(255,255,255,1)'; cx.strokeStyle='rgba(255,255,255,.7)'; cx.lineWidth=.8*DPR();
+      if(s.arms&&s.r>2.5*DPR()){
+        cx.save(); cx.translate(s.x,s.y); cx.rotate(s.angle);
+        for(let a=0;a<6;a++){
+          cx.beginPath(); cx.moveTo(0,0); cx.lineTo(0,s.r*2.2);
+          cx.moveTo(-s.r*.6,s.r*.9); cx.lineTo(s.r*.6,s.r*.9);
+          cx.moveTo(-s.r*.4,s.r*1.5); cx.lineTo(s.r*.4,s.r*1.5);
+          cx.stroke(); cx.rotate(Math.PI/3);
+        }
+        cx.restore();
+      } else { cx.beginPath(); cx.arc(s.x,s.y,s.r,0,Math.PI*2); cx.fill(); }
+    });
+    cx.restore();
+  }
+
+  function drawAurora(alpha) {
+    if(alpha<.01) return;
+    auroraT+=.003;
+    cx.save();
+    for(let i=0;i<4;i++){
+      const yBase=H*(.1+i*.07), wa=Math.sin(auroraT+i*1.2)*.5+.5;
+      const g=cx.createLinearGradient(0,yBase-80*DPR(),0,yBase+80*DPR());
+      g.addColorStop(0,'rgba(0,0,0,0)');
+      g.addColorStop(.5,`hsla(${(140+i*30)%360},80%,55%,${.12*wa*alpha})`);
+      g.addColorStop(1,'rgba(0,0,0,0)');
+      cx.fillStyle=g;
+      cx.beginPath(); cx.moveTo(0,H);
+      for(let x=0;x<=W;x+=W*.05){
+        cx.lineTo(x,yBase+Math.sin((x/W)*Math.PI*3+auroraT+i)*30*DPR()+Math.sin((x/W)*Math.PI*1.5+auroraT*.7)*20*DPR());
+      }
+      cx.lineTo(W,H); cx.closePath(); cx.fill();
+    }
+    cx.restore();
+  }
+
+  function wa(w) {
+    const e=t=>t<.5?2*t*t:1-2*(1-t)*(1-t), ep=e(Math.min(1,tProg));
+    if(w===tarW) return ep; if(w===curW) return 1-ep; return 0;
+  }
+
+  // Public: set weather state from WMO code
+  window.setWeatherBg = function(code) {
+    const c = Number(code);
+    let state;
+    if (c === 0)                                         state = 'sun';
+    else if ([1,2,3].includes(c))                        state = 'cloud';
+    else if ([45,48].includes(c))                        state = 'fog';
+    else if ([51,53,55,61,63,65,80,81,82].includes(c))  state = 'rain';
+    else if ([71,73,75,77].includes(c))                  state = 'snow';
+    else if ([95,96,99].includes(c))                     state = 'thunder';
+    else                                                  state = 'cloud';
+    if (state === tarW) return;
+    fromSky = curSky.map(c=>[...c]);
+    toSky   = SKY[state].map(c=>[...c]);
+    curW=tarW; tarW=state; tStart=performance.now(); tProg=0;
+  };
+
+  // Main loop
+  function frame(ts) {
+    if (tProg < 1) {
+      tProg = Math.min(1, (ts - tStart) / T_DUR);
+      const ep = tProg<.5?2*tProg*tProg:1-2*(1-tProg)*(1-tProg);
+      curSky = fromSky.map((c,i)=>lerp3(c,toSky[i],ep));
+    }
+    if (tarW==='thunder' && ts-lastLt > rand(2500,6000)) { triggerLt(); lastLt=ts; }
+
+    cx.clearRect(0,0,W,H);
+    drawSky();
+    drawStars(Math.max(wa('thunder'),wa('snow')), ts);
+    drawAurora(wa('snow'));
+    drawSun(wa('sun'), ts);
+    const cloudA = Math.max(wa('cloud'), wa('rain')*.5, wa('thunder')*.85);
+    drawClouds(cloudA, wa('thunder')>.3);
+    drawFog(wa('fog'));
+    drawRain(RAIN,      wa('rain'),    'rgba(190,215,255,1)');
+    drawSplashes(wa('rain'));
+    drawRain(HEAVY_RAIN,wa('thunder'),'rgba(155,180,230,1)');
+    drawSplashes(wa('thunder')*.7);
+    drawLightning(wa('thunder'));
+    drawSnow(wa('snow'));
+
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(frame);
+
+  // Try to restore from cache immediately
+  try {
+    const cached = JSON.parse(sessionStorage.getItem('wx_cache') || 'null');
+    if (cached) window.setWeatherBg(cached.code);
+  } catch(_) {}
+})();
+
 loadAppVersion();
 loadWeather();

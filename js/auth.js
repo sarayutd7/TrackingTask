@@ -245,18 +245,58 @@ function lockApp(){
 async function afterAuthSuccess(){
   lockHide();
   applyMenuPermissions();
-  try {
-    await loadFile();
+  function renderAll() {
     render();
-    loadDL();
-    renderDL();
-    loadQLTags();
-    loadQL();
-    renderQlFilterBar();
-    renderQL();
+    loadDL(); renderDL();
+    loadQLTags(); loadQL(); renderQlFilterBar(); renderQL();
+    loadFinPM(); loadFinTags(); renderFinance();
+  }
+  try {
+    // Phase 1: render from localStorage cache instantly (no network wait)
+    await loadFile();
+    renderAll();
+    // Phase 2: refresh from KV in background — re-render silently if data changed
+    const snapshot = JSON.stringify(DB);
+    loadFile({ silent: true }).then(() => {
+      if (JSON.stringify(DB) !== snapshot) renderAll();
+    }).catch(() => {});
   } catch(e){
     console.error('afterAuthSuccess render error:', e);
   }
+  // Phase 3: poll every 60s + re-fetch on tab focus for real-time sync
+  startDataSync();
+}
+
+function startDataSync() {
+  // Visibility change — re-fetch when user returns to tab
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && localStorage.getItem('trackingTaskToken')) {
+      const snapshot = JSON.stringify(DB);
+      loadFile({ silent: true }).then(() => {
+        if (JSON.stringify(DB) !== snapshot) {
+          render();
+          loadDL(); renderDL();
+          loadQLTags(); loadQL(); renderQlFilterBar(); renderQL();
+          loadFinPM(); loadFinTags(); renderFinance();
+        }
+      }).catch(() => {});
+    }
+  }, { once: false });
+
+  // Polling every 60s
+  setInterval(() => {
+    if (document.visibilityState !== 'visible') return;
+    if (!localStorage.getItem('trackingTaskToken')) return;
+    const snapshot = JSON.stringify(DB);
+    loadFile({ silent: true }).then(() => {
+      if (JSON.stringify(DB) !== snapshot) {
+        render();
+        loadDL(); renderDL();
+        loadQLTags(); loadQL(); renderQlFilterBar(); renderQL();
+        loadFinPM(); loadFinTags(); renderFinance();
+      }
+    }).catch(() => {});
+  }, 60000);
 }
 
 const PIN_RE = /^\d{6}$/;

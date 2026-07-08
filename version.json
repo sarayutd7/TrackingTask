@@ -1,5 +1,5 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "releaseDate": "2026-07-08",
-  "changelog": "Security patch: brute-force protection, XSS fixes, CSP headers, admin hardening"
+  "changelog": "Weather wallpaper animation, performance optimisation (stale-while-revalidate), premium mood icons"
 }
