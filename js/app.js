@@ -3338,6 +3338,57 @@ function startAutoRefresh(){
   document.addEventListener('visibilitychange', () => { if(!document.hidden) pollServerForUpdates(); });
 }
 
+// ── Weather ──
+function loadWeather() {
+  const WX_KEY = 'wx_cache';
+  const ICONS = {
+    sun: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`,
+    cloud: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M4.93 4.93l1.41 1.41M20 12h2M17.66 6.34l-1.41 1.41"/><circle cx="12" cy="12" r="3"/><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><path d="M8 19a4 4 0 1 0 8 0"/></svg>`,
+    rain: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="8" y1="23" x2="8" y2="25"/><line x1="12" y1="18" x2="12" y2="20"/><line x1="16" y1="19" x2="16" y2="21"/></svg>`,
+    fog: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="4" y1="20" x2="20" y2="20"/><line x1="6" y1="23" x2="18" y2="23"/></svg>`,
+    thunder: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"/><polyline points="13 11 9 17 15 17 11 23"/></svg>`,
+    snow: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="20" x2="8" y2="24"/><line x1="12" y1="20" x2="12" y2="24"/><line x1="16" y1="20" x2="16" y2="24"/></svg>`,
+  };
+  function codeToMeta(code) {
+    if (code === 0)                                    return { icon: ICONS.sun,    label: 'ฟ้าใส' };
+    if ([1,2,3].includes(code))                        return { icon: ICONS.cloud,  label: 'มีเมฆ' };
+    if ([45,48].includes(code))                        return { icon: ICONS.fog,    label: 'หมอก' };
+    if ([51,53,55,61,63,65,80,81,82].includes(code))   return { icon: ICONS.rain,   label: 'ฝนตก' };
+    if ([71,73,75,77].includes(code))                  return { icon: ICONS.snow,   label: 'หิมะ' };
+    if ([95,96,99].includes(code))                     return { icon: ICONS.thunder, label: 'ฟ้าผ่า' };
+    return { icon: ICONS.cloud, label: 'มีเมฆบางส่วน' };
+  }
+  function render(temp, code) {
+    const el = document.getElementById('dlWeather');
+    if (!el) return;
+    const { icon, label } = codeToMeta(code);
+    el.title = label;
+    el.innerHTML = `<span class="dl-weather-icon">${icon}</span><span class="dl-weather-temp">${Math.round(temp)}°</span>`;
+  }
+  // Check cache
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(WX_KEY) || 'null');
+    if (cached && (Date.now() - cached.ts) < 30 * 60 * 1000) {
+      render(cached.temp, cached.code);
+      return;
+    }
+  } catch(_) {}
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const { latitude: lat, longitude: lon } = pos.coords;
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode&temperature_unit=celsius&wind_speed_unit=kmh&timezone=auto`;
+      const r = await fetch(url);
+      if (!r.ok) return;
+      const data = await r.json();
+      const temp = data.current.temperature_2m;
+      const code = data.current.weathercode;
+      sessionStorage.setItem(WX_KEY, JSON.stringify({ ts: Date.now(), temp, code }));
+      render(temp, code);
+    } catch(_) {}
+  }, () => {});
+}
+
 // ── App version ──
 async function loadAppVersion(){
   try {
@@ -3367,3 +3418,4 @@ loadFile().then(() => {
   startAutoRefresh();
 });
 loadAppVersion();
+loadWeather();

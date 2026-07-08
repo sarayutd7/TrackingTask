@@ -1177,7 +1177,10 @@
   .dl-ta:focus { outline: none; border-color: var(--accent); }
   .dl-ta::placeholder { color: var(--text-3); }
   @media(max-width:640px){ .dl-grid { grid-template-columns: 1fr; } }
-  .dl-mood-badge { font-size: 1rem; margin-left: .3rem; }
+  .dl-mood-badge { font-size: 1.1rem; margin-left: .3rem; }
+  .dl-weather { display: inline-flex; align-items: center; gap: .2rem; margin-left: .4rem; font-size: .75rem; color: var(--text-3); user-select: none; }
+  .dl-weather-icon { display: flex; align-items: center; color: var(--accent); }
+  .dl-weather-temp { font-variant-numeric: tabular-nums; font-weight: 500; }
   .dl-mood-row {
     display: flex;
     flex-wrap: wrap;
@@ -1188,17 +1191,28 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    font-size: 1.2rem;
+    width: 44px;
+    height: 44px;
     background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
     cursor: pointer;
-    transition: all .15s;
+    transition: all .2s cubic-bezier(.34,1.56,.64,1);
+    color: var(--text-3);
+    position: relative;
   }
-  .dl-mood-pill:hover { border-color: var(--border-hover); }
-  .dl-mood-pill.active { border-color: var(--accent); background: rgba(74,158,255,.14); }
+  .dl-mood-pill:hover {
+    border-color: var(--mood-color, var(--accent));
+    color: var(--mood-color, var(--accent));
+    transform: scale(1.08);
+  }
+  .dl-mood-pill.active {
+    border-color: var(--mood-color, var(--accent));
+    background: color-mix(in srgb, var(--mood-color, var(--accent)) 15%, transparent);
+    color: var(--mood-color, var(--accent));
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--mood-color, var(--accent)) 30%, transparent);
+  }
 
   /* ── Quick Links ── */
   /* ── Note list top row ── */

@@ -255,6 +255,7 @@
         </span>
         <span class="dl-title">บันทึกประจำวัน</span>
         <span class="dl-mood-badge" id="dlMoodBadge"></span>
+        <span class="dl-weather" id="dlWeather" title=""></span>
         <span class="dl-chevron" id="dlChevron">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
         </span>
@@ -263,12 +264,57 @@
         <div class="dl-field">
           <label class="dl-label">อารมณ์วันนี้</label>
           <div class="dl-mood-row" id="dlMoodRow">
-            <button class="dl-mood-pill" data-mood="😄" onclick="event.stopPropagation();dlSetMood('😄')">😄</button>
-            <button class="dl-mood-pill" data-mood="🙂" onclick="event.stopPropagation();dlSetMood('🙂')">🙂</button>
-            <button class="dl-mood-pill" data-mood="😐" onclick="event.stopPropagation();dlSetMood('😐')">😐</button>
-            <button class="dl-mood-pill" data-mood="😔" onclick="event.stopPropagation();dlSetMood('😔')">😔</button>
-            <button class="dl-mood-pill" data-mood="😴" onclick="event.stopPropagation();dlSetMood('😴')">😴</button>
-            <button class="dl-mood-pill" data-mood="😡" onclick="event.stopPropagation();dlSetMood('😡')">😡</button>
+            <button class="dl-mood-pill" data-mood="😄" style="--mood-color:#f59e0b" onclick="event.stopPropagation();dlSetMood('😄')" title="สุขมาก">
+              <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9"/>
+                <circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/>
+                <circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/>
+                <path d="M8 14s1.5 3 4 3 4-3 4-3"/>
+              </svg>
+            </button>
+            <button class="dl-mood-pill" data-mood="🙂" style="--mood-color:#84cc16" onclick="event.stopPropagation();dlSetMood('🙂')" title="สุข">
+              <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9"/>
+                <circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/>
+                <circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/>
+                <path d="M9 14.5s1 2 3 2 3-2 3-2"/>
+              </svg>
+            </button>
+            <button class="dl-mood-pill" data-mood="😐" style="--mood-color:#94a3b8" onclick="event.stopPropagation();dlSetMood('😐')" title="ปกติ">
+              <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9"/>
+                <circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/>
+                <circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/>
+                <line x1="9" y1="15" x2="15" y2="15"/>
+              </svg>
+            </button>
+            <button class="dl-mood-pill" data-mood="😔" style="--mood-color:#60a5fa" onclick="event.stopPropagation();dlSetMood('😔')" title="เศร้า">
+              <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9"/>
+                <circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/>
+                <circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/>
+                <path d="M9 16s1-2 3-2 3 2 3 2"/>
+              </svg>
+            </button>
+            <button class="dl-mood-pill" data-mood="😴" style="--mood-color:#a78bfa" onclick="event.stopPropagation();dlSetMood('😴')" title="เหนื่อย">
+              <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9"/>
+                <path d="M8 10.5c.5-.5 1.5-.5 2 0"/>
+                <path d="M14 10.5c.5-.5 1.5-.5 2 0"/>
+                <path d="M9.5 15s1-1 2.5-1 2.5 1 2.5 1"/>
+                <text x="16" y="8" font-size="4" fill="currentColor" stroke="none">z</text>
+              </svg>
+            </button>
+            <button class="dl-mood-pill" data-mood="😡" style="--mood-color:#f87171" onclick="event.stopPropagation();dlSetMood('😡')" title="โกรธ">
+              <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9"/>
+                <circle cx="9" cy="11" r="1.2" fill="currentColor" stroke="none"/>
+                <circle cx="15" cy="11" r="1.2" fill="currentColor" stroke="none"/>
+                <path d="M7.5 8.5l3 1.5"/>
+                <path d="M16.5 8.5l-3 1.5"/>
+                <path d="M9 16s1-2 3-2 3 2 3 2"/>
+              </svg>
+            </button>
           </div>
         </div>
         <div class="dl-grid">
