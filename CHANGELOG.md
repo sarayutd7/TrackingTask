@@ -7,6 +7,40 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.0.6] — 2026-07-08
+
+### Changed — Aurora UI Full Remodel (matches demo exactly)
+
+**Design System (`css/styles.css` — complete rewrite)**
+- `:root` tokens now exactly match Aurora demo: `--bg: #0f1117`, `--surface: #1a1d2e`, `--surface2: #1f2235`, `--surface3: #252840`, `--border: rgba(255,255,255,0.07)`, `--grad-accent: linear-gradient(135deg,#6366f1,#8b5cf6)` plus all gradient variants (indigo/cyan/amber/green/red)
+- Body: `background: var(--bg)` — solid dark, no more transparent rgba surfaces
+- Stat cards: solid gradient backgrounds per color class (`.stat-card.indigo`, `.amber`, `.green`) with matching glow icon circles — exactly as demo
+- Sidebar active item: full `linear-gradient(135deg,#6366f1,#8b5cf6)` background with glow shadow — replaces old border-left approach
+- Kanban columns: `background: var(--surface)`, 4px gradient header accent strip via `::before`
+- Task cards: `background: var(--surface2)`, per-column-color hover glows + translateY lift
+- Note cards: left 4px accent strip via `border-left`, corner decoration via `::before`, pinned amber glow border
+- Finance summary cards: gradient backgrounds (green/red/indigo) per income/expense/net type
+- Modals: `rgba(20,23,38,.96)` + `backdrop-filter:blur(24px)` + `rgba(99,102,241,.2)` border
+- Daily Log: 2px rainbow top strip via `::before`, mood pill circular glow active state
+- All Aurora keyframes: `auroraShimmer`, `glowPulse`, `strip-slide`, `progress-shimmer`
+
+**`js/app.js`**
+- `renderStats()`: maps column colors to Aurora classes (`purple→indigo`, `amber→amber`, `green→green`) — stat cards now use `.stat-card.indigo/amber/green` for gradient backgrounds
+- `renderBoard()`: column body wrapped in `.col-body` for correct padding
+- `qlCardHtml()`: added `.ql-card-inner` wrapper with left-padding offset for accent strip, type badges use CSS classes `ql-type-badge type-permanent/type-fleeting`
+- `renderFinance()`: summary cards use `.stat-card.green/.red/.indigo` matching Aurora gradient pattern
+- `billRowHtml()`: bill status badges use `.bill-paid` / `.bill-due` classes
+
+**`index.html`**
+- Sidebar user section wrapped in `.sb-user-wrap` div with gradient avatar
+- `#dlWeather` moved into sidebar footer as `.sb-weather-wrap`
+- `#aurora-top-bar` 3px rainbow strip already present (confirmed)
+
+**`admin.html` + `js/admin.js`**
+- Full Aurora admin panel rewrite: 4-column stat grid with glow icon circles
+- 2-column user card grid with gradient avatars, status pills (active/locked/disabled), permission chips, Aurora action buttons
+- All existing IDs preserved for JS compatibility
+
 ## [1.0.5] — 2026-07-08
 
 ### Changed

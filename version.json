@@ -1,5 +1,5 @@
 {
-  "version": "1.0.5",
+  "version": "1.0.6",
   "releaseDate": "2026-07-08",
-  "changelog": "Remove weather background animation, Aurora static gradient background"
+  "changelog": "Aurora UI remodel — full redesign matching demo exactly across all 4 sections"
 }
