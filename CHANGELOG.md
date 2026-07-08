@@ -7,6 +7,40 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.0.3] — 2026-07-08
+
+### Changed — Aurora UI Redesign (all 4 menus)
+
+**Design System (`css/styles.css` — full rewrite)**
+- New Aurora color tokens: `--bg: #0f1117`, indigo-violet gradient accent (`#6366f1` → `#8b5cf6`), cyan `#06b6d4`, amber `#f59e0b`
+- Glassmorphism cards: `rgba(99,102,241,0.055)` surface + `rgba(255,255,255,0.07)` border
+- Stat icon circles: 44px with per-color glow `box-shadow`
+- Kanban columns: 3px gradient top strip per column color via `::before` pseudo-element
+- Task cards: Aurora indigo hover glow + `translateY(-1px)` lift
+- Progress bar: 3-stop indigo→violet→cyan gradient with shimmer animation
+- Priority badges: Aurora glow with matching border
+- Note cards: left 4px accent strip (replaces top bar), amber shimmer border for pinned
+- Finance rows: glass surface + Aurora indigo hover; income/expense amounts in green/red bold
+- Daily log: Aurora glass panel, mood pill active state glows with mood color
+- Sidebar: `rgba(10,12,20,0.88)` + `blur(20px)`, active item with indigo gradient + left border
+- Added keyframes: `auroraShimmer`, `glowPulse`, `progressShimmer`
+
+**`index.html`**
+- Fixed 3px animated Aurora shimmer bar at very top of page
+- Sidebar gradient avatar (`#6366f1` → `#8b5cf6`)
+- Admin nav item red pill badge
+
+**`js/app.js`**
+- `renderBoard()` + `renderMobileBoard()`: column div now has `col-color-{color}` class → activates gradient strip
+- `qlCardHtml()`: added permanent/fleeting type badge (purple/cyan) in card footer
+- Finance summary cards: `fin-card-income`, `fin-card-expense`, `fin-card-net` classes → colored top accent
+- `billRowHtml()`: `fin-entry-row` class for Aurora hover
+- `incomeSourceRowHtml()`: `income-source-card` + `fin-amount income` classes
+
+**`admin.html` + `js/admin.js`**
+- Full Aurora admin panel: glass header with shield icon + ADMIN badge, 4-column stat grid with icon circles + glow
+- User cards: gradient avatar, status pills (green/amber/red), permission chips, hover transitions
+
 ## [1.0.2] — 2026-07-08
 
 ### Added

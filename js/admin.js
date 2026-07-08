@@ -51,25 +51,29 @@ function renderAdminStats(){
   const disabled = adminUsersCache.filter(u=>u.disabled).length;
   const locked = adminUsersCache.filter(u=>u.locked).length;
   const active = total - disabled - locked;
-  document.getElementById('adminStatsGrid').innerHTML = `
-  <div class="adm-stat">
-    <div class="adm-stat-icon" style="background:#3b82f622">
-      <svg width="18" height="18" fill="none" stroke="#3b82f6" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+  const statCard = (colorDim, colorGlow, iconSvg, count, label) => `
+  <div style="background:rgba(99,102,241,0.055);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px">
+    <div style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:${colorDim};box-shadow:0 0 16px ${colorGlow};flex-shrink:0">
+      ${iconSvg}
     </div>
-    <div><div class="adm-stat-num" style="color:#3b82f6">${total}</div><div class="adm-stat-label">ผู้ใช้ทั้งหมด</div></div>
-  </div>
-  <div class="adm-stat">
-    <div class="adm-stat-icon" style="background:#ef444422">
-      <svg width="18" height="18" fill="none" stroke="#ef4444" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    <div>
+      <div style="font-size:24px;font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;letter-spacing:-1px">${count}</div>
+      <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-top:2px">${label}</div>
     </div>
-    <div><div class="adm-stat-num" style="color:#ef4444">${disabled}</div><div class="adm-stat-label">ถูกระงับ</div></div>
-  </div>
-  <div class="adm-stat">
-    <div class="adm-stat-icon" style="background:#f59e0b22">
-      <svg width="18" height="18" fill="none" stroke="#f59e0b" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    </div>
-    <div><div class="adm-stat-num" style="color:#f59e0b">${locked}</div><div class="adm-stat-label">ล็อกบัญชี</div></div>
   </div>`;
+  document.getElementById('adminStatsGrid').innerHTML =
+    statCard('rgba(99,102,241,0.15)','rgba(99,102,241,0.3)',
+      `<svg width="20" height="20" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>`,
+      total, 'ผู้ใช้ทั้งหมด') +
+    statCard('rgba(16,185,129,0.15)','rgba(16,185,129,0.3)',
+      `<svg width="20" height="20" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+      active, 'ใช้งานอยู่') +
+    statCard('rgba(245,158,11,0.15)','rgba(245,158,11,0.3)',
+      `<svg width="20" height="20" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+      disabled, 'ถูกระงับ') +
+    statCard('rgba(244,63,94,0.15)','rgba(244,63,94,0.3)',
+      `<svg width="20" height="20" fill="none" stroke="#f43f5e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+      locked, 'ล็อกบัญชี');
 }
 
 function adminSearch(q){
@@ -98,37 +102,38 @@ function renderAdminUsers(){
   }
   body.innerHTML = filtered.map(u=>{
     const initials = (u.username||'?').charAt(0).toUpperCase();
-    const statusCls = u.disabled ? 'adm-status-dis' : (u.locked ? 'adm-status-lock' : 'adm-status-ok');
-    const statusTxt = u.disabled ? '🚫 ระงับ' : (u.locked ? '🔒 ล็อก' : '✓ ใช้งานได้');
+    const statusBadge = u.disabled
+      ? `<span style="background:rgba(148,163,184,0.1);color:#94a3b8;border:1px solid rgba(148,163,184,0.2);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600">ระงับ</span>`
+      : u.locked
+        ? `<span style="background:rgba(244,63,94,0.15);color:#f43f5e;border:1px solid rgba(244,63,94,0.3);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600">🔒 ล็อค</span>`
+        : `<span style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600">ใช้งาน</span>`;
     const perms = Object.keys(MENU_LABELS).map(m=>{
       const on = (u.allowedMenus||[]).includes(m);
-      return `<span class="adm-perm-chip${on?' on':''}" onclick="adminTogglePermission('${esc(u.username)}','${m}',${!on})">
-        <span class="chip-dot"></span>${esc(MENU_LABELS[m])}
-      </span>`;
+      return on
+        ? `<span style="background:rgba(99,102,241,0.15);color:#a5b4fc;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:600;cursor:pointer" onclick="adminTogglePermission('${esc(u.username)}','${m}',false)">${esc(MENU_LABELS[m])}</span>`
+        : `<span style="background:rgba(255,255,255,0.04);color:#475569;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:600;cursor:pointer" onclick="adminTogglePermission('${esc(u.username)}','${m}',true)">${esc(MENU_LABELS[m])}</span>`;
     }).join('');
     const stats = u.stats || { task:0, note:0, finance:0 };
+    const btnBase = `background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#94a3b8;padding:5px 10px;font-size:12px;cursor:pointer;transition:all .15s`;
+    const btnHover = `onmouseover="this.style.background='rgba(99,102,241,0.15)';this.style.color='#a5b4fc'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='#94a3b8'"`;
+    const btnRedHover = `onmouseover="this.style.background='rgba(244,63,94,0.15)';this.style.color='#f43f5e'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='#94a3b8'"`;
+    const btnAmberHover = `onmouseover="this.style.background='rgba(245,158,11,0.15)';this.style.color='#f59e0b'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='#94a3b8'"`;
     return `
-    <div class="adm-user-card">
-      <div class="adm-user-top">
-        <div class="adm-avatar">${initials}</div>
-        <div class="adm-user-info">
-          <div class="adm-user-name">${esc(u.username)}</div>
-          <div class="adm-user-email">${esc(u.email||'-')}</div>
-        </div>
-        <span class="adm-status-badge ${statusCls}">${statusTxt}</span>
+    <div style="background:rgba(99,102,241,0.055);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;transition:all .15s;flex-wrap:wrap"
+         onmouseover="this.style.background='rgba(99,102,241,0.09)';this.style.borderColor='rgba(99,102,241,0.2)'"
+         onmouseout="this.style.background='rgba(99,102,241,0.055)';this.style.borderColor='rgba(255,255,255,0.07)'">
+      <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:grid;place-items:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0">${initials}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600;color:#f1f5f9">${esc(u.username)}</div>
+        <div style="font-size:12px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(u.email||'-')}</div>
       </div>
-      <div class="adm-user-stats">
-        <span>Task <b>${stats.task}</b></span>
-        <span>Note <b>${stats.note}</b></span>
-        <span>Finance <b>${stats.finance}</b></span>
-      </div>
-      <div class="adm-perms">${perms}</div>
-      <div class="adm-user-actions">
-        <button class="btn btn-ghost" style="font-size:.78rem;padding:.35rem .8rem" onclick="adminToggleDisabled('${esc(u.username)}',${!u.disabled})">
-          ${u.disabled ? 'เปิดใช้งาน' : 'ระงับ'}
-        </button>
-        ${u.locked ? `<button class="btn btn-ghost" style="font-size:.78rem;padding:.35rem .8rem;color:#f59e0b;border-color:#f59e0b44" onclick="adminUnlock('${esc(u.username)}')">ปลดล็อก</button>` : ''}
-        <button class="btn btn-ghost" style="font-size:.78rem;padding:.35rem .8rem;color:var(--red);border-color:#ef444444;margin-left:auto" onclick="adminDeleteUser('${esc(u.username)}')">ลบบัญชี</button>
+      ${statusBadge}
+      <div style="display:flex;gap:4px;flex-wrap:wrap">${perms}</div>
+      <div style="font-size:11px;color:#475569;white-space:nowrap">Task ${stats.task} · Note ${stats.note} · Finance ${stats.finance}</div>
+      <div style="display:flex;gap:6px;margin-left:auto">
+        <button onclick="adminToggleDisabled('${esc(u.username)}',${!u.disabled})" style="${btnBase}" ${btnHover}>${u.disabled ? 'เปิดใช้งาน' : 'ระงับ'}</button>
+        ${u.locked ? `<button onclick="adminUnlock('${esc(u.username)}')" style="${btnBase}" ${btnAmberHover}>ปลดล็อก</button>` : ''}
+        <button onclick="adminDeleteUser('${esc(u.username)}')" style="${btnBase}" ${btnRedHover}>ลบบัญชี</button>
       </div>
     </div>`;
   }).join('');
