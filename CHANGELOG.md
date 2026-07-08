@@ -7,6 +7,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.0.7] — 2026-07-08
+
+### Fixed — Aurora CSS audit fixes
+
+- `.dl-section`: background changed from old `rgba(15,17,23,0.82)` + backdrop-filter → solid `var(--surface)`
+- `.ql-card`: background changed from `rgba(20,22,35,0.9)` → solid `var(--surface)`
+- `.fin-card` (entry rows): background changed from `rgba(20,22,35,0.9)` → solid `var(--surface)`
+- `.app-sidebar` (desktop): background changed from `rgba(10,12,20,0.88)` + blur → solid `var(--bg2)`
+- Added missing CSS classes: `.ql-card-inner`, `.ql-type-badge.type-permanent/.type-fleeting`, `.sb-user-wrap`, `.sb-weather-wrap`, `.bill-paid`, `.bill-due`, `.fin-card.income/.expense/.balance`
+- Fixed color swatch values to exact Aurora palette: purple `#8b5cf6`, green `#10b981`, yellow `#f59e0b`, red `#f43f5e`
+
 ## [1.0.6] — 2026-07-08
 
 ### Changed — Aurora UI Full Remodel (matches demo exactly)
