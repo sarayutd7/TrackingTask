@@ -1100,7 +1100,7 @@ function setDateFromStrip(ds){
 }
 
 document.addEventListener('keydown', e=>{
-  if(e.key==='Escape'){ closeModal(); qlClose(); colClose(); rschedClose(); closeFinanceModal(); closeFinPMModal(); qlReadClose(); }
+  if(e.key==='Escape'){ closeModal(); qlClose(); colClose(); rschedClose(); closeFinanceModal(); closeFinPMModal(); qlReadClose(); closeChangelogModal(); }
 });
 document.addEventListener('keydown', e=>{
   if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){
@@ -3359,11 +3359,14 @@ function loadWeather() {
     return { icon: ICONS.cloud, label: 'มีเมฆบางส่วน' };
   }
   function render(temp, code) {
-    const el = document.getElementById('dlWeather');
-    if (!el) return;
     const { icon, label } = codeToMeta(code);
-    el.title = label;
-    el.innerHTML = `<span class="dl-weather-icon">${icon}</span><span class="dl-weather-temp">${Math.round(temp)}°</span>`;
+    const html = `<span class="dl-weather-icon">${icon}</span><span class="dl-weather-temp">${Math.round(temp)}°</span>`;
+    ['dlWeather', 'dlWeatherTopbar'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.title = label;
+      el.innerHTML = html;
+    });
   }
   // Check cache
   try {
@@ -3398,6 +3401,47 @@ async function loadAppVersion(){
     const el = document.getElementById('appVersion');
     if(el && data.version) el.textContent = 'v' + data.version;
   } catch(e){}
+}
+
+function openChangelogModal() {
+  const body = document.getElementById('changelogBody');
+  if (body) {
+    body.innerHTML = `
+      <div class="cl-entry">
+        <div class="cl-version-tag">v1.0.1 <span class="cl-date">2026-07-08</span></div>
+        <div class="cl-badge cl-badge-patch">Security Patch</div>
+        <ul class="cl-list">
+          <li>Rate-limit brute-force บน PIN reset (ล็อคหลัง 5 ครั้ง)</li>
+          <li>เปลี่ยน OTP ให้ใช้ crypto.getRandomValues() แทน Math.random()</li>
+          <li>แก้ XSS: ครอบ esc() บน img slip/image ใน Finance</li>
+          <li>sanitizeRichHTML บล็อก external URL ใน &lt;img&gt;</li>
+          <li>เพิ่ม Content-Security-Policy headers</li>
+          <li>ลบ admin username hardcode ออกจาก frontend JS</li>
+          <li>กัน wrangler.toml ไม่ให้ push ขึ้น public repo</li>
+          <li>Bump service worker cache เป็น v2</li>
+        </ul>
+      </div>
+      <div class="cl-entry">
+        <div class="cl-version-tag">v1.0.0 <span class="cl-date">2026-07-08</span></div>
+        <div class="cl-badge cl-badge-major">Initial Release</div>
+        <ul class="cl-list">
+          <li>Daily task management พร้อม to-do list และสถานะ</li>
+          <li>Note system พร้อม rich content, รูปภาพ และ pagination 20 รายการ</li>
+          <li>Finance module: บันทึกรายจ่ายและรายรับ</li>
+          <li>Image compression รับประกัน 500 KB</li>
+          <li>PWA: ติดตั้งได้, รองรับ offline, service worker</li>
+          <li>UI mobile-first ภาษาไทย</li>
+          <li>Cloudflare Workers backend + KV storage</li>
+          <li>Admin panel สำหรับจัดการผู้ใช้</li>
+        </ul>
+      </div>
+    `;
+  }
+  document.getElementById('changelogModal').style.display = 'flex';
+}
+
+function closeChangelogModal() {
+  document.getElementById('changelogModal').style.display = 'none';
 }
 
 // ── Initial render (ต้องอยู่ท้ายสุด เพื่อให้ const ทุกตัวถูก initialize ก่อน) ──
