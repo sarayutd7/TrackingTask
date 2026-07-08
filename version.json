@@ -1,5 +1,5 @@
 {
-  "version": "1.0.4",
+  "version": "1.0.5",
   "releaseDate": "2026-07-08",
-  "changelog": "Aurora UI fix — card opacity increased, weather canvas dimmed for readability"
+  "changelog": "Remove weather background animation, Aurora static gradient background"
 }

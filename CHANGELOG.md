@@ -7,6 +7,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.0.5] — 2026-07-08
+
+### Changed
+- Removed weather canvas background animation (`#weatherBg { display: none }`) — weather still shows as icon+temperature in topbar
+- Body background changed to static Aurora radial gradient: indigo glow top-left + violet glow bottom-right on `#0f1117`
+- All card surfaces updated to solid `rgba(20,22,35,0.9)` — no longer need backdrop-filter blur
+
 ## [1.0.4] — 2026-07-08
 
 ### Fixed — Aurora UI Readability
