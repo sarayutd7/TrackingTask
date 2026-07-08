@@ -7,6 +7,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.0.8] — 2026-07-08
+
+### Fixed — Stat card gradients + sidebar active state
+
+- Added `.stat-card.indigo/.amber/.green/.cyan/.red` CSS rules — JS outputs these class names but CSS only had `:has()` selectors; now both work
+- Added `.stat-icon-wrap` base size rule (same as `.stat-icon`) — new JS render uses this class
+- Added `.stat-card.{color} .stat-icon-wrap` glow backgrounds
+- Added `.stat-card.{color} .stat-num` color rules (indigo=#818cf8, amber=#fbbf24, green=#34d399)
+- Sidebar active item (desktop): fixed second-half override back to semi-transparent — now correctly full gradient `linear-gradient(135deg,#6366f1,#8b5cf6)` with `border-left:none`
+
 ## [1.0.7] — 2026-07-08
 
 ### Fixed — Aurora CSS audit fixes
