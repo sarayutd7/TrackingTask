@@ -7,6 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.4] — 2026-07-10
+
+### Changed
+- Topbar: ชื่อเมนูและวันที่อยู่บรรทัดเดียวกัน วันที่เป็น pill badge มีขอบโค้งมน (`.topbar-titles` row layout)
+- Finance: ลบ `#finSubTabBar` ออกจาก HTML เนื่องจาก sub-tabs ถูก render โดย JS แล้ว
+
+---
+
 ## [1.2.3] — 2026-07-10
 
 ### Fixed

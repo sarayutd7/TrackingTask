@@ -3163,9 +3163,9 @@
     animation: auroraShimmer 5s linear infinite;
     z-index: 1;
   }
-  .topbar-titles { display: flex; flex-direction: column; gap: 0; line-height: 1.2; }
-  .topbar-title, .mobile-topbar-title { font-size: .88rem; font-weight: 700; color: var(--text-1); }
-  .topbar-date { font-size: .65rem; color: var(--text-3); font-weight: 400; }
+  .topbar-titles { display: flex; flex-direction: row; align-items: center; gap: .45rem; flex-wrap: nowrap; min-width: 0; }
+  .topbar-title, .mobile-topbar-title { font-size: .92rem; font-weight: 700; color: var(--text-1); white-space: nowrap; }
+  .topbar-date { font-size: .62rem; color: var(--text-2); font-weight: 500; white-space: nowrap; background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: .15rem .55rem; line-height: 1.4; }
   .topbar-spacer { flex: 1; }
   .topbar-btn { }  /* inherits hamburger-btn styles */
   /* hamburger only needed on mobile (sidebar is always visible on desktop) */
