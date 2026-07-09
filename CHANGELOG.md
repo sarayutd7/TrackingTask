@@ -7,6 +7,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.1.1] — 2026-07-09
+
+### Fixed — UI polish: col-header padding, changelog scroll, date strip desktop
+
+- `col-header`: added `padding-top: 7px` so column title doesn't sit flush against the gradient accent strip
+- Changelog modal: `.changelog-body` now has `flex: 1; min-height: 0` so long changelogs are scrollable inside the modal
+- Date strip bar: now visible on desktop (was hidden via `display:none` in desktop media query) with transparent background
+
+---
+
 ## [1.1.0] — 2026-07-09
 
 ### Changed — Remove weather background animation
