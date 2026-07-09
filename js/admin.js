@@ -48,26 +48,28 @@ async function loadAdminUsers(){
 
 function renderAdminStats(){
   const total = adminUsersCache.length;
-  const active = adminUsersCache.filter(u=>!u.disabled&&!u.locked).length;
   const disabled = adminUsersCache.filter(u=>u.disabled).length;
-  const locked = adminUsersCache.filter(u=>u.locked&&!u.disabled).length;
-  const el = document.getElementById('adminStatsGrid');
-  if(!el) return;
-  const card = (label,num,bg,color,svg) => `
-    <div class="admin-stat">
-      <div class="admin-stat-icon" style="background:${bg};box-shadow:0 0 14px ${color}40">
-        ${svg}
-      </div>
-      <div>
-        <div class="admin-stat-num">${num}</div>
-        <div class="admin-stat-label">${label}</div>
-      </div>
-    </div>`;
-  el.innerHTML =
-    card('ผู้ใช้ทั้งหมด',total,'rgba(99,102,241,.2)','#818cf8',`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`) +
-    card('ใช้งานอยู่',active,'rgba(16,185,129,.2)','#34d399',`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`) +
-    card('ถูกระงับ',disabled,'rgba(244,63,94,.2)','#fb7185',`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>`) +
-    card('ถูกล็อค',locked,'rgba(245,158,11,.2)','#fbbf24',`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2.5"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`);
+  const locked = adminUsersCache.filter(u=>u.locked).length;
+  const active = total - disabled - locked;
+  document.getElementById('adminStatsGrid').innerHTML = `
+  <div class="adm-stat">
+    <div class="adm-stat-icon" style="background:#3b82f622">
+      <svg width="18" height="18" fill="none" stroke="#3b82f6" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+    </div>
+    <div><div class="adm-stat-num" style="color:#3b82f6">${total}</div><div class="adm-stat-label">ผู้ใช้ทั้งหมด</div></div>
+  </div>
+  <div class="adm-stat">
+    <div class="adm-stat-icon" style="background:#ef444422">
+      <svg width="18" height="18" fill="none" stroke="#ef4444" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    </div>
+    <div><div class="adm-stat-num" style="color:#ef4444">${disabled}</div><div class="adm-stat-label">ถูกระงับ</div></div>
+  </div>
+  <div class="adm-stat">
+    <div class="adm-stat-icon" style="background:#f59e0b22">
+      <svg width="18" height="18" fill="none" stroke="#f59e0b" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <div><div class="adm-stat-num" style="color:#f59e0b">${locked}</div><div class="adm-stat-label">ล็อกบัญชี</div></div>
+  </div>`;
 }
 
 function adminSearch(q){
@@ -79,7 +81,7 @@ function renderAdminUsers(){
   const body = document.getElementById('adminUserList');
   const countEl = document.getElementById('adminSearchCount');
   if(!adminUsersCache.length){
-    body.innerHTML = '<div class="adm-empty" style="grid-column:1/-1">ไม่มีผู้ใช้งานอื่นในระบบ</div>';
+    body.innerHTML = '<span class="ql-empty">ไม่มีผู้ใช้งานอื่นในระบบ</span>';
     if(countEl) countEl.textContent = '';
     return;
   }
@@ -91,32 +93,42 @@ function renderAdminUsers(){
     : adminUsersCache;
   if(countEl) countEl.textContent = adminSearchQuery ? `แสดง ${filtered.length} / ${adminUsersCache.length} คน` : `${adminUsersCache.length} คน`;
   if(!filtered.length){
-    body.innerHTML = `<div class="adm-empty" style="grid-column:1/-1">ไม่พบผู้ใช้ที่ตรงกับ "${esc(adminSearchQuery)}"</div>`;
+    body.innerHTML = `<div class="adm-empty">ไม่พบผู้ใช้ที่ตรงกับ "${esc(adminSearchQuery)}"</div>`;
     return;
   }
   body.innerHTML = filtered.map(u=>{
     const initials = (u.username||'?').charAt(0).toUpperCase();
-    const statusClass = u.disabled ? 'status-disabled' : u.locked ? 'status-locked' : 'status-active';
-    const statusText = u.disabled ? 'ระงับ' : u.locked ? 'ล็อค' : 'ใช้งาน';
+    const statusCls = u.disabled ? 'adm-status-dis' : (u.locked ? 'adm-status-lock' : 'adm-status-ok');
+    const statusTxt = u.disabled ? '🚫 ระงับ' : (u.locked ? '🔒 ล็อก' : '✓ ใช้งานได้');
     const perms = Object.keys(MENU_LABELS).map(m=>{
       const on = (u.allowedMenus||[]).includes(m);
-      return `<span class="perm-chip${on?' on':''}" onclick="adminTogglePermission('${esc(u.username)}','${m}',${!on})">${esc(MENU_LABELS[m])}</span>`;
+      return `<span class="adm-perm-chip${on?' on':''}" onclick="adminTogglePermission('${esc(u.username)}','${m}',${!on})">
+        <span class="chip-dot"></span>${esc(MENU_LABELS[m])}
+      </span>`;
     }).join('');
+    const stats = u.stats || { task:0, note:0, finance:0 };
     return `
-    <div class="user-card">
-      <div class="user-card-top">
-        <div class="user-avatar">${initials}</div>
-        <div style="flex:1;min-width:0">
-          <div class="user-name">${esc(u.username)}</div>
-          <div class="user-email">${esc(u.email||'-')}</div>
+    <div class="adm-user-card">
+      <div class="adm-user-top">
+        <div class="adm-avatar">${initials}</div>
+        <div class="adm-user-info">
+          <div class="adm-user-name">${esc(u.username)}</div>
+          <div class="adm-user-email">${esc(u.email||'-')}</div>
         </div>
-        <span class="user-status ${statusClass}">${statusText}</span>
+        <span class="adm-status-badge ${statusCls}">${statusTxt}</span>
       </div>
-      <div class="perm-row">${perms}</div>
-      <div class="user-actions">
-        <button class="ua-btn" onclick="adminToggleDisabled('${esc(u.username)}',${!u.disabled})">${u.disabled ? 'เปิดใช้งาน' : 'ระงับ'}</button>
-        ${u.locked ? `<button class="ua-btn warn" onclick="adminUnlock('${esc(u.username)}')">ปลดล็อก</button>` : ''}
-        <button class="ua-btn danger" onclick="adminDeleteUser('${esc(u.username)}')">ลบ</button>
+      <div class="adm-user-stats">
+        <span>Task <b>${stats.task}</b></span>
+        <span>Note <b>${stats.note}</b></span>
+        <span>Finance <b>${stats.finance}</b></span>
+      </div>
+      <div class="adm-perms">${perms}</div>
+      <div class="adm-user-actions">
+        <button class="btn btn-ghost" style="font-size:.78rem;padding:.35rem .8rem" onclick="adminToggleDisabled('${esc(u.username)}',${!u.disabled})">
+          ${u.disabled ? 'เปิดใช้งาน' : 'ระงับ'}
+        </button>
+        ${u.locked ? `<button class="btn btn-ghost" style="font-size:.78rem;padding:.35rem .8rem;color:#f59e0b;border-color:#f59e0b44" onclick="adminUnlock('${esc(u.username)}')">ปลดล็อก</button>` : ''}
+        <button class="btn btn-ghost" style="font-size:.78rem;padding:.35rem .8rem;color:var(--red);border-color:#ef444444;margin-left:auto" onclick="adminDeleteUser('${esc(u.username)}')">ลบบัญชี</button>
       </div>
     </div>`;
   }).join('');

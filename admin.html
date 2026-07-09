@@ -1,90 +1,166 @@
-<!doctype html>
-<html lang="th" data-theme="dark">
+<!DOCTYPE html>
+<html lang="th">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>TrackingTask — Admin</title>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="css/styles.css?v=20260708">
-  <style>
-    body{margin:0;background:#0f1117;color:#f1f5f9;font-family:-apple-system,'Segoe UI',sans-serif;min-height:100vh}
-    .admin-wrap{max-width:1000px;margin:0 auto;padding:24px}
-    .rainbow-strip{height:3px;position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(90deg,#6366f1,#8b5cf6,#06b6d4,#10b981,#f59e0b,#f43f5e,#6366f1);background-size:200% 100%;animation:strip-slide 4s linear infinite}
-    @keyframes strip-slide{to{background-position:-200% 0}}
-    .admin-header{display:flex;align-items:center;gap:12px;padding:20px 0 20px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:24px;margin-top:12px}
-    .admin-logo{width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:10px;display:grid;place-items:center;flex-shrink:0}
-    .admin-title{font-size:18px;font-weight:700;color:#f1f5f9;letter-spacing:-.3px}
-    .admin-badge{margin-left:auto;background:rgba(244,63,94,.15);color:#f43f5e;border:1px solid rgba(244,63,94,.3);border-radius:8px;padding:4px 12px;font-size:11px;font-weight:700;letter-spacing:.5px}
-    .admin-stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
-    .admin-stat{background:#1a1d2e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px;transition:border-color .2s}
-    .admin-stat:hover{border-color:rgba(255,255,255,.13)}
-    .admin-stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .admin-stat-num{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;color:#f1f5f9}
-    .admin-stat-label{font-size:11px;color:#475569;margin-top:2px}
-    .admin-toolbar{display:flex;gap:10px;margin-bottom:18px;align-items:center}
-    .admin-search{flex:1;background:#1a1d2e;border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:9px 14px;color:#f1f5f9;font-size:13px;outline:none;transition:border-color .2s}
-    .admin-search:focus{border-color:rgba(99,102,241,.4)}
-    .admin-search::placeholder{color:#475569}
-    .user-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .user-card{background:#1a1d2e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:16px;transition:border-color .2s}
-    .user-card:hover{border-color:rgba(255,255,255,.13)}
-    .user-card-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
-    .user-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0;background:linear-gradient(135deg,#6366f1,#8b5cf6)}
-    .user-name{font-size:14px;font-weight:700;color:#f1f5f9}
-    .user-email{font-size:11px;color:#475569;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
-    .user-status{margin-left:auto;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;flex-shrink:0}
-    .status-active{background:linear-gradient(135deg,rgba(16,185,129,.25),rgba(5,150,105,.15));color:#34d399;border:1px solid rgba(16,185,129,.2)}
-    .status-locked{background:linear-gradient(135deg,rgba(245,158,11,.25),rgba(249,115,22,.15));color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
-    .status-disabled{background:linear-gradient(135deg,rgba(244,63,94,.2),rgba(239,68,68,.12));color:#fb7185;border:1px solid rgba(244,63,94,.2)}
-    .perm-row{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap}
-    .perm-chip{font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;background:#252840;border:1px solid rgba(255,255,255,.07);color:#475569;cursor:pointer;transition:all .15s;user-select:none}
-    .perm-chip.on{background:linear-gradient(135deg,#6366f1,#8b5cf6);border-color:transparent;color:#fff}
-    .user-actions{display:flex;gap:6px}
-    .ua-btn{flex:1;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:600;background:#1f2235;border:1px solid rgba(255,255,255,.07);color:#94a3b8;cursor:pointer;transition:all .15s}
-    .ua-btn:hover{border-color:rgba(255,255,255,.13);color:#f1f5f9}
-    .ua-btn.danger:hover{border-color:rgba(244,63,94,.4);color:#fb7185}
-    .ua-btn.warn:hover{border-color:rgba(245,158,11,.4);color:#fbbf24}
-    #adminError{color:#fb7185;font-size:13px;margin-bottom:12px;min-height:20px}
-    #adminSearchCount{font-size:12px;color:#475569;white-space:nowrap}
-    #adminDenied{display:none;text-align:center;padding:60px;color:#94a3b8}
-    .adm-empty{text-align:center;padding:3rem 1rem;color:#475569;font-size:.88rem}
-    @media(max-width:640px){.admin-stat-row{grid-template-columns:1fr 1fr}.user-grid{grid-template-columns:1fr}}
-    @media(max-width:380px){.admin-stat-row{grid-template-columns:1fr}}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Admin — TrackingTask</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=20260705-1">
+<style>
+  body { margin: 0; }
+  .adm-shell {
+    display: flex; flex-direction: column;
+    min-height: 100vh;
+    background: var(--bg);
+  }
+  /* Top nav */
+  .adm-nav {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .75rem 1.5rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .adm-nav-brand { display: flex; align-items: center; gap: .5rem; }
+  .adm-nav-dot {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .adm-nav-title { font-size: .95rem; font-weight: 700; color: var(--text-1); }
+  .adm-nav-sep { flex: 1; }
+  /* Content */
+  .adm-content { max-width: 900px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; width: 100%; box-sizing: border-box; }
+  /* Page title */
+  .adm-page-title { font-size: 1.3rem; font-weight: 700; color: var(--text-1); margin-bottom: 1.2rem; display: flex; align-items: center; gap: .5rem; }
+  /* Stats */
+  .adm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; margin-bottom: 1.5rem; }
+  .adm-stat {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem 1.1rem;
+    display: flex; align-items: center; gap: .75rem;
+  }
+  .adm-stat-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .adm-stat-num { font-size: 1.4rem; font-weight: 800; line-height: 1; }
+  .adm-stat-label { font-size: .72rem; color: var(--text-3); margin-top: 2px; }
+  /* Toolbar */
+  .adm-toolbar { display: flex; align-items: center; gap: .6rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  /* User cards */
+  .adm-user-list { display: flex; flex-direction: column; gap: .75rem; }
+  .adm-user-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1rem 1.2rem;
+    transition: border-color .15s;
+  }
+  .adm-user-card:hover { border-color: var(--border-hover); }
+  .adm-user-top { display: flex; align-items: flex-start; gap: .75rem; }
+  .adm-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent) 0%, #9B8CFF 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+  .adm-user-info { flex: 1; min-width: 0; }
+  .adm-user-name { font-size: .95rem; font-weight: 700; color: var(--text-1); }
+  .adm-user-email { font-size: .76rem; color: var(--text-3); margin-top: 2px; }
+  .adm-status-badge {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .7rem; font-weight: 700; padding: .25rem .6rem;
+    border-radius: 6px; flex-shrink: 0;
+  }
+  .adm-status-ok   { background: #16a34a22; color: #16a34a; border: 1px solid #16a34a44; }
+  .adm-status-dis  { background: #ef444422; color: #ef4444; border: 1px solid #ef444444; }
+  .adm-status-lock { background: #f59e0b22; color: #f59e0b; border: 1px solid #f59e0b44; }
+  /* Stats row */
+  .adm-user-stats {
+    display: flex; gap: 1rem; margin: .6rem 0 .6rem 3.25rem;
+    font-size: .76rem; color: var(--text-3); flex-wrap: wrap;
+  }
+  .adm-user-stats b { color: var(--text-1); }
+  /* Permissions */
+  .adm-perms { display: flex; gap: .4rem; flex-wrap: wrap; margin: .4rem 0 .75rem 3.25rem; }
+  .adm-perm-chip {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .3rem .7rem; border-radius: 7px; font-size: .75rem; font-weight: 600;
+    border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text-3); cursor: pointer; transition: all .15s;
+    user-select: none;
+  }
+  .adm-perm-chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .adm-perm-chip .chip-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  /* Actions */
+  .adm-user-actions { display: flex; gap: .5rem; margin-left: 3.25rem; flex-wrap: wrap; }
+  /* Error */
+  .adm-error { font-size: .82rem; color: var(--red); margin-bottom: .75rem; min-height: 1.2rem; }
+  .adm-empty { text-align: center; padding: 2.5rem 1rem; color: var(--text-3); font-size: .88rem; }
+  @media (max-width: 640px) {
+    .adm-content { padding: 1rem .75rem 5rem; }
+    .adm-stats { grid-template-columns: 1fr; }
+    .adm-user-stats, .adm-perms, .adm-user-actions { margin-left: 0; }
+    .adm-nav { padding: .6rem 1rem; }
+  }
+</style>
 </head>
 <body>
-  <div class="rainbow-strip"></div>
-  <div class="admin-wrap">
-    <div class="admin-header">
-      <div class="admin-logo">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+<div class="adm-shell">
+
+  <nav class="adm-nav">
+    <div class="adm-nav-brand">
+      <div class="adm-nav-dot">
+        <svg width="14" height="14" fill="none" stroke="white" stroke-width="2.2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </div>
-      <div>
-        <div class="admin-title">แผงผู้ดูแลระบบ</div>
-        <div style="font-size:12px;color:#475569">TrackingTask Admin</div>
-      </div>
-      <span class="admin-badge">ADMIN</span>
-      <a href="index.html" style="font-size:12px;color:#6366f1;margin-left:12px;text-decoration:none">← กลับแอป</a>
+      <span class="adm-nav-title">จัดการ User</span>
+    </div>
+    <div class="adm-nav-sep"></div>
+    <a class="btn btn-ghost" href="index.html" style="font-size:.82rem;padding:.35rem .8rem">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      กลับหน้าหลัก
+    </a>
+  </nav>
+
+  <div class="adm-content">
+
+    <div id="adminDenied" style="display:none;text-align:center;padding:4rem 1rem;color:var(--text-3)">
+      <div style="font-size:2.5rem;margin-bottom:.75rem">🚫</div>
+      <div style="font-size:1.05rem;font-weight:700;color:var(--text)">ไม่มีสิทธิ์เข้าถึงหน้านี้</div>
+      <div style="margin-top:.4rem;font-size:.85rem">หน้านี้สำหรับ Super Admin เท่านั้น</div>
+      <a class="btn btn-accent" href="index.html" style="margin-top:1.5rem;display:inline-flex">กลับหน้าหลัก</a>
     </div>
 
     <div id="adminContent" style="display:none">
-      <div id="adminStatsGrid" class="admin-stat-row"></div>
-      <div id="adminError"></div>
-      <div class="admin-toolbar">
-        <input class="admin-search" type="text" id="adminSearchInput" placeholder="ค้นหาผู้ใช้..." oninput="adminSearch(this.value)">
-        <span id="adminSearchCount"></span>
-        <button onclick="loadAdminUsers()" style="padding:9px 16px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">รีเฟรช</button>
-      </div>
-      <div id="adminUserList" class="user-grid"></div>
-    </div>
 
-    <div id="adminDenied">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-      <p style="margin-top:16px;font-size:16px;font-weight:600;color:#f43f5e">ไม่มีสิทธิ์เข้าถึง</p>
-      <p style="font-size:13px;color:#475569;margin-top:8px">เฉพาะผู้ดูแลระบบเท่านั้น</p>
-      <a href="index.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:.875rem;font-weight:600;text-decoration:none;margin-top:20px">กลับหน้าหลัก</a>
+      <!-- Stats -->
+      <div class="adm-stats" id="adminStatsGrid"></div>
+
+      <div class="adm-error" id="adminError"></div>
+
+      <!-- Toolbar -->
+      <div class="adm-toolbar">
+        <div class="ql-search-wrap" style="flex:1;min-width:180px">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="ql-search-input" id="adminSearchInput" placeholder="ค้นหาชื่อผู้ใช้หรืออีเมล…" oninput="adminSearch(this.value)">
+        </div>
+        <span id="adminSearchCount" style="font-size:.78rem;color:var(--text-3);white-space:nowrap"></span>
+        <button class="btn btn-ghost" style="font-size:.78rem;padding:.4rem .8rem;gap:.35rem" onclick="loadAdminUsers()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          รีเฟรช
+        </button>
+      </div>
+
+      <div class="adm-user-list" id="adminUserList"></div>
+
     </div>
   </div>
-  <script src="js/admin.js?v=20260708"></script>
+</div>
+
+<script src="js/admin.js?v=20260705-1"></script>
 </body>
 </html>

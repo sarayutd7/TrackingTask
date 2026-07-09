@@ -1,5 +1,5 @@
 {
-  "version": "1.0.9",
+  "version": "1.0.10",
   "releaseDate": "2026-07-09",
-  "changelog": "Aurora UI complete rewrite — clean CSS, Finance 2-column layout with donut chart, Note filter chips, sidebar fixes"
+  "changelog": "Reverted to v1.0.2 baseline — removed Aurora UI redesign (v1.0.3–v1.0.9)"
 }
