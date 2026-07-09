@@ -757,7 +757,7 @@ function renderBoard(){
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
         </button>
       </div>
-      <div class="col-body" id="list-${esc(col.id)}"></div>
+      <div id="list-${esc(col.id)}"></div>
       <button class="add-btn" onclick="openModal('${esc(col.id)}')">
         <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         เพิ่มงาน
@@ -780,15 +780,13 @@ function renderStats(g){
     gray:  `<svg width="18" height="18" fill="none" stroke="var(--gray)"   stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>`,
   };
   el.style.gridTemplateColumns = `repeat(${COLS.length}, 1fr)`;
-  const colorClassMap = {purple:'indigo',amber:'amber',green:'green',teal:'cyan',blue:'indigo',pink:'red',gray:''};
   el.innerHTML = COLS.map(col=>{
     const count = (g[col.id]||[]).length;
-    const colorClass = colorClassMap[col.color]||'';
     return `
-    <div class="stat-card${colorClass?' '+colorClass:''}">
-      <div class="stat-icon-wrap">${icons[col.color]||icons.gray}</div>
+    <div class="stat-card">
+      <div class="stat-icon ${col.color}">${icons[col.color]||icons.gray}</div>
       <div class="stat-body">
-        <div class="stat-num">${count}</div>
+        <div class="stat-num ${col.color}">${count}</div>
         <div class="stat-label">${esc(col.name)}</div>
       </div>
     </div>`;
@@ -1467,7 +1465,6 @@ function qlCardHtml(item, i){
     : `<button class="ql-card-btn hide" onclick="qlHideNote(${i})" title="ซ่อน">🔒</button>`;
   return `
   <div class="ql-card nc-${color}${isPinned?' is-pinned':''}" data-tag="${esc(item.tag||'')}" onclick="if(window.innerWidth<=768)qlOpenRead(${i})">
-    <div class="ql-card-inner" style="padding:14px 14px 14px 18px">
     <div class="ql-card-top">
       <div class="ql-card-badges">${tagChip}${hiddenChip}</div>
       ${pinDot}
@@ -1478,8 +1475,8 @@ function qlCardHtml(item, i){
     ${imagesHtml}
     ${relatedHtml}
     <div class="ql-card-footer">
-      <span class="ql-type-badge ${isPermanent?'type-permanent':'type-fleeting'}">${isPermanent?'Permanent':'Fleeting'}</span>
       <span class="ql-card-date">${qlFmtDate(item.createdAt)}</span>
+      <span class="ql-type-badge" style="${isPermanent?'background:rgba(139,92,246,0.15);color:#a78bfa':'background:rgba(6,182,212,0.15);color:#06b6d4'};border-radius:4px;font-size:10px;padding:2px 6px;font-weight:600">${isPermanent?'Permanent':'Fleeting'}</span>
       <div class="ql-card-actions">
         <button class="ql-card-btn pin${isPinned?' pinned':''}" onclick="qlTogglePin(${i})" title="${isPinned?'ถอดหมุด':'ปักหมุด'}">${qlPinSvg}</button>
         ${hideBtn}
@@ -1488,7 +1485,6 @@ function qlCardHtml(item, i){
         <button class="ql-card-btn edit" onclick="qlOpenEdit(${i})" title="แก้ไข">${qlEditSvg}</button>
         <button class="ql-card-btn del"  onclick="qlDelete(${i})"   title="ลบ">${qlDelSvg}</button>
       </div>
-    </div>
     </div>
   </div>`;
 }
@@ -1956,21 +1952,21 @@ function renderFinance(){
   if(statsEl){
     statsEl.style.gridTemplateColumns = 'repeat(3, 1fr)';
     statsEl.innerHTML = `
-    <div class="stat-card green">
+    <div class="stat-card fin-card-income">
       <div class="stat-icon green"><svg width="18" height="18" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
       <div class="stat-body">
         <div class="stat-num green">${finFmtMoney(income)}</div>
         <div class="stat-label">รายรับเดือนนี้</div>
       </div>
     </div>
-    <div class="stat-card red">
+    <div class="stat-card fin-card-expense">
       <div class="stat-icon red"><svg width="18" height="18" fill="none" stroke="var(--red)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
       <div class="stat-body">
         <div class="stat-num red">${finFmtMoney(expense)}</div>
         <div class="stat-label">รายจ่ายเดือนนี้</div>
       </div>
     </div>
-    <div class="stat-card indigo">
+    <div class="stat-card fin-card-net">
       <div class="stat-icon ${balance>=0?'blue':'red'}"><svg width="18" height="18" fill="none" stroke="${balance>=0?'var(--blue)':'var(--red)'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
       <div class="stat-body">
         <div class="stat-num ${balance>=0?'blue':'red'}">${finFmtMoney(balance)}</div>
@@ -2000,7 +1996,7 @@ function renderFinance(){
     const slipImg = e.slip ? `<img class="fin-slip-thumb" src="${esc(e.slip)}" onclick="showImagePreview(this.src)" title="คลิกเพื่อดูรูปขนาดเต็ม">` : '';
     const sign = e.type==='income' ? '+' : '-';
     return `
-    <div class="fin-card fin-row ${esc(e.type)}">
+    <div class="fin-card ${esc(e.type)}">
       ${slipImg}
       <div class="fin-card-main">
         <div class="fin-card-top">
@@ -2019,7 +2015,6 @@ function renderFinance(){
       </div>
     </div>`;
   }).join('');
-  if(typeof renderFinSidePanel==='function') renderFinSidePanel(income,expense);
 }
 
 function billsChangeMonth(delta){
@@ -2034,19 +2029,19 @@ function incomeChangeMonth(delta){
 function billRowHtml(bill, payment, dueDateStr, isOverdue, isDueSoon, amount, image){
   const paid = !!(payment && payment.paid);
   const statusBadge = paid
-    ? `<span class="bill-status-badge bill-paid">จ่ายแล้ว</span>`
+    ? `<span class="bill-status-badge paid">จ่ายแล้ว</span>`
     : isOverdue
-      ? `<span class="bill-status-badge bill-due overdue">เกินกำหนด</span>`
+      ? `<span class="bill-status-badge overdue">เกินกำหนด</span>`
       : isDueSoon
-        ? `<span class="bill-status-badge bill-due duesoon">ใกล้ถึงกำหนด</span>`
-        : `<span class="bill-status-badge bill-due pending">ยังไม่จ่าย</span>`;
+        ? `<span class="bill-status-badge duesoon">ใกล้ถึงกำหนด</span>`
+        : `<span class="bill-status-badge pending">ยังไม่จ่าย</span>`;
   const inactiveBadge = bill.active ? '' : `<span class="fin-pm-badge">หยุดใช้งาน</span>`;
   const imageThumb = image ? `<img class="fin-slip-thumb" src="${esc(image)}" onclick="showImagePreview(this.src)" title="คลิกเพื่อดูรูปขนาดเต็ม">` : '';
   const pmBadge = (paid && payment && payment.paymentMethod) ? `<span class="fin-pm-badge">${esc(payment.paymentMethod)}</span>` : '';
   const payTimeBadge = (paid && payment && payment.payTime) ? `<span class="fin-card-time">จ่ายเวลา ${esc(payment.payTime)}</span>` : '';
   const payNoteHtml = (paid && payment && payment.payNote) ? `<div class="fin-card-note">${esc(payment.payNote)}</div>` : '';
   return `
-  <div class="fin-card fin-row fin-entry-row bill-card ${paid?'paid':isOverdue?'overdue':isDueSoon?'duesoon':''}">
+  <div class="fin-card fin-entry-row bill-card ${paid?'paid':isOverdue?'overdue':isDueSoon?'duesoon':''}">
     ${imageThumb}
     <div class="fin-card-main">
       <div class="fin-card-top">
@@ -3808,72 +3803,4 @@ loadFile().then(() => {
 })();
 
 loadAppVersion();
-
-/* ─── Finance Side Panel (donut chart + bills mini) ─── */
-function renderFinSidePanel(income, expense){
-  _drawFinDonut(income, expense);
-  _renderFinBillsMini();
-}
-
-function _drawFinDonut(income, expense){
-  const canvas = document.getElementById('finDonutCanvas');
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  const cx = W/2, cy = H/2, r = Math.min(W,H)/2 - 10;
-  ctx.clearRect(0,0,W,H);
-  const total = income + expense;
-  const pct = total>0 ? Math.round((income/total)*100) : 0;
-  const incAngle = total>0 ? (income/total)*Math.PI*2 : 0;
-  const expAngle = Math.PI*2 - incAngle;
-  const start = -Math.PI/2;
-  const thick = 28;
-  // bg ring
-  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
-  ctx.strokeStyle='rgba(255,255,255,.07)'; ctx.lineWidth=thick; ctx.stroke();
-  // expense arc
-  if(expense>0){
-    ctx.beginPath(); ctx.arc(cx,cy,r,start,start+expAngle);
-    ctx.strokeStyle='#f43f5e'; ctx.lineWidth=thick; ctx.lineCap='round'; ctx.stroke();
-  }
-  // income arc
-  if(income>0){
-    ctx.beginPath(); ctx.arc(cx,cy,r,start+expAngle,start+expAngle+incAngle);
-    ctx.strokeStyle='#10b981'; ctx.lineWidth=thick; ctx.lineCap='round'; ctx.stroke();
-  }
-  // center text
-  const pctEl = document.getElementById('finDonutPct');
-  if(pctEl) pctEl.textContent = pct+'%';
-  // legend
-  const leg = document.getElementById('finDonutLegend');
-  if(leg) leg.innerHTML = `
-    <div class="fin-legend-item"><span class="fin-legend-dot" style="background:#10b981"></span><span style="flex:1">รายรับ</span><span style="font-weight:700;color:#34d399">${finFmtMoney(income)}</span></div>
-    <div class="fin-legend-item"><span class="fin-legend-dot" style="background:#f43f5e"></span><span style="flex:1">รายจ่าย</span><span style="font-weight:700;color:#fb7185">${finFmtMoney(expense)}</span></div>
-    <div class="fin-legend-item" style="border-top:1px solid rgba(255,255,255,.07);padding-top:6px;margin-top:2px"><span class="fin-legend-dot" style="background:#818cf8"></span><span style="flex:1">คงเหลือ</span><span style="font-weight:700;color:#818cf8">${finFmtMoney(income-expense)}</span></div>`;
-}
-
-function _renderFinBillsMini(){
-  const el = document.getElementById('finBillsMini');
-  if(!el) return;
-  const bills = (DB._bills||[]).filter(b=>b.active).slice(0,4);
-  if(!bills.length){ el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px 0">ยังไม่มีบิลประจำเดือน</div>'; return; }
-  const curMonth = currentDate.slice(0,7);
-  const payments = DB._billPayments&&DB._billPayments[curMonth]||[];
-  el.innerHTML = bills.map(bill=>{
-    const pay = payments.find(p=>p.billId===bill.id);
-    const paid = !!(pay&&pay.paid);
-    const statusHtml = paid
-      ? `<span class="fin-bills-mini-status" style="background:rgba(16,185,129,.2);color:#34d399">จ่ายแล้ว</span>`
-      : `<span class="fin-bills-mini-status" style="background:rgba(245,158,11,.18);color:#fbbf24">ยังไม่จ่าย</span>`;
-    const icon = bill.image ? `<img src="${esc(bill.image)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">` : `<span style="font-size:18px">🏠</span>`;
-    return `<div class="fin-bills-mini-item">
-      <div class="fin-bills-mini-icon">${icon}</div>
-      <div class="fin-bills-mini-body">
-        <div class="fin-bills-mini-name">${esc(bill.name)}</div>
-        <div class="fin-bills-mini-sub">${finFmtMoney(bill.amount)} / เดือน · ครบ ${bill.dueDay} ${currentDate.slice(5,7).replace(/^0/,'')} ก.ค.</div>
-      </div>
-      ${statusHtml}
-    </div>`;
-  }).join('');
-}
 loadWeather();

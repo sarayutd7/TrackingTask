@@ -7,6 +7,34 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.0.12] — 2026-07-09
+
+### Fixed — Service worker stuck on old cached versions
+
+- `sw.js` used a cache-first `fetch` strategy with a `CACHE` name that never changed across releases (`trackingtask-v2` since v1.0.1). Since the file's bytes never changed, browsers never detected an update, so installed devices stayed stuck forever on whatever version was cached the first time the PWA was installed — even after new versions were deployed to `main`.
+- Bumped `CACHE` to `trackingtask-v3` (forces a one-time re-install and purge of stale caches on next visit)
+- Switched the `fetch` handler to network-first: always try the network first (so deployed updates are visible immediately) and only fall back to the cache when offline
+
+---
+
+## [1.0.11] — 2026-07-09
+
+### Reverted — Back to v1.0.5 baseline
+
+- Superseded the v1.0.2 revert below: reverted `index.html`, `css/styles.css`, `js/app.js`, `js/admin.js`, `admin.html` to their v1.0.5 state, removing the Aurora UI redesign introduced in v1.0.6–v1.0.9 (full dark-theme remodel, gradient stat cards, Finance 2-column layout with donut chart, etc.) while keeping the v1.0.3–v1.0.5 changes (weather wallpaper removal, static Aurora background)
+- v1.0.6–v1.0.9 entries below remain in this changelog for historical record but no longer reflect the current UI
+
+---
+
+## [1.0.10] — 2026-07-09
+
+### Reverted — Back to v1.0.2 baseline
+
+- Reverted `index.html`, `css/styles.css`, `js/app.js`, `js/admin.js`, `admin.html` to their v1.0.2 state, removing the Aurora UI redesign introduced in v1.0.3–v1.0.9 (dark theme overhaul, gradient stat cards, Finance 2-column layout with donut chart, etc.)
+- v1.0.3–v1.0.9 entries below remain in this changelog for historical record but no longer reflect the current UI
+
+---
+
 ## [1.0.9] — 2026-07-09
 
 ### Changed — Aurora UI complete rewrite + Finance 2-column layout

@@ -128,7 +128,7 @@
           <svg width="15" height="15" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2.5"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         </div>
         <span class="sb-name">TrackingTask</span>
-        <button id="appVersion" class="app-version-badge" onclick="openChangelogModal()" title="ดู Changelog">v1.0.9</button>
+        <button id="appVersion" class="app-version-badge" onclick="openChangelogModal()" title="ดู Changelog">v1.0.12</button>
       </div>
       <div class="sb-date-box">
         <button class="sb-date-nav" onclick="prevDay()" title="วันก่อน">&#8249;</button>
@@ -161,17 +161,14 @@
             <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           </div>
           <span class="sb-item-label">จัดการ User</span>
-          <span class="sb-badge">Admin</span>
+          <span style="margin-left:auto;background:rgba(244,63,94,0.2);color:#f43f5e;border:1px solid rgba(244,63,94,0.3);border-radius:6px;font-size:10px;padding:2px 6px;font-weight:700;letter-spacing:.3px">Admin</span>
         </a>
       </nav>
       <div class="sb-footer">
-        <div class="sb-user-wrap">
-          <div class="sb-avatar" id="sbAvatar" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">Y</div>
-          <div class="sb-user-info">
-            <div class="sb-user-name" id="sbUserName">Hi, Yut</div>
-          </div>
+        <div class="sb-avatar" id="sbAvatar" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">Y</div>
+        <div class="sb-user-info">
+          <div class="sb-user-name" id="sbUserName">Hi, Yut</div>
         </div>
-        <div class="sb-weather-wrap" id="dlWeather" title=""></div>
         <div class="sb-actions">
           <button class="sb-action-btn" id="sbThemeBtn" onclick="toggleTheme()" title="สลับ Light/Dark">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -264,6 +261,7 @@
         </span>
         <span class="dl-title">บันทึกประจำวัน</span>
         <span class="dl-mood-badge" id="dlMoodBadge"></span>
+        <span class="dl-weather" id="dlWeather" title=""></span>
         <span class="dl-chevron" id="dlChevron">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
         </span>
@@ -588,43 +586,19 @@
 
       <div class="stats" id="finStatsGrid"></div>
 
-      <div class="fin-content-grid">
-        <div class="fin-main-col">
-          <div class="fin-toolbar">
-            <button class="btn btn-accent" onclick="openFinanceModal()">
-              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              เพิ่มรายการ
-            </button>
-            <div class="ql-filter-bar" id="finFilterBar">
-              <button class="ql-filter-btn active" data-filter="all"     onclick="finSetFilter('all')">ทั้งหมด</button>
-              <button class="ql-filter-btn"        data-filter="income"  onclick="finSetFilter('income')">รายรับ</button>
-              <button class="ql-filter-btn"        data-filter="expense" onclick="finSetFilter('expense')">รายจ่าย</button>
-            </div>
-          </div>
-          <div class="fin-list" id="finBody"></div>
-        </div>
-
-        <div class="fin-side-panel">
-          <div class="fin-side-card">
-            <div class="fin-side-title">สัดส่วนรายรับ/รายจ่าย</div>
-            <div class="fin-donut-wrap">
-              <canvas id="finDonutCanvas" width="180" height="180"></canvas>
-              <div class="fin-donut-center">
-                <div class="fin-donut-pct" id="finDonutPct">0%</div>
-                <div class="fin-donut-label">ประหยัด</div>
-              </div>
-            </div>
-            <div class="fin-donut-legend" id="finDonutLegend"></div>
-          </div>
-          <div class="fin-side-card">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-              <div class="fin-side-title" style="margin-bottom:0">บิลประจำเดือน</div>
-              <button class="fin-side-link btn-ghost btn" style="padding:3px 8px;font-size:11px" onclick="finSetSubTab('bills')">ดูทั้งหมด →</button>
-            </div>
-            <div id="finBillsMini"></div>
-          </div>
+      <div class="fin-toolbar">
+        <button class="btn btn-accent" onclick="openFinanceModal()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          เพิ่มรายการ
+        </button>
+        <div class="ql-filter-bar" id="finFilterBar">
+          <button class="ql-filter-btn active" data-filter="all"     onclick="finSetFilter('all')">ทั้งหมด</button>
+          <button class="ql-filter-btn"        data-filter="income"  onclick="finSetFilter('income')">รายรับ</button>
+          <button class="ql-filter-btn"        data-filter="expense" onclick="finSetFilter('expense')">รายจ่าย</button>
         </div>
       </div>
+
+      <div class="fin-list" id="finBody"></div>
 
     </div>
 
