@@ -7,6 +7,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.1] — 2026-07-10
+
+### Fixed
+- Topbar: ซ่อน hamburger บน desktop (sidebar always visible), ซ่อน weather จาก topbar
+- Topbar: title "Note (QL)" และ "Finance" แสดงถูกต้องเมื่อ switchTab
+- Topbar: update topbarDate เมื่อเปลี่ยน tab
+
+---
+
 ## [1.2.0] — 2026-07-10
 
 ### Changed

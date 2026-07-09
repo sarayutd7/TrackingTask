@@ -3168,6 +3168,8 @@
   .topbar-date { font-size: .65rem; color: var(--text-3); font-weight: 400; }
   .topbar-spacer { flex: 1; }
   .topbar-btn { }  /* inherits hamburger-btn styles */
+  /* hamburger only needed on mobile (sidebar is always visible on desktop) */
+  @media (min-width: 769px) { .topbar-menu-btn { display: none !important; } }
 
   /* Backdrop for mobile drawer */
   .sb-backdrop {

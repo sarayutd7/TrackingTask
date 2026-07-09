@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "releaseDate": "2026-07-10",
-  "changelog": "UI redesign: topbar with date, kanban-col color bars, stat-cards, filter chips, progress header, note cards with accent"
+  "changelog": "Topbar polish: hide hamburger on desktop, hide weather from topbar, fix Note (QL) title, update date on tab switch"
 }

@@ -285,9 +285,14 @@ function switchTab(tab){
   if(tab==='tool')    renderDL();
   if(tab==='finance'){ renderFinance(); if(finSubTab==='bills') renderBills(); if(finSubTab==='income') renderIncomeSources(); }
   // update mobile title & close drawer
-  const titles = {task:'Daily Task', tool:'Note', finance:'รายรับ-รายจ่าย'};
+  const titles = {task:'Daily Task', tool:'Note (QL)', finance:'รายรับ-รายจ่าย'};
   const titleEl = document.getElementById('mobileTabTitle');
   if(titleEl) titleEl.textContent = titles[tab] || '';
+  const topbarDateEl = document.getElementById('topbarDate');
+  if(topbarDateEl){
+    const today = new Date();
+    topbarDateEl.textContent = today.toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
+  }
   closeSidebar();
 }
 
