@@ -7,6 +7,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.0.12] — 2026-07-09
+
+### Fixed — Service worker stuck on old cached versions
+
+- `sw.js` used a cache-first `fetch` strategy with a `CACHE` name that never changed across releases (`trackingtask-v2` since v1.0.1). Since the file's bytes never changed, browsers never detected an update, so installed devices stayed stuck forever on whatever version was cached the first time the PWA was installed — even after new versions were deployed to `main`.
+- Bumped `CACHE` to `trackingtask-v3` (forces a one-time re-install and purge of stale caches on next visit)
+- Switched the `fetch` handler to network-first: always try the network first (so deployed updates are visible immediately) and only fall back to the cache when offline
+
+---
+
 ## [1.0.11] — 2026-07-09
 
 ### Reverted — Back to v1.0.5 baseline

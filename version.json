@@ -1,5 +1,5 @@
 {
-  "version": "1.0.11",
+  "version": "1.0.12",
   "releaseDate": "2026-07-09",
-  "changelog": "Reverted to v1.0.5 baseline — removed Aurora UI redesign (v1.0.6–v1.0.9)"
+  "changelog": "Fixed service worker permanently caching old versions — network-first fetch strategy + cache bump"
 }

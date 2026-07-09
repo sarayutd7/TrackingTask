@@ -1,4 +1,4 @@
-const CACHE = 'trackingtask-v2';
+const CACHE = 'trackingtask-v3';
 const ASSETS = [
   '/index.html',
   '/css/styles.css',
@@ -25,7 +25,14 @@ self.addEventListener('fetch', e => {
   if (e.request.url.includes('workers.dev') || e.request.url.includes('/api/')) {
     return;
   }
+  // Network-first so deployed updates are visible immediately; cache is only an offline fallback.
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    fetch(e.request)
+      .then(res => {
+        const resClone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, resClone));
+        return res;
+      })
+      .catch(() => caches.match(e.request))
   );
 });
