@@ -2019,6 +2019,7 @@ function renderFinance(){
       </div>
     </div>`;
   }).join('');
+  if(typeof renderFinSidePanel==='function') renderFinSidePanel(income,expense);
 }
 
 function billsChangeMonth(delta){
@@ -3807,4 +3808,72 @@ loadFile().then(() => {
 })();
 
 loadAppVersion();
+
+/* ─── Finance Side Panel (donut chart + bills mini) ─── */
+function renderFinSidePanel(income, expense){
+  _drawFinDonut(income, expense);
+  _renderFinBillsMini();
+}
+
+function _drawFinDonut(income, expense){
+  const canvas = document.getElementById('finDonutCanvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2, r = Math.min(W,H)/2 - 10;
+  ctx.clearRect(0,0,W,H);
+  const total = income + expense;
+  const pct = total>0 ? Math.round((income/total)*100) : 0;
+  const incAngle = total>0 ? (income/total)*Math.PI*2 : 0;
+  const expAngle = Math.PI*2 - incAngle;
+  const start = -Math.PI/2;
+  const thick = 28;
+  // bg ring
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle='rgba(255,255,255,.07)'; ctx.lineWidth=thick; ctx.stroke();
+  // expense arc
+  if(expense>0){
+    ctx.beginPath(); ctx.arc(cx,cy,r,start,start+expAngle);
+    ctx.strokeStyle='#f43f5e'; ctx.lineWidth=thick; ctx.lineCap='round'; ctx.stroke();
+  }
+  // income arc
+  if(income>0){
+    ctx.beginPath(); ctx.arc(cx,cy,r,start+expAngle,start+expAngle+incAngle);
+    ctx.strokeStyle='#10b981'; ctx.lineWidth=thick; ctx.lineCap='round'; ctx.stroke();
+  }
+  // center text
+  const pctEl = document.getElementById('finDonutPct');
+  if(pctEl) pctEl.textContent = pct+'%';
+  // legend
+  const leg = document.getElementById('finDonutLegend');
+  if(leg) leg.innerHTML = `
+    <div class="fin-legend-item"><span class="fin-legend-dot" style="background:#10b981"></span><span style="flex:1">รายรับ</span><span style="font-weight:700;color:#34d399">${finFmtMoney(income)}</span></div>
+    <div class="fin-legend-item"><span class="fin-legend-dot" style="background:#f43f5e"></span><span style="flex:1">รายจ่าย</span><span style="font-weight:700;color:#fb7185">${finFmtMoney(expense)}</span></div>
+    <div class="fin-legend-item" style="border-top:1px solid rgba(255,255,255,.07);padding-top:6px;margin-top:2px"><span class="fin-legend-dot" style="background:#818cf8"></span><span style="flex:1">คงเหลือ</span><span style="font-weight:700;color:#818cf8">${finFmtMoney(income-expense)}</span></div>`;
+}
+
+function _renderFinBillsMini(){
+  const el = document.getElementById('finBillsMini');
+  if(!el) return;
+  const bills = (DB._bills||[]).filter(b=>b.active).slice(0,4);
+  if(!bills.length){ el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px 0">ยังไม่มีบิลประจำเดือน</div>'; return; }
+  const curMonth = currentDate.slice(0,7);
+  const payments = DB._billPayments&&DB._billPayments[curMonth]||[];
+  el.innerHTML = bills.map(bill=>{
+    const pay = payments.find(p=>p.billId===bill.id);
+    const paid = !!(pay&&pay.paid);
+    const statusHtml = paid
+      ? `<span class="fin-bills-mini-status" style="background:rgba(16,185,129,.2);color:#34d399">จ่ายแล้ว</span>`
+      : `<span class="fin-bills-mini-status" style="background:rgba(245,158,11,.18);color:#fbbf24">ยังไม่จ่าย</span>`;
+    const icon = bill.image ? `<img src="${esc(bill.image)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">` : `<span style="font-size:18px">🏠</span>`;
+    return `<div class="fin-bills-mini-item">
+      <div class="fin-bills-mini-icon">${icon}</div>
+      <div class="fin-bills-mini-body">
+        <div class="fin-bills-mini-name">${esc(bill.name)}</div>
+        <div class="fin-bills-mini-sub">${finFmtMoney(bill.amount)} / เดือน · ครบ ${bill.dueDay} ${currentDate.slice(5,7).replace(/^0/,'')} ก.ค.</div>
+      </div>
+      ${statusHtml}
+    </div>`;
+  }).join('');
+}
 loadWeather();

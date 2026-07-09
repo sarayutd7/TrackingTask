@@ -1,5 +1,5 @@
 {
-  "version": "1.0.8",
-  "releaseDate": "2026-07-08",
-  "changelog": "Aurora UI remodel — full redesign matching demo exactly across all 4 sections"
+  "version": "1.0.9",
+  "releaseDate": "2026-07-09",
+  "changelog": "Aurora UI complete rewrite — clean CSS, Finance 2-column layout with donut chart, Note filter chips, sidebar fixes"
 }
