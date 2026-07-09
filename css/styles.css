@@ -353,7 +353,7 @@
   .col.kanban-col { display: flex; flex-direction: column; }
   .col-bar { height: 4px; width: 100%; flex-shrink: 0; }
   .col-body { flex: 1; padding: 0 .75rem; }
-  .add-task-btn { margin: .35rem .75rem .75rem; width: calc(100% - 1.5rem); }
+  .add-task-btn { margin: .35rem .75rem .75rem; width: 94%; }
 
   .col-header {
     display: flex;
