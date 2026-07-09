@@ -7,6 +7,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.1.0] — 2026-07-09
+
+### Changed — Remove weather background animation
+
+- Removed canvas-based weather animation (`initWeatherBg` IIFE, ~330 lines) — was causing JS errors and breaking the app
+- Removed `<canvas id="weatherBg">` element from `index.html`
+- Removed `window.setWeatherBg()` calls from `loadWeather()` (weather icon+temperature in topbar still works)
+- Body background remains static Aurora dark (`#0f1117`) — stable and performant
+
+---
+
 ## [1.0.12] — 2026-07-09
 
 ### Fixed — Service worker stuck on old cached versions

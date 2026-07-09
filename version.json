@@ -1,5 +1,5 @@
 {
-  "version": "1.0.12",
+  "version": "1.1.0",
   "releaseDate": "2026-07-09",
-  "changelog": "Fixed service worker permanently caching old versions — network-first fetch strategy + cache bump"
+  "changelog": "Remove weather background animation — replaced with static Aurora dark background"
 }
