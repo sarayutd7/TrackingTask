@@ -7,6 +7,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.0.11] — 2026-07-09
+
+### Reverted — Back to v1.0.5 baseline
+
+- Superseded the v1.0.2 revert below: reverted `index.html`, `css/styles.css`, `js/app.js`, `js/admin.js`, `admin.html` to their v1.0.5 state, removing the Aurora UI redesign introduced in v1.0.6–v1.0.9 (full dark-theme remodel, gradient stat cards, Finance 2-column layout with donut chart, etc.) while keeping the v1.0.3–v1.0.5 changes (weather wallpaper removal, static Aurora background)
+- v1.0.6–v1.0.9 entries below remain in this changelog for historical record but no longer reflect the current UI
+
+---
+
 ## [1.0.10] — 2026-07-09
 
 ### Reverted — Back to v1.0.2 baseline

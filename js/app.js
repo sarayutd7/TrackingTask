@@ -748,7 +748,7 @@ function renderBoard(){
   // กำหนดจำนวน column ให้เต็มจอ เท่ากันทุก column
   board.style.gridTemplateColumns = `repeat(${COLS.length}, minmax(240px, 1fr))`;
   board.innerHTML = COLS.map(col=>`
-    <div class="col" id="col-${esc(col.id)}">
+    <div class="col col-color-${esc(col.color)}" id="col-${esc(col.id)}">
       <div class="col-header">
         <div class="col-dot ${col.color}"></div>
         <span class="col-title">${esc(col.name)}</span>
@@ -983,7 +983,7 @@ function renderMobileBoard(g, tasks){
       <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
     </div>`;
 
-    return `<div class="mb-pane${active}" id="mbPane-${esc(col.id)}">
+    return `<div class="mb-pane col-color-${esc(col.color)}${active}" id="mbPane-${esc(col.id)}">
       ${pfBar}
       <div class="mb-pane-header">
         <span class="mb-pane-dot" style="background:${mbColorVar(col.color)}"></span>
@@ -1476,6 +1476,7 @@ function qlCardHtml(item, i){
     ${relatedHtml}
     <div class="ql-card-footer">
       <span class="ql-card-date">${qlFmtDate(item.createdAt)}</span>
+      <span class="ql-type-badge" style="${isPermanent?'background:rgba(139,92,246,0.15);color:#a78bfa':'background:rgba(6,182,212,0.15);color:#06b6d4'};border-radius:4px;font-size:10px;padding:2px 6px;font-weight:600">${isPermanent?'Permanent':'Fleeting'}</span>
       <div class="ql-card-actions">
         <button class="ql-card-btn pin${isPinned?' pinned':''}" onclick="qlTogglePin(${i})" title="${isPinned?'ถอดหมุด':'ปักหมุด'}">${qlPinSvg}</button>
         ${hideBtn}
@@ -1951,21 +1952,21 @@ function renderFinance(){
   if(statsEl){
     statsEl.style.gridTemplateColumns = 'repeat(3, 1fr)';
     statsEl.innerHTML = `
-    <div class="stat-card">
+    <div class="stat-card fin-card-income">
       <div class="stat-icon green"><svg width="18" height="18" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
       <div class="stat-body">
         <div class="stat-num green">${finFmtMoney(income)}</div>
         <div class="stat-label">รายรับเดือนนี้</div>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card fin-card-expense">
       <div class="stat-icon red"><svg width="18" height="18" fill="none" stroke="var(--red)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
       <div class="stat-body">
         <div class="stat-num red">${finFmtMoney(expense)}</div>
         <div class="stat-label">รายจ่ายเดือนนี้</div>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card fin-card-net">
       <div class="stat-icon ${balance>=0?'blue':'red'}"><svg width="18" height="18" fill="none" stroke="${balance>=0?'var(--blue)':'var(--red)'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
       <div class="stat-body">
         <div class="stat-num ${balance>=0?'blue':'red'}">${finFmtMoney(balance)}</div>
@@ -2003,7 +2004,7 @@ function renderFinance(){
             <div class="fin-card-item">${esc(e.item)}</div>
             <div style="display:flex;gap:.3rem;align-items:center;flex-wrap:wrap">${dateBadge}${timeBadge}</div>
           </div>
-          <div class="fin-card-amount ${esc(e.type)}">${sign}${finFmtMoney(e.amount)}</div>
+          <div class="fin-card-amount fin-amount ${esc(e.type)}">${sign}${finFmtMoney(e.amount)}</div>
         </div>
         <div class="fin-card-meta">${pmBadge}${tagBadge}</div>
         ${noteHtml}
@@ -2040,7 +2041,7 @@ function billRowHtml(bill, payment, dueDateStr, isOverdue, isDueSoon, amount, im
   const payTimeBadge = (paid && payment && payment.payTime) ? `<span class="fin-card-time">จ่ายเวลา ${esc(payment.payTime)}</span>` : '';
   const payNoteHtml = (paid && payment && payment.payNote) ? `<div class="fin-card-note">${esc(payment.payNote)}</div>` : '';
   return `
-  <div class="fin-card bill-card ${paid?'paid':isOverdue?'overdue':isDueSoon?'duesoon':''}">
+  <div class="fin-card fin-entry-row bill-card ${paid?'paid':isOverdue?'overdue':isDueSoon?'duesoon':''}">
     ${imageThumb}
     <div class="fin-card-main">
       <div class="fin-card-top">
@@ -2703,14 +2704,14 @@ function incomeSourceRowHtml(source, logsThisMonth, totalThisMonth){
   const lastLog = logsThisMonth[0];
   const lastInfo = lastLog ? `ล่าสุด ${lastLog.date.slice(-2)}/${lastLog.date.slice(5,7)} — ${finFmtMoney(lastLog.amount)} บาท` : 'ยังไม่มีรายการเดือนนี้';
   return `
-  <div class="fin-card bill-card">
+  <div class="income-source-card fin-card">
     <div class="fin-card-main">
       <div class="fin-card-top">
         <div>
           <div class="fin-card-item">${esc(source.name)}</div>
           <span class="fin-card-time">${esc(lastInfo)}</span>
         </div>
-        <div class="fin-card-amount income">+${finFmtMoney(totalThisMonth)}</div>
+        <div class="fin-card-amount fin-amount income">+${finFmtMoney(totalThisMonth)}</div>
       </div>
       <div class="fin-card-meta">
         <span class="bill-status-badge pending">${logsThisMonth.length} ครั้งเดือนนี้</span>
