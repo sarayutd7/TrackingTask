@@ -7,6 +7,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.3] — 2026-07-10
+
+### Fixed
+- Finance summary cards: เปลี่ยนจาก `fin-card-new` เป็น `fin-card` พร้อม override ใน `.finance-summary .fin-card`
+- Finance donut: เปลี่ยนจาก SVG เป็น CSS `conic-gradient` พร้อม `::before` cutout circle
+- Finance bills preview: ใช้ `.bill-icon/.bill-name/.bill-amount` พร้อม emoji icon และ inline bg color
+- CSS: เพิ่ม `.fin-bills-preview .bill-card` override ไม่มี border-left
+
+---
+
 ## [1.2.2] — 2026-07-10
 
 ### Changed

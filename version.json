@@ -1,5 +1,5 @@
 {
-  "version": "1.2.2",
+  "version": "1.2.3",
   "releaseDate": "2026-07-10",
-  "changelog": "Finance tab redesign: summary cards, txn-row list, donut chart, bills preview sidebar, sub-tabs, filter chips"
+  "changelog": "Finance: summary fin-card fix, CSS conic-gradient donut, bill preview icons, sidebar admin badge"
 }

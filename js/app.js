@@ -1995,24 +1995,14 @@ function fmtDateShortTH(dateStr){
 function renderDonutSvg(income, expense){
   const total = income + expense || 1;
   const incomeRatio = income / total;
-  const r = 38, cx = 50, cy = 50, circumference = 2 * Math.PI * r;
-  const incomeDash = circumference * incomeRatio;
-  const expenseDash = circumference * (1 - incomeRatio);
   const savePct = income > 0 ? Math.round(((income - expense) / income) * 100) : 0;
+  const pct = (incomeRatio * 100).toFixed(1) + '%';
   return `<div class="donut-wrap">
-    <svg class="donut-svg" viewBox="0 0 100 100">
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(128,128,128,.15)" stroke-width="12"/>
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#10b981" stroke-width="12"
-        stroke-dasharray="${incomeDash.toFixed(2)} ${circumference.toFixed(2)}"
-        stroke-linecap="round" transform="rotate(-90 50 50)"/>
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#f43f5e" stroke-width="12"
-        stroke-dasharray="${expenseDash.toFixed(2)} ${circumference.toFixed(2)}"
-        stroke-dashoffset="${(-incomeDash).toFixed(2)}"
-        stroke-linecap="round" transform="rotate(-90 50 50)"/>
-    </svg>
-    <div class="donut-center">
-      <div class="donut-pct">${savePct}%</div>
-      <div class="donut-sub">ประหยัด</div>
+    <div class="donut" style="background:conic-gradient(#10b981 0% ${pct}, #f43f5e ${pct} 100%)">
+      <div class="donut-center">
+        <div class="donut-pct">${savePct}%</div>
+        <div class="donut-sub">ประหยัด</div>
+      </div>
     </div>
   </div>`;
 }
@@ -2021,14 +2011,18 @@ function renderDonutSvg(income, expense){
 function renderBillsPreview(month){
   const bills = getBills().filter(b => b.active);
   if(!bills.length) return '';
-  const rows = bills.slice(0, 5).map(bill => {
+  const iconBgs = ['rgba(99,102,241,.18)','rgba(244,63,94,.15)','rgba(6,182,212,.15)','rgba(245,158,11,.15)','rgba(16,185,129,.15)'];
+  const iconEmojis = ['🏠','🎬','📱','💡','📋'];
+  const rows = bills.slice(0, 5).map((bill, idx) => {
     const payment = findBillPayment(month, bill.id);
     const paid = !!payment;
-    return `<div class="bill-card">
-      <div class="bill-icon">🏠</div>
-      <div class="bill-card-body">
+    const bg = iconBgs[idx % iconBgs.length];
+    const emoji = iconEmojis[idx % iconEmojis.length];
+    return `<div class="bill-card preview-bill">
+      <div class="bill-icon" style="background:${bg}">${emoji}</div>
+      <div>
         <div class="bill-name">${esc(bill.name)}</div>
-        <div class="bill-amount">฿${finFmtMoney(bill.amount)} · ครบ ${bill.dueDay} ของเดือน</div>
+        <div class="bill-amount">฿${finFmtMoney(bill.amount)} / เดือน · ครบ ${bill.dueDay} ของเดือน</div>
       </div>
       <span class="bill-status ${paid ? 'bill-paid' : 'bill-due'}">${paid ? 'จ่ายแล้ว' : 'รอจ่าย'}</span>
     </div>`;
@@ -2062,17 +2056,17 @@ function renderFinance(){
   if(statsEl){
     statsEl.className = 'finance-summary';
     statsEl.innerHTML = `
-    <div class="fin-card-new income">
+    <div class="fin-card income">
       <div class="fin-icon">📈</div>
       <div class="fin-amount">฿${finFmtMoney(income)}</div>
       <div class="fin-label">รายรับทั้งหมด</div>
     </div>
-    <div class="fin-card-new expense">
+    <div class="fin-card expense">
       <div class="fin-icon">📉</div>
       <div class="fin-amount">฿${finFmtMoney(expense)}</div>
       <div class="fin-label">รายจ่ายทั้งหมด</div>
     </div>
-    <div class="fin-card-new balance">
+    <div class="fin-card balance">
       <div class="fin-icon">💎</div>
       <div class="fin-amount">฿${finFmtMoney(balance)}</div>
       <div class="fin-label">คงเหลือสุทธิ</div>

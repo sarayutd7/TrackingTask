@@ -3523,26 +3523,30 @@
   gap: .75rem;
   margin-bottom: 1.25rem;
 }
-.fin-card-new {
+/* Summary cards override — inside .finance-summary to win over old .fin-card styles */
+.finance-summary .fin-card {
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 16px;
+  border-left: none;
   padding: 1rem 1.1rem;
   display: flex;
   flex-direction: column;
   gap: .3rem;
   position: relative;
   overflow: hidden;
+  cursor: default;
 }
-.fin-card-new::before {
+.finance-summary .fin-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 3px;
 }
-.fin-card-new.income::before { background: linear-gradient(90deg,#10b981,#34d399); }
-.fin-card-new.expense::before { background: linear-gradient(90deg,#f43f5e,#fb923c); }
-.fin-card-new.balance::before { background: linear-gradient(90deg,#6366f1,#8b5cf6); }
+.finance-summary .fin-card.income::before { background: linear-gradient(90deg,#10b981,#34d399); }
+.finance-summary .fin-card.expense::before { background: linear-gradient(90deg,#f43f5e,#fb923c); }
+.finance-summary .fin-card.balance::before { background: linear-gradient(90deg,#6366f1,#8b5cf6); }
+.finance-summary .fin-card:hover { background: var(--surface2); transform: none; box-shadow: none; }
 .fin-icon { font-size: 1.3rem; margin-bottom: .1rem; }
 .fin-amount {
   font-size: 1.3rem;
@@ -3550,9 +3554,9 @@
   letter-spacing: -.02em;
   font-variant-numeric: tabular-nums;
 }
-.fin-card-new.income  .fin-amount { color: #34d399; }
-.fin-card-new.expense .fin-amount { color: #fb7185; }
-.fin-card-new.balance .fin-amount { color: var(--accent); }
+.finance-summary .fin-card.income  .fin-amount { color: #34d399; }
+.finance-summary .fin-card.expense .fin-amount { color: #fb7185; }
+.finance-summary .fin-card.balance .fin-amount { color: var(--accent); }
 .fin-label { font-size: .72rem; color: var(--text-3); font-weight: 500; }
 
 /* ── Two column layout ── */
@@ -3641,13 +3645,28 @@
   width: 90px; height: 90px;
   flex-shrink: 0;
 }
-.donut-svg { width: 90px; height: 90px; display: block; }
+/* CSS conic-gradient donut */
+.donut {
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.donut::before {
+  content: '';
+  position: absolute;
+  width: 60px; height: 60px;
+  background: var(--surface2);
+  border-radius: 50%;
+  z-index: 1;
+}
 .donut-center {
   position: absolute;
   inset: 0;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   gap: 1px;
+  z-index: 2;
 }
 .donut-pct { font-size: .9rem; font-weight: 700; color: var(--text); }
 .donut-sub { font-size: .58rem; color: var(--text-3); }
@@ -3674,15 +3693,18 @@
   font-weight: 600;
   color: var(--text-2);
 }
-.bill-icon-new {
+/* bill icon/name/amount for preview sidebar */
+.fin-bills-preview .bill-card { border-left: none; background: none; margin: 0; padding: .5rem 0; }
+.fin-bills-preview .bill-card:last-child { padding-bottom: 0; }
+.bill-icon {
   width: 32px; height: 32px;
   border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
   font-size: .9rem;
   flex-shrink: 0;
 }
-.bill-name-new { font-size: .78rem; font-weight: 600; color: var(--text); }
-.bill-amount-new { font-size: .67rem; color: var(--text-3); margin-top: 1px; }
+.bill-name { font-size: .78rem; font-weight: 600; color: var(--text); }
+.bill-amount { font-size: .67rem; color: var(--text-3); margin-top: 1px; }
 .bill-status {
   margin-left: auto;
   font-size: .65rem;
