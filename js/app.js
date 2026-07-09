@@ -1950,16 +1950,17 @@ function finFmtMoney(n){
 
 function finSetFilter(filter){
   finActiveFilter = filter;
-  document.querySelectorAll('#finFilterBar .ql-filter-btn').forEach(btn=>{
-    btn.classList.toggle('active', btn.dataset.filter === filter);
+  document.querySelectorAll('#finFilterBar .filter-chip, #finFilterBar .ql-filter-btn').forEach(btn=>{
+    btn.classList.toggle('active', (btn.dataset.filter || btn.dataset.filter) === filter);
   });
   renderFinance();
 }
 
 function finSetSubTab(tab){
   finSubTab = tab;
-  document.querySelectorAll('#finSubTabBar .ql-filter-btn').forEach(btn=>{
-    btn.classList.toggle('active', btn.dataset.subtab === tab);
+  document.querySelectorAll('#finSubTabBar .sub-tab, #finSubTabBar .ql-filter-btn').forEach(btn=>{
+    const isActive = (btn.dataset.subtab === tab) || (btn.getAttribute('onclick')||'').includes(`'${tab}'`);
+    btn.classList.toggle('active', isActive);
   });
   document.getElementById('finListPane').style.display   = tab==='list'   ? '' : 'none';
   document.getElementById('finBillsPane').style.display  = tab==='bills'  ? '' : 'none';
@@ -1971,86 +1972,192 @@ function finSetSubTab(tab){
 const finEditSvg = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
 const finDelSvg  = `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
 
+// Map finance tag/type to an emoji icon
+function finTagIcon(tag, type){
+  if(type === 'income') return '💼';
+  const map = {
+    'อาหาร':'🍜','ช้อปปิ้ง':'🛍️','เดินทาง':'🚌','บันเทิง':'🎬','สุขภาพ':'💊',
+    'บิล':'🧾','น้ำมัน':'⛽','บ้าน':'🏠','การศึกษา':'📚','อื่นๆ':'📌'
+  };
+  if(tag && map[tag]) return map[tag];
+  return '📌';
+}
+
+// Format a YYYY-MM-DD date as short Thai string e.g. "1 ก.ค. 2569"
+function fmtDateShortTH(dateStr){
+  if(!dateStr) return '';
+  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const [y, m, d] = dateStr.split('-');
+  return `${Number(d)} ${months[Number(m)-1]} ${Number(y)+543}`;
+}
+
+// Render a donut SVG showing income vs expense ratio
+function renderDonutSvg(income, expense){
+  const total = income + expense || 1;
+  const incomeRatio = income / total;
+  const r = 38, cx = 50, cy = 50, circumference = 2 * Math.PI * r;
+  const incomeDash = circumference * incomeRatio;
+  const expenseDash = circumference * (1 - incomeRatio);
+  const savePct = income > 0 ? Math.round(((income - expense) / income) * 100) : 0;
+  return `<div class="donut-wrap">
+    <svg class="donut-svg" viewBox="0 0 100 100">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(128,128,128,.15)" stroke-width="12"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#10b981" stroke-width="12"
+        stroke-dasharray="${incomeDash.toFixed(2)} ${circumference.toFixed(2)}"
+        stroke-linecap="round" transform="rotate(-90 50 50)"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#f43f5e" stroke-width="12"
+        stroke-dasharray="${expenseDash.toFixed(2)} ${circumference.toFixed(2)}"
+        stroke-dashoffset="${(-incomeDash).toFixed(2)}"
+        stroke-linecap="round" transform="rotate(-90 50 50)"/>
+    </svg>
+    <div class="donut-center">
+      <div class="donut-pct">${savePct}%</div>
+      <div class="donut-sub">ประหยัด</div>
+    </div>
+  </div>`;
+}
+
+// Render bills preview sidebar widget
+function renderBillsPreview(month){
+  const bills = getBills().filter(b => b.active);
+  if(!bills.length) return '';
+  const rows = bills.slice(0, 5).map(bill => {
+    const payment = findBillPayment(month, bill.id);
+    const paid = !!payment;
+    return `<div class="bill-card">
+      <div class="bill-icon">🏠</div>
+      <div class="bill-card-body">
+        <div class="bill-name">${esc(bill.name)}</div>
+        <div class="bill-amount">฿${finFmtMoney(bill.amount)} · ครบ ${bill.dueDay} ของเดือน</div>
+      </div>
+      <span class="bill-status ${paid ? 'bill-paid' : 'bill-due'}">${paid ? 'จ่ายแล้ว' : 'รอจ่าย'}</span>
+    </div>`;
+  }).join('');
+  return `<div class="fin-bills-preview">
+    <div class="bills-section-title">
+      <span>บิลประจำเดือน</span>
+      <span onclick="finSetSubTab('bills')" style="font-size:11px;color:var(--accent);font-weight:600;cursor:pointer">ดูทั้งหมด →</span>
+    </div>
+    ${rows}
+  </div>`;
+}
+
 function renderFinance(){
-  // Summary cards + list both use the whole month being viewed
+  // Collect all entries for the viewed month, newest date first
   const curMonth = currentDate.slice(0,7);
   const monthEntries = Object.keys(DB._finance||{})
     .filter(d=>d.slice(0,7)===curMonth)
-    .sort((a,b)=>b.localeCompare(a)) // newest date first
+    .sort((a,b)=>b.localeCompare(a))
     .flatMap(d=>DB._finance[d].map(e=>({...e, _date:d})));
+
   let income = 0, expense = 0;
   monthEntries.forEach(e => {
     if(e.type === 'income') income += Number(e.amount)||0;
     else expense += Number(e.amount)||0;
   });
   const balance = income - expense;
+
+  // --- Summary cards ---
   const statsEl = document.getElementById('finStatsGrid');
   if(statsEl){
-    statsEl.style.gridTemplateColumns = 'repeat(3, 1fr)';
+    statsEl.className = 'finance-summary';
     statsEl.innerHTML = `
-    <div class="stat-card fin-card-income">
-      <div class="stat-icon green"><svg width="18" height="18" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-      <div class="stat-body">
-        <div class="stat-num green">${finFmtMoney(income)}</div>
-        <div class="stat-label">รายรับเดือนนี้</div>
-      </div>
+    <div class="fin-card-new income">
+      <div class="fin-icon">📈</div>
+      <div class="fin-amount">฿${finFmtMoney(income)}</div>
+      <div class="fin-label">รายรับทั้งหมด</div>
     </div>
-    <div class="stat-card fin-card-expense">
-      <div class="stat-icon red"><svg width="18" height="18" fill="none" stroke="var(--red)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
-      <div class="stat-body">
-        <div class="stat-num red">${finFmtMoney(expense)}</div>
-        <div class="stat-label">รายจ่ายเดือนนี้</div>
-      </div>
+    <div class="fin-card-new expense">
+      <div class="fin-icon">📉</div>
+      <div class="fin-amount">฿${finFmtMoney(expense)}</div>
+      <div class="fin-label">รายจ่ายทั้งหมด</div>
     </div>
-    <div class="stat-card fin-card-net">
-      <div class="stat-icon ${balance>=0?'blue':'red'}"><svg width="18" height="18" fill="none" stroke="${balance>=0?'var(--blue)':'var(--red)'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
-      <div class="stat-body">
-        <div class="stat-num ${balance>=0?'blue':'red'}">${finFmtMoney(balance)}</div>
-        <div class="stat-label">คงเหลือเดือนนี้</div>
-      </div>
+    <div class="fin-card-new balance">
+      <div class="fin-icon">💎</div>
+      <div class="fin-amount">฿${finFmtMoney(balance)}</div>
+      <div class="fin-label">คงเหลือสุทธิ</div>
     </div>`;
   }
 
-  // List — แสดงทุกรายการของเดือน (ไม่ใช่แค่วันที่เลือก) เรียงจากวันล่าสุดก่อน
+  // --- Transaction list ---
   const body = document.getElementById('finBody');
   if(!body) return;
-  const list = (finActiveFilter==='all' ? monthEntries : monthEntries.filter(e=>e.type===finActiveFilter));
+
+  const list = finActiveFilter === 'all' ? monthEntries : monthEntries.filter(e => e.type === finActiveFilter);
 
   if(!list.length){
     body.innerHTML = monthEntries.length
       ? '<span class="ql-empty">ไม่มีรายการในตัวกรองนี้</span>'
       : '<span class="ql-empty">ยังไม่มีรายการในเดือนนี้ — กด + เพิ่มรายการ เพื่อบันทึก</span>';
-    return;
+  } else {
+    body.innerHTML = `<div class="txn-list">${list.map(e => {
+      const isIncome = e.type === 'income';
+      const icon = finTagIcon(e.tag, e.type);
+      const iconBg = isIncome ? 'rgba(16,185,129,.18)' : 'rgba(244,63,94,.15)';
+      const amtClass = isIncome ? 'income' : 'expense';
+      const amtPrefix = isIncome ? '+' : '−';
+      const tagHtml = e.tag ? `<span class="txn-cat">${esc(e.tag)}</span>` : '';
+      const pmHtml  = e.paymentMethod ? `<span class="txn-pm">${esc(e.paymentMethod)}</span>` : '';
+      const label   = e.note || e.item || '(ไม่มีชื่อ)';
+      const slipHtml = e.slip ? `<img class="fin-slip-thumb" src="${esc(e.slip)}" onclick="event.stopPropagation();showImagePreview(this.src)" title="ดูสลิป">` : '';
+      return `<div class="txn-row" onclick="openFinanceModal('${esc(e.id)}')">
+        <div class="txn-icon" style="background:${iconBg}">${icon}</div>
+        <div style="flex:1;min-width:0">
+          <div class="txn-name">${esc(label)}</div>
+          <div class="txn-meta">${tagHtml}${pmHtml}</div>
+        </div>
+        ${slipHtml}
+        <div style="text-align:right;flex-shrink:0">
+          <div class="txn-amount ${amtClass}">${amtPrefix}฿${finFmtMoney(e.amount)}</div>
+          <div class="txn-date">${fmtDateShortTH(e._date)}</div>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
   }
 
-  body.innerHTML = list.map(e=>{
-    const pmBadge = e.paymentMethod ? `<span class="fin-pm-badge">${esc(e.paymentMethod)}</span>` : '';
-    const tagBadge = e.tag ? `<span class="fin-pm-badge">${esc(e.tag)}</span>` : '';
-    const dateBadge = e._date ? `<span class="fin-card-date-badge">${esc(e._date.slice(5))}</span>` : '';
-    const timeBadge = e.time ? `<span class="fin-card-time">${esc(e.time)}</span>` : '';
-    const noteHtml = e.note ? `<div class="fin-card-note">${esc(e.note)}</div>` : '';
-    const slipImg = e.slip ? `<img class="fin-slip-thumb" src="${esc(e.slip)}" onclick="showImagePreview(this.src)" title="คลิกเพื่อดูรูปขนาดเต็ม">` : '';
-    const sign = e.type==='income' ? '+' : '-';
-    return `
-    <div class="fin-card ${esc(e.type)}">
-      ${slipImg}
-      <div class="fin-card-main">
-        <div class="fin-card-top">
-          <div>
-            <div class="fin-card-item">${esc(e.item)}</div>
-            <div style="display:flex;gap:.3rem;align-items:center;flex-wrap:wrap">${dateBadge}${timeBadge}</div>
+  // --- Side column: donut chart + bills preview ---
+  // Find or create the side column element
+  let sideCol = document.getElementById('finSideCol');
+  if(!sideCol){
+    sideCol = document.createElement('div');
+    sideCol.id = 'finSideCol';
+    sideCol.className = 'two-col-side';
+    // Insert after finBody
+    body.parentNode.insertBefore(sideCol, body.nextSibling);
+    // Wrap body + sideCol in a two-col container if not already wrapped
+    const wrapper = document.createElement('div');
+    wrapper.className = 'two-col';
+    body.parentNode.insertBefore(wrapper, body);
+    wrapper.appendChild(body);
+    wrapper.appendChild(sideCol);
+  }
+
+  sideCol.innerHTML = `
+    <div class="fin-donut-card">
+      <div class="section-title">สัดส่วนรายรับ/รายจ่าย</div>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        ${renderDonutSvg(income, expense)}
+        <div class="donut-legend">
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#10b981"></div>
+            <div class="legend-label">รายรับ</div>
+            <div class="legend-val" style="color:#34d399">฿${finFmtMoney(income)}</div>
           </div>
-          <div class="fin-card-amount fin-amount ${esc(e.type)}">${sign}${finFmtMoney(e.amount)}</div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#f43f5e"></div>
+            <div class="legend-label">รายจ่าย</div>
+            <div class="legend-val" style="color:#fb7185">฿${finFmtMoney(expense)}</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:rgba(99,102,241,.4)"></div>
+            <div class="legend-label">คงเหลือ</div>
+            <div class="legend-val" style="color:#818cf8">฿${finFmtMoney(balance)}</div>
+          </div>
         </div>
-        <div class="fin-card-meta">${pmBadge}${tagBadge}</div>
-        ${noteHtml}
       </div>
-      <div class="fin-card-actions">
-        <button class="fin-card-btn edit" onclick="openFinanceModal('${esc(e.id)}')" title="แก้ไข">${finEditSvg}</button>
-        <button class="fin-card-btn del"  onclick="deleteFinance('${esc(e.id)}')" title="ลบ">${finDelSvg}</button>
-      </div>
-    </div>`;
-  }).join('');
+    </div>
+    ${renderBillsPreview(curMonth)}
+  `;
 }
 
 function billsChangeMonth(delta){

@@ -7,6 +7,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.2] — 2026-07-10
+
+### Changed
+- **Finance tab**: summary cards (`.fin-card-new`) แสดงรายรับ/รายจ่าย/คงเหลือ พร้อม gradient top border
+- **Finance tab**: transaction list ใช้ `.txn-row` พร้อม icon, ชื่อ, tag, payment method, จำนวนเงิน signed, วันที่
+- **Finance tab**: donut chart SVG แสดงสัดส่วน income vs expense + legend
+- **Finance tab**: bills preview sidebar (sticky) แสดง 5 บิลล่าสุดพร้อมสถานะ จ่ายแล้ว/รอจ่าย
+- **Finance tab**: sub-tabs เป็น `.sub-tab` pill style; filter chips เป็น `.filter-chip` พร้อม chip-dot
+- **Finance tab**: layout 2-column (`.two-col`) บน desktop
+
+---
+
 ## [1.2.1] — 2026-07-10
 
 ### Fixed

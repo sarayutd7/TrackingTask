@@ -1,5 +1,5 @@
 {
-  "version": "1.2.1",
+  "version": "1.2.2",
   "releaseDate": "2026-07-10",
-  "changelog": "Topbar polish: hide hamburger on desktop, hide weather from topbar, fix Note (QL) title, update date on tab switch"
+  "changelog": "Finance tab redesign: summary cards, txn-row list, donut chart, bills preview sidebar, sub-tabs, filter chips"
 }
