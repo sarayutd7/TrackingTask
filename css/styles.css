@@ -257,14 +257,30 @@
 
   /* ── Progress ── */
   .progress-wrap {
-    margin-bottom: 1.75rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+  }
+  .progress-header {
     display: flex;
     align-items: center;
-    gap: .85rem;
+    justify-content: space-between;
+  }
+  .progress-label {
+    font-size: .78rem;
+    color: var(--text-3);
+    font-weight: 500;
+  }
+  .progress-pct {
+    font-size: .78rem;
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
   }
   .progress-track {
-    flex: 1;
-    height: 3px;
+    width: 100%;
+    height: 6px;
     background: var(--surface3);
     border-radius: 99px;
     overflow: hidden;
@@ -280,13 +296,6 @@
   @keyframes progressShimmer {
     0%   { background-position: 100% 0; }
     100% { background-position: -100% 0; }
-  }
-  .progress-label {
-    font-size: .78rem;
-    color: var(--text-3);
-    min-width: 3rem;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
   }
 
   /* ── Board ── */
@@ -332,7 +341,7 @@
     background: rgba(20,22,35,0.85);
     border: 1px solid rgba(99,102,241,0.18);
     border-radius: 16px;
-    padding: 1rem;
+    padding: 0;
     min-height: 200px;
     min-width: 0;
     width: 100%;
@@ -340,30 +349,21 @@
     overflow: hidden;
   }
 
+  /* New kanban column structure */
+  .col.kanban-col { display: flex; flex-direction: column; }
+  .col-bar { height: 4px; width: 100%; flex-shrink: 0; }
+  .col-body { flex: 1; padding: 0 .75rem; }
+  .add-task-btn { margin: 0 .75rem .75rem; }
+
   .col-header {
     display: flex;
     align-items: center;
     gap: .5rem;
-    margin-bottom: .85rem;
-    padding-top: 7px;
-    padding-bottom: .75rem;
+    padding: .65rem .85rem .6rem;
     border-bottom: 1px solid var(--border);
     position: relative;
-    overflow: hidden;
   }
-  .col-header::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-  }
-  .col-color-purple .col-header::before { background: linear-gradient(90deg, #8b5cf6, #6366f1); }
-  .col-color-amber  .col-header::before { background: linear-gradient(90deg, #f59e0b, #f97316); }
-  .col-color-green  .col-header::before { background: linear-gradient(90deg, #10b981, #06b6d4); }
-  .col-color-blue   .col-header::before { background: linear-gradient(90deg, #3b82f6, #6366f1); }
-  .col-color-teal   .col-header::before { background: linear-gradient(90deg, #06b6d4, #10b981); }
-  .col-color-pink   .col-header::before { background: linear-gradient(90deg, #ec4899, #8b5cf6); }
-  .col-color-gray   .col-header::before { background: linear-gradient(90deg, #64748b, #94a3b8); }
+  .col-header::before { display: none; }
 
   .col-dot {
     width: 7px; height: 7px;
@@ -707,6 +707,25 @@
     gap: .4rem;
     margin-bottom: .65rem;
   }
+  /* Filter chip (new style) */
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .3rem .8rem;
+    border-radius: 999px;
+    font-size: .74rem;
+    font-weight: 500;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-2);
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all .15s;
+  }
+  .filter-chip:hover { color: var(--text); border-color: var(--border-hover); background: var(--surface3); }
+  .filter-chip.active { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.4); color: var(--text); }
+  .chip-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
   .pf-btn {
     display: inline-flex;
     align-items: center;
@@ -1413,13 +1432,85 @@
     cursor: default;
   }
   .ql-card:hover { background: rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.25); box-shadow: 0 4px 20px rgba(99,102,241,0.12); transform: translateY(-1px); }
-  /* card color variants — left-border accent */
-  .ql-card.nc-purple { border-left: 4px solid #8b5cf6; }
-  .ql-card.nc-green  { border-left: 4px solid #10b981; }
-  .ql-card.nc-yellow { border-left: 4px solid #f59e0b; }
-  .ql-card.nc-red    { border-left: 4px solid #f43f5e; }
-  .ql-card.nc-blue   { border-left: 4px solid #3b82f6; }
+  /* card color variants — left-border accent (non-note-card) */
+  .ql-card:not(.note-card).nc-purple { border-left: 4px solid #8b5cf6; }
+  .ql-card:not(.note-card).nc-green  { border-left: 4px solid #10b981; }
+  .ql-card:not(.note-card).nc-yellow { border-left: 4px solid #f59e0b; }
+  .ql-card:not(.note-card).nc-red    { border-left: 4px solid #f43f5e; }
+  .ql-card:not(.note-card).nc-blue   { border-left: 4px solid #3b82f6; }
   .ql-card.nc-plain  { /* no accent strip */ }
+
+  /* ── New note-card design ── */
+  .note-card { padding: 0; overflow: hidden; }
+  .note-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(99,102,241,0.15); }
+  .note-card.nc-purple { background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.22); }
+  .note-card.nc-green  { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.22); }
+  .note-card.nc-yellow { background: rgba(245,158,11,0.08);  border-color: rgba(245,158,11,0.22); }
+  .note-card.nc-red    { background: rgba(244,63,94,0.08);   border-color: rgba(244,63,94,0.22); }
+  .note-card.nc-blue   { background: rgba(59,130,246,0.08);  border-color: rgba(59,130,246,0.22); }
+  .note-card.nc-plain  { background: rgba(20,22,35,0.9); }
+  .note-card-inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+    padding: .85rem 1rem .8rem 1.15rem;
+    min-height: 100%;
+  }
+  .note-accent {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+  }
+  .note-card.nc-purple .note-accent { background: #8b5cf6; }
+  .note-card.nc-green  .note-accent { background: #10b981; }
+  .note-card.nc-yellow .note-accent { background: #f59e0b; }
+  .note-card.nc-red    .note-accent { background: #f43f5e; }
+  .note-card.nc-blue   .note-accent { background: #3b82f6; }
+  .note-card.nc-plain  .note-accent { background: var(--border); }
+  .note-title {
+    font-size: .875rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.35;
+    margin-bottom: .1rem;
+  }
+  .note-body {
+    font-size: .77rem;
+    color: var(--text-2);
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .note-body * { display: inline; }
+  .note-body img { display: none; }
+  .note-footer {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    flex-wrap: wrap;
+  }
+  .note-tag-chip {
+    font-size: .67rem;
+    font-weight: 600;
+    padding: .12rem .5rem;
+    border-radius: 999px;
+    letter-spacing: .02em;
+  }
+  .note-type-badge {
+    font-size: .67rem;
+    color: var(--text-3);
+    font-weight: 500;
+  }
+  .note-date {
+    font-size: .67rem;
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .pin-icon { font-size: .75rem; line-height: 1; }
   /* pinned: amber glow */
   .ql-card.is-pinned {
     border: 1px solid rgba(245,158,11,0.35);
@@ -2673,6 +2764,15 @@
   .bnb-item.bnb-on .bnb-icon { color: var(--accent); }
   .bnb-item.bnb-on .bnb-label { color: var(--accent); }
   .bnb-item.bnb-on .bnb-dot { opacity: 1; }
+  .bnb-badge {
+    position: absolute; top: -4px; right: -6px;
+    background: #ef4444; color: #fff;
+    font-size: .6rem; font-weight: 700;
+    min-width: 16px; height: 16px;
+    border-radius: 999px; padding: 0 4px;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
 
   /* ── Date strip (Daily Task, mobile) ── */
   .date-strip-bar {
@@ -3044,8 +3144,8 @@
   .mobile-topbar {
     display: flex;
     align-items: center;
-    gap: .6rem;
-    padding: .5rem .75rem;
+    gap: .5rem;
+    padding: .45rem .75rem;
     background: rgba(15,17,23,0.88);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -3063,9 +3163,11 @@
     animation: auroraShimmer 5s linear infinite;
     z-index: 1;
   }
-  .mobile-topbar-title {
-    font-size: .9rem; font-weight: 700; color: var(--text-1);
-  }
+  .topbar-titles { display: flex; flex-direction: column; gap: 0; line-height: 1.2; }
+  .topbar-title, .mobile-topbar-title { font-size: .88rem; font-weight: 700; color: var(--text-1); }
+  .topbar-date { font-size: .65rem; color: var(--text-3); font-weight: 400; }
+  .topbar-spacer { flex: 1; }
+  .topbar-btn { }  /* inherits hamburger-btn styles */
 
   /* Backdrop for mobile drawer */
   .sb-backdrop {

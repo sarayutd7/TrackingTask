@@ -7,6 +7,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.0] — 2026-07-10
+
+### Changed
+- **Topbar**: เพิ่ม title+date stacked layout, topbar-spacer, ใช้ topbar-btn class
+- **Stat cards**: ใช้ `.stat-icon-wrap` พร้อม color background tint; stat-card ได้รับ color class
+- **Progress bar**: เพิ่ม `.progress-header` แสดง label "ความคืบหน้าวันนี้" และ % ขนาด 6px
+- **Priority filter**: เปลี่ยน pf-btn เป็น `filter-chip` รูป pill พร้อม `chip-dot` สีสัน
+- **Kanban columns**: เพิ่ม color gradient bar บนสุดของ column, ใช้ `.col-bar` + `.col-body`
+- **Note cards**: redesign เป็น `.note-card` + `.note-card-inner` + `.note-accent` bar ซ้าย, background tint ตามสี, แสดง tag chip + type badge + date ใน footer
+- **bnb-badge**: แสดง task count badge บน Daily Task bottom nav
+
+---
+
 ## [1.1.1] — 2026-07-09
 
 ### Fixed — UI polish: col-header padding, changelog scroll, date strip desktop

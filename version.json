@@ -1,5 +1,5 @@
 {
-  "version": "1.1.1",
-  "releaseDate": "2026-07-09",
-  "changelog": "col-header padding, changelog modal scroll, date strip visible on desktop"
+  "version": "1.2.0",
+  "releaseDate": "2026-07-10",
+  "changelog": "UI redesign: topbar with date, kanban-col color bars, stat-cards, filter chips, progress header, note cards with accent"
 }

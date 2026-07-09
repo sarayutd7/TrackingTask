@@ -745,25 +745,46 @@ function rteHandlePaste(e){
 function renderBoard(){
   const board = document.getElementById('board');
   if(!board) return;
-  // กำหนดจำนวน column ให้เต็มจอ เท่ากันทุก column
   board.style.gridTemplateColumns = `repeat(${COLS.length}, minmax(240px, 1fr))`;
-  board.innerHTML = COLS.map(col=>`
-    <div class="col col-color-${esc(col.color)}" id="col-${esc(col.id)}">
+  const colGradients = {
+    purple:'linear-gradient(90deg,#6366f1,#8b5cf6)',
+    amber: 'linear-gradient(90deg,#f59e0b,#fb923c)',
+    green: 'linear-gradient(90deg,#10b981,#34d399)',
+    blue:  'linear-gradient(90deg,#3b82f6,#60a5fa)',
+    pink:  'linear-gradient(90deg,#ec4899,#f472b6)',
+    teal:  'linear-gradient(90deg,#06b6d4,#22d3ee)',
+    gray:  'linear-gradient(90deg,#64748b,#94a3b8)',
+  };
+  const colIconSvg = {
+    purple:`<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12l2 2 4-4"/></svg>`,
+    amber: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--amber)" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    green: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+    blue:  `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
+    pink:  `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78z"/></svg>`,
+    teal:  `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--teal)" stroke-width="2.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+    gray:  `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--gray)" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>`,
+  };
+  board.innerHTML = COLS.map(col=>{
+    const grad = colGradients[col.color] || colGradients.gray;
+    const icon = colIconSvg[col.color] || colIconSvg.gray;
+    return `
+    <div class="col kanban-col col-color-${esc(col.color)}" id="col-${esc(col.id)}">
+      <div class="col-bar" style="background:${grad}"></div>
       <div class="col-header">
-        <div class="col-dot ${col.color}"></div>
-        <span class="col-title">${esc(col.name)}</span>
+        ${icon}
+        <span class="col-name col-title">${esc(col.name)}</span>
         <span class="col-count ${col.color}" id="badge-${esc(col.id)}">0</span>
         <button class="col-edit-btn" onclick="event.stopPropagation();openColEdit('${esc(col.id)}')" title="แก้ไข column">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
         </button>
       </div>
-      <div id="list-${esc(col.id)}"></div>
-      <button class="add-btn" onclick="openModal('${esc(col.id)}')">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <div class="col-body" id="list-${esc(col.id)}"></div>
+      <button class="add-btn add-task-btn" onclick="openModal('${esc(col.id)}')">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         เพิ่มงาน
       </button>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 // ── Stats rendering ───────────────────────────────────
@@ -783,8 +804,8 @@ function renderStats(g){
   el.innerHTML = COLS.map(col=>{
     const count = (g[col.id]||[]).length;
     return `
-    <div class="stat-card">
-      <div class="stat-icon ${col.color}">${icons[col.color]||icons.gray}</div>
+    <div class="stat-card ${col.color}">
+      <div class="stat-icon-wrap stat-icon ${col.color}">${icons[col.color]||icons.gray}</div>
       <div class="stat-body">
         <div class="stat-num ${col.color}">${count}</div>
         <div class="stat-label">${esc(col.name)}</div>
@@ -884,14 +905,15 @@ function renderPriorityFilterBar(tasks){
   if(!hasAny){ activePriorityFilter=''; return; }
 
   const allActive = !activePriorityFilter;
+  const dotColors = {critical:'#f43f5e',high:'#f97316',medium:'#f59e0b',low:'#10b981',lowest:'#94a3b8'};
   bar.innerHTML =
-    `<button class="pf-btn pf-all${allActive?' pf-active':''}" onclick="setPriorityFilter('')">
-       ทั้งหมด<span class="pf-count">${tasks.length}</span>
+    `<button class="filter-chip pf-btn pf-all${allActive?' active pf-active':''}" onclick="setPriorityFilter('')">
+       <span class="chip-dot" style="background:rgba(148,163,184,0.45)"></span>ทั้งหมด
      </button>` +
     PRIORITIES.filter(p=>counts[p.id]>0).map(p=>{
       const active = activePriorityFilter===p.id;
-      return `<button class="pf-btn${active?' pf-active':''}" data-p="${p.id}" onclick="setPriorityFilter('${p.id}')">
-        ${p.dot} ${p.label}<span class="pf-count">${counts[p.id]}</span>
+      return `<button class="filter-chip pf-btn${active?' active pf-active':''}" data-p="${p.id}" onclick="setPriorityFilter('${p.id}')">
+        <span class="chip-dot" style="background:${dotColors[p.id]||'#94a3b8'}"></span>${p.label}
       </button>`;
     }).join('');
 }
@@ -1070,6 +1092,16 @@ function render(){
   document.getElementById('dateDisplay').innerHTML = dateHtml;
   const sbDate = document.getElementById('sbDateDisplay');
   if(sbDate) sbDate.textContent = label;
+  const topbarDateEl = document.getElementById('topbarDate');
+  if(topbarDateEl) topbarDateEl.textContent = d.toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
+
+  // bnb-badge: task count for current date
+  const taskBadge = document.getElementById('bnb-badge-task');
+  if(taskBadge){
+    const cnt = tasks ? tasks.length : 0;
+    taskBadge.textContent = cnt > 99 ? '99+' : cnt;
+    taskBadge.style.display = cnt > 0 ? 'flex' : 'none';
+  }
   renderDateStrip();
 }
 
@@ -1431,56 +1463,58 @@ function qlCardHtml(item, i){
   const tagLabel  = item.tag ? qlTagLabel(item.tag) : '';
   const tagColor  = item.tag ? qlTagColor(item.tag) : '';
   const tagChip   = tagLabel
-    ? `<span class="ql-card-tag-chip" style="background:${tagColor}1F;color:${tagColor};border:1px solid ${tagColor}44">${esc(tagLabel)}</span>`
+    ? `<span class="note-tag-chip" style="background:${tagColor}22;color:${tagColor};border:1px solid ${tagColor}44">${esc(tagLabel)}</span>`
     : '';
   const wasUnlocked = !!item.hidden;
   const hiddenChip = wasUnlocked
     ? `<span class="ql-card-hidden-chip"><svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2.5"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>ซ่อนอยู่</span>`
     : '';
   const isPinned  = !!item.pinned;
-  const pinDot    = isPinned
-    ? `<div class="ql-card-pin-dot" title="ปักหมุด"><svg width="9" height="9" fill="var(--yellow)" viewBox="0 0 24 24"><path d="M12 2l2.4 6.4H21l-5.5 4 2.1 6.6L12 15l-5.6 4.1 2.1-6.7L3 8.4h7.6z"/></svg></div>`
-    : '';
   const isPermanent = item.noteType === 'permanent';
   const hasUrl    = item.url && item.url.trim();
   const openBtn   = hasUrl
-    ? `<a class="ql-open-btn" href="${esc(item.url)}" target="_blank" rel="noopener">${qlLinkSvg} เปิด Link</a>`
+    ? `<a class="ql-open-btn" href="${esc(item.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${qlLinkSvg} เปิด Link</a>`
     : '';
-  const detailHtml = item.detail
-    ? `<div class="ql-card-detail">${/<[a-z][\s\S]*>/i.test(item.detail) ? sanitizeRichHTML(item.detail) : esc(item.detail)}</div>`
+  const detailContent = item.detail
+    ? (/<[a-z][\s\S]*>/i.test(item.detail) ? sanitizeRichHTML(item.detail) : esc(item.detail))
     : '';
   const imgCount  = (item.images && item.images.length) || 0;
   const imagesHtml = imgCount
-    ? `<div class="ql-img-row"><img class="ql-img-thumb" src="${esc(item.images[0])}" onclick="qlOpenRead(${i})">${imgCount>1?`<span class="ql-img-count-badge" onclick="qlOpenRead(${i})">+${imgCount-1}</span>`:''}</div>`
+    ? `<div class="ql-img-row"><img class="ql-img-thumb" src="${esc(item.images[0])}" onclick="event.stopPropagation();qlOpenRead(${i})">${imgCount>1?`<span class="ql-img-count-badge" onclick="event.stopPropagation();qlOpenRead(${i})">+${imgCount-1}</span>`:''}</div>`
     : '';
   const relatedHtml = qlRelatedChipsHtml(item, 2);
   const summarizeBtn = !isPermanent
-    ? `<button class="ql-card-btn summarize" onclick="qlSummarizeToPermanent(${i})" title="สรุปเป็นโน้ตถาวร">✍️</button>`
+    ? `<button class="ql-card-btn summarize" onclick="event.stopPropagation();qlSummarizeToPermanent(${i})" title="สรุปเป็นโน้ตถาวร">✍️</button>`
     : '';
   const hideBtn = wasUnlocked
-    ? `<button class="ql-card-btn unhide" onclick="qlUnhideNote(${i})" title="เลิกซ่อน">🔓</button>`
-    : `<button class="ql-card-btn hide" onclick="qlHideNote(${i})" title="ซ่อน">🔒</button>`;
+    ? `<button class="ql-card-btn unhide" onclick="event.stopPropagation();qlUnhideNote(${i})" title="เลิกซ่อน">🔓</button>`
+    : `<button class="ql-card-btn hide" onclick="event.stopPropagation();qlHideNote(${i})" title="ซ่อน">🔒</button>`;
+  const typeBadge = isPermanent
+    ? `<span class="note-type-badge">📄 Permanent</span>`
+    : `<span class="note-type-badge">💡 Fleeting</span>`;
   return `
-  <div class="ql-card nc-${color}${isPinned?' is-pinned':''}" data-tag="${esc(item.tag||'')}" onclick="if(window.innerWidth<=768)qlOpenRead(${i})">
-    <div class="ql-card-top">
-      <div class="ql-card-badges">${tagChip}${hiddenChip}</div>
-      ${pinDot}
-    </div>
-    <div class="ql-card-name">${esc(item.name)}</div>
-    ${openBtn}
-    ${detailHtml}
-    ${imagesHtml}
-    ${relatedHtml}
-    <div class="ql-card-footer">
-      <span class="ql-card-date">${qlFmtDate(item.createdAt)}</span>
-      <span class="ql-type-badge" style="${isPermanent?'background:rgba(139,92,246,0.15);color:#a78bfa':'background:rgba(6,182,212,0.15);color:#06b6d4'};border-radius:4px;font-size:10px;padding:2px 6px;font-weight:600">${isPermanent?'Permanent':'Fleeting'}</span>
+  <div class="ql-card note-card nc-${color}${isPinned?' is-pinned':''}" data-tag="${esc(item.tag||'')}" onclick="if(window.innerWidth<=768)qlOpenRead(${i})">
+    <div class="note-card-inner">
+      <div class="note-accent"></div>
+      ${isPinned ? `<div class="note-footer" style="margin-bottom:6px"><span class="pin-icon">📌</span>${tagChip?`<span style="margin-left:4px">${tagChip}</span>`:''}</div>` : ''}
+      <div class="note-title">${esc(item.name)}</div>
+      ${detailContent ? `<div class="note-body">${detailContent}</div>` : ''}
+      ${imagesHtml}
+      ${relatedHtml}
+      ${openBtn}
+      <div class="note-footer" style="margin-top:auto;padding-top:.4rem">
+        ${!isPinned && tagChip ? tagChip : ''}
+        ${hiddenChip}
+        ${typeBadge}
+        <span class="note-date" style="margin-left:auto">${qlFmtDate(item.createdAt)}</span>
+      </div>
       <div class="ql-card-actions">
-        <button class="ql-card-btn pin${isPinned?' pinned':''}" onclick="qlTogglePin(${i})" title="${isPinned?'ถอดหมุด':'ปักหมุด'}">${qlPinSvg}</button>
+        <button class="ql-card-btn pin${isPinned?' pinned':''}" onclick="event.stopPropagation();qlTogglePin(${i})" title="${isPinned?'ถอดหมุด':'ปักหมุด'}">${qlPinSvg}</button>
         ${hideBtn}
         ${summarizeBtn}
-        <button class="ql-card-btn view" onclick="qlOpenRead(${i})" title="ดูรายละเอียด"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
-        <button class="ql-card-btn edit" onclick="qlOpenEdit(${i})" title="แก้ไข">${qlEditSvg}</button>
-        <button class="ql-card-btn del"  onclick="qlDelete(${i})"   title="ลบ">${qlDelSvg}</button>
+        <button class="ql-card-btn view" onclick="event.stopPropagation();qlOpenRead(${i})" title="ดูรายละเอียด"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        <button class="ql-card-btn edit" onclick="event.stopPropagation();qlOpenEdit(${i})" title="แก้ไข">${qlEditSvg}</button>
+        <button class="ql-card-btn del"  onclick="event.stopPropagation();qlDelete(${i})"   title="ลบ">${qlDelSvg}</button>
       </div>
     </div>
   </div>`;
