@@ -228,8 +228,13 @@ function lockHide(){
   // sync sidebar user info
   const sbName = document.getElementById('sbUserName');
   const sbAv   = document.getElementById('sbAvatar');
-  if(sbName) sbName.textContent = loggedIn && uname ? `Hi, ${uname}` : 'TrackingTask';
+  if(sbName) sbName.textContent = loggedIn && uname ? uname : '';
   if(sbAv && uname) sbAv.textContent = uname.charAt(0).toUpperCase();
+  const sbEmail = document.getElementById('sbUserEmail');
+  if(sbEmail){
+    const email = localStorage.getItem('trackingTaskEmail') || '';
+    sbEmail.textContent = loggedIn && email ? email : '';
+  }
 }
 
 function lockApp(){

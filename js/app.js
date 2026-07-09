@@ -1078,24 +1078,21 @@ function renderDateStrip(){
   const bar = document.getElementById('dateStripBar');
   if(!bar) return;
   const cur = new Date(currentDate+'T00:00:00');
-  const DAYS_TH = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const today = localDateStr(new Date());
   const chips = [];
+  chips.push(`<button class="ds-chip ds-nav" onclick="shiftDay(-1)">← ก่อนหน้า</button>`);
   for(let i=-3; i<=3; i++){
     const dt = new Date(cur);
     dt.setDate(cur.getDate()+i);
     const ds = localDateStr(dt);
     const isCur = ds===currentDate;
-    chips.push(`<button class="ds-chip${isCur?' ds-cur':''}" onclick="setDateFromStrip('${ds}')">
-      <span class="ds-day">${DAYS_TH[dt.getDay()]}</span>
-      <span class="ds-num">${dt.getDate()}</span>
-    </button>`);
+    const isToday = ds===today;
+    const label = `${dt.getDate()} ${MONTHS_TH[dt.getMonth()]}${isToday?' (วันนี้)':''}`;
+    chips.push(`<button class="ds-chip${isCur?' ds-cur':''}" onclick="setDateFromStrip('${ds}')">${label}</button>`);
   }
+  chips.push(`<button class="ds-chip ds-nav" onclick="shiftDay(1)">ถัดไป →</button>`);
   bar.innerHTML = chips.join('');
-  // scroll current chip into center
-  setTimeout(()=>{
-    const cur = bar.querySelector('.ds-cur');
-    if(cur) cur.scrollIntoView({inline:'center',block:'nearest'});
-  }, 50);
 }
 
 function setDateFromStrip(ds){
@@ -3370,12 +3367,30 @@ function loadWeather() {
   function render(temp, code) {
     const { icon, label } = codeToMeta(code);
     const html = `<span class="dl-weather-icon">${icon}</span><span class="dl-weather-temp">${Math.round(temp)}°</span>`;
-    ['dlWeather', 'dlWeatherTopbar'].forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.title = label;
-      el.innerHTML = html;
-    });
+    // sidebar weather card
+    const sbW = document.getElementById('dlWeather');
+    if (sbW) {
+      sbW.innerHTML = `
+        <span style="font-size:22px">${icon}</span>
+        <div>
+          <div class="weather-temp">${Math.round(temp)}°C</div>
+          <div class="weather-loc" id="wxLocLabel">${label}</div>
+        </div>`;
+      // reverse-geocode city name
+      if (navigator.geolocation && !sbW.dataset.city) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`)
+            .then(r=>r.json()).then(d=>{
+              const city = d.address?.city || d.address?.state || d.address?.country || label;
+              const loc = document.getElementById('wxLocLabel');
+              if(loc) loc.textContent = city;
+              sbW.dataset.city = city;
+            }).catch(()=>{});
+        }, ()=>{});
+      }
+    }
+    const topbarEl = document.getElementById('dlWeatherTopbar');
+    if (topbarEl) { topbarEl.title = label; topbarEl.innerHTML = html; }
   }
   // Check cache
   try {
@@ -3416,6 +3431,71 @@ function openChangelogModal() {
   const body = document.getElementById('changelogBody');
   if (body) {
     body.innerHTML = `
+      <div class="cl-entry">
+        <div class="cl-version-tag">v1.1.1 <span class="cl-date">2026-07-09</span></div>
+        <div class="cl-badge cl-badge-patch">UI Polish</div>
+        <ul class="cl-list">
+          <li>col-header: เพิ่ม padding-top 7px</li>
+          <li>Changelog modal: scroll ได้แล้ว</li>
+          <li>Date strip bar: แสดงบน desktop แล้ว</li>
+        </ul>
+      </div>
+      <div class="cl-entry">
+        <div class="cl-version-tag">v1.1.0 <span class="cl-date">2026-07-09</span></div>
+        <div class="cl-badge cl-badge-minor">Changed</div>
+        <ul class="cl-list">
+          <li>ลบ weather background animation ออก (ทำให้แอปพัง)</li>
+          <li>ลบ &lt;canvas id="weatherBg"&gt; ออกจาก HTML</li>
+          <li>Weather icon+อุณหภูมิใน topbar ยังทำงานได้ปกติ</li>
+        </ul>
+      </div>
+      <div class="cl-entry">
+        <div class="cl-version-tag">v1.0.12 <span class="cl-date">2026-07-09</span></div>
+        <div class="cl-badge cl-badge-patch">Fixed</div>
+        <ul class="cl-list">
+          <li>Service worker ค้างกับ version เก่า — เปลี่ยนเป็น network-first strategy</li>
+          <li>Bump cache เป็น trackingtask-v3</li>
+        </ul>
+      </div>
+      <div class="cl-entry">
+        <div class="cl-version-tag">v1.0.9 <span class="cl-date">2026-07-09</span></div>
+        <div class="cl-badge cl-badge-minor">Aurora UI</div>
+        <ul class="cl-list">
+          <li>CSS rewrite สะอาด 5 sections (~920 บรรทัด)</li>
+          <li>Finance: 2-column layout, donut chart, bills mini widget</li>
+          <li>Note filter chips มีจุดสี, left accent strip</li>
+          <li>Sidebar class mapping ครบ, Admin badge เป็น indigo</li>
+        </ul>
+      </div>
+      <div class="cl-entry">
+        <div class="cl-version-tag">v1.0.6–1.0.8 <span class="cl-date">2026-07-08</span></div>
+        <div class="cl-badge cl-badge-minor">Aurora Remodel</div>
+        <ul class="cl-list">
+          <li>Aurora UI redesign ทุก tab: Daily Task, Note, Finance, Admin</li>
+          <li>Stat cards gradient, sidebar active gradient, Kanban column accent strips</li>
+          <li>CSS custom properties: --bg #0f1117, --accent indigo-violet gradient</li>
+        </ul>
+      </div>
+      <div class="cl-entry">
+        <div class="cl-version-tag">v1.0.5 <span class="cl-date">2026-07-08</span></div>
+        <div class="cl-badge cl-badge-patch">Changed</div>
+        <ul class="cl-list">
+          <li>ลบ weather canvas animation ออก (รุ่นแรก)</li>
+          <li>Background เป็น static Aurora radial gradient</li>
+        </ul>
+      </div>
+      <div class="cl-entry">
+        <div class="cl-version-tag">v1.0.2 <span class="cl-date">2026-07-08</span></div>
+        <div class="cl-badge cl-badge-minor">Added</div>
+        <ul class="cl-list">
+          <li>Weather wallpaper animation (canvas-based)</li>
+          <li>Frosted glass UI ทั่วทั้งแอป</li>
+          <li>Weather icon ใน mobile topbar</li>
+          <li>Mood icons SVG 6 แบบ พร้อม springy animation</li>
+          <li>Changelog modal (version badge clickable)</li>
+          <li>Stale-while-revalidate + 60s auto-refresh</li>
+        </ul>
+      </div>
       <div class="cl-entry">
         <div class="cl-version-tag">v1.0.1 <span class="cl-date">2026-07-08</span></div>
         <div class="cl-badge cl-badge-patch">Security Patch</div>
