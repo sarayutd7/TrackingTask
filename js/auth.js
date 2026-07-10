@@ -553,6 +553,17 @@ async function submitForgotPinConfirm(){
 // เรียกตอน app โหลด
 if(localStorage.getItem(AUTH_TOKEN_KEY)){
   lockHide();
+  // Re-sync isAdmin from server in background (ป้องกัน localStorage ค้างค่าเก่า)
+  fetch(API + '/account', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem(AUTH_TOKEN_KEY) } })
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (!data) return;
+      // Worker returns isAdmin in account response — update localStorage and UI
+      if (typeof data.isAdmin !== 'undefined') {
+        localStorage.setItem(AUTH_IS_ADMIN_KEY, data.isAdmin ? '1' : '0');
+        lockHide(); // re-apply UI visibility with fresh value
+      }
+    }).catch(() => {});
 } else {
   lockShow();
 }

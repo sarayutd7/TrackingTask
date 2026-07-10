@@ -683,7 +683,7 @@ export default {
         return jsonResponse({ error: "Unauthorized" }, 401, CORS_HEADERS);
       }
       const userRec = JSON.parse(recordRaw);
-      return jsonResponse({ username, email: userRec.email || "", linkedGoogleEmail: userRec.linkedGoogleEmail || "" }, 200, CORS_HEADERS);
+      return jsonResponse({ username, email: userRec.email || "", linkedGoogleEmail: userRec.linkedGoogleEmail || "", isAdmin: ADMIN_USERNAMES.has(username) }, 200, CORS_HEADERS);
     }
 
     if (url.pathname === "/account/link-google" && request.method === "POST") {
