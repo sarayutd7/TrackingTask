@@ -7,6 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.14] — 2026-07-10
+
+### Changed
+
+- Date strip's "today" indicator changed from a small inline `•` character (easy to miss) to a distinct colored dot (`.ds-today-dot`) next to the day/month label — accent-colored normally, white when that chip is also the currently-selected date. The chip also gets an accent-colored border when today isn't the selected date, so it stands out even when browsing other days.
+
+---
+
 ## [1.2.13] — 2026-07-10
 
 ### Changed

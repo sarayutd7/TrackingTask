@@ -1,5 +1,5 @@
 {
-  "version": "1.2.13",
+  "version": "1.2.14",
   "releaseDate": "2026-07-10",
-  "changelog": "Bigger toggle switches; date strip shows 3 days on mobile, 7 on desktop"
+  "changelog": "Date strip: clearer visual mark for today's chip"
 }

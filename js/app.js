@@ -1227,8 +1227,9 @@ function renderDateStrip(){
     const ds = localDateStr(dt);
     const isCur = ds===currentDate;
     const isToday = ds===today;
-    const label = `${dt.getDate()} ${MONTHS_TH[dt.getMonth()]}${isToday?' •':''}`;
-    chips.push(`<button class="ds-chip${isCur?' ds-cur':''}" onclick="setDateFromStrip('${ds}')" title="${isToday?'วันนี้':''}">${label}</button>`);
+    const todayDot = isToday ? '<span class="ds-today-dot"></span>' : '';
+    const label = `${dt.getDate()} ${MONTHS_TH[dt.getMonth()]}${todayDot}`;
+    chips.push(`<button class="ds-chip${isCur?' ds-cur':''}${isToday?' ds-today':''}" onclick="setDateFromStrip('${ds}')" title="${isToday?'วันนี้':''}">${label}</button>`);
   }
   chips.push(`<button class="ds-chip ds-nav ds-nav-icon" onclick="shiftDay(1)" title="ถัดไป" aria-label="ถัดไป"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>`);
   bar.innerHTML = chips.join('');

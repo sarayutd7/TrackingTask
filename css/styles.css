@@ -2833,6 +2833,12 @@
   }
   .ds-chip:hover { background: var(--surface3, #252840); color: var(--text); }
   .ds-chip.ds-cur { background: var(--accent) !important; border-color: transparent; color: #fff !important; font-weight: 600; }
+  .ds-chip.ds-today:not(.ds-cur) { border-color: var(--accent); color: var(--text); }
+  .ds-today-dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); margin-left: 5px; vertical-align: middle;
+  }
+  .ds-chip.ds-cur .ds-today-dot { background: #fff; }
   .ds-chip.ds-nav { background: var(--surface); border-color: var(--border); color: var(--text-3); font-size: .8rem; }
   .ds-chip.ds-nav-icon { padding: .38rem; width: 32px; height: 32px; flex-shrink: 0; }
 
