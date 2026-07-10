@@ -3007,7 +3007,7 @@
 
   /* Align top spacing of Note / Finance tabs with Daily Task */
   #qlListView,
-  #tabFinance > .fin-subtab-bar { margin-top: 1rem; }
+  #tabFinance { padding-top: 1rem; }
 
   /* ── Note edit form cards ── */
   .ql-edit-card {
