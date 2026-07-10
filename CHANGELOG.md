@@ -7,6 +7,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.9] — 2026-07-10
+
+### Fixed
+
+- **Sidebar drawer footer invisible on mobile**: `.app-layout` had `position:relative; z-index:1`, which trapped `.app-sidebar`'s `z-index:300` inside a stacking context capped at `1` — so the theme-toggle and logout buttons in the sidebar footer rendered *behind* `.bottom-nav-bar` (`z-index:200`) and were invisible even though they were correctly positioned in the DOM. Removed the unneeded `z-index` from `.app-layout` so the sidebar's own `z-index:300` applies as originally intended.
+- **Mood badge showed a raw OS emoji**: the collapsed Daily Log header (`#dlMoodBadge`) displayed the stored mood as a literal emoji character, which looked inconsistent with the custom SVG face icons used on the mood picker pills. Added a `MOOD_ICONS`/`moodIconHtml()` mapping so the badge now renders the same custom SVG icon (in the mood's color) instead of the native emoji glyph.
+- **Changelog was a small centered popup**: converted to a full-page view on mobile (100vw/100dvh, no border radius) with a back-arrow button instead of a close (✕) button, matching in-app page navigation instead of a modal dialog.
+
+---
+
 ## [1.2.8] — 2026-07-10
 
 ### Fixed — Mobile usability

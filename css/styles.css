@@ -818,7 +818,24 @@
 
   /* ── Changelog Modal ── */
   .changelog-modal { max-width: 480px; width: 92vw; max-height: 80vh; display: flex; flex-direction: column; }
+  .changelog-modal .modal-header { justify-content: flex-start; gap: .75rem; }
+  .modal-back-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text-2); border-radius: 8px;
+    width: 32px; height: 32px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .15s;
+  }
+  .modal-back-btn:hover { color: var(--text); background: var(--surface3); }
   .changelog-body { overflow-y: auto; padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: 1.5rem; flex: 1; min-height: 0; }
+  /* Full-page feel on mobile — slides in like a dedicated page instead of a centered popup */
+  @media (max-width: 640px) {
+    #changelogModal { padding: 0; align-items: stretch; }
+    #changelogModal .changelog-modal {
+      max-width: 100vw; width: 100vw; max-height: 100dvh; height: 100dvh;
+      border-radius: 0; border: none;
+    }
+  }
   .cl-entry { display: flex; flex-direction: column; gap: .5rem; }
   .cl-version-tag { font-size: .95rem; font-weight: 700; color: var(--text); }
   .cl-date { font-size: .75rem; font-weight: 400; color: var(--text-3); margin-left: .4rem; }
@@ -1274,7 +1291,7 @@
   .dl-ta:focus { outline: none; border-color: var(--accent); }
   .dl-ta::placeholder { color: var(--text-3); }
   @media(max-width:640px){ .dl-grid { grid-template-columns: 1fr; } }
-  .dl-mood-badge { font-size: 1.1rem; margin-left: .3rem; }
+  .dl-mood-badge { display: inline-flex; align-items: center; margin-left: .3rem; vertical-align: middle; }
   .dl-weather { display: inline-flex; align-items: center; gap: .2rem; margin-left: .4rem; font-size: .75rem; color: var(--text-3); user-select: none; }
   .dl-weather-topbar { margin-left: auto; margin-right: .2rem; font-size: .72rem; }
   .dl-weather-icon { display: flex; align-items: center; color: var(--accent); }
@@ -2504,7 +2521,9 @@
     display: flex;
     align-items: flex-start;
     position: relative;
-    z-index: 1;
+    /* no z-index here — this used to trap .app-sidebar's z-index:300 inside a
+       stacking context capped at 1, so the mobile drawer (incl. its footer
+       with theme/logout buttons) rendered behind .bottom-nav-bar (z-index:200) */
   }
 
   /* ── Desktop Sidebar ── */

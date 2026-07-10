@@ -1171,13 +1171,27 @@ function saveDL(){
   _saveDLTimer = setTimeout(() => writeFile(), 1500);
 }
 
+const MOOD_ICONS = {
+  '😄': { color:'#f59e0b', svg:'<circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/><path d="M8 14s1.5 3 4 3 4-3 4-3"/>' },
+  '🙂': { color:'#84cc16', svg:'<circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/><path d="M9 14.5s1 2 3 2 3-2 3-2"/>' },
+  '😐': { color:'#94a3b8', svg:'<circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/><line x1="9" y1="15" x2="15" y2="15"/>' },
+  '😔': { color:'#60a5fa', svg:'<circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/><path d="M9 16s1-2 3-2 3 2 3 2"/>' },
+  '😴': { color:'#a78bfa', svg:'<circle cx="12" cy="12" r="9"/><path d="M8 10.5c.5-.5 1.5-.5 2 0"/><path d="M14 10.5c.5-.5 1.5-.5 2 0"/><path d="M9.5 15s1-1 2.5-1 2.5 1 2.5 1"/><text x="16" y="8" font-size="4" fill="currentColor" stroke="none">z</text>' },
+  '😡': { color:'#f87171', svg:'<circle cx="12" cy="12" r="9"/><circle cx="9" cy="11" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="11" r="1.2" fill="currentColor" stroke="none"/><path d="M7.5 8.5l3 1.5"/><path d="M16.5 8.5l-3 1.5"/><path d="M9 16s1-2 3-2 3 2 3 2"/>' },
+};
+function moodIconHtml(emoji){
+  const m = MOOD_ICONS[emoji];
+  if(!m) return '';
+  return `<svg width="18" height="18" fill="none" stroke="${m.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">${m.svg}</svg>`;
+}
+
 function renderDL(){
   const log = DL[currentDate] || {};
   document.getElementById('dlBlocker').value   = log.blocker   || '';
   document.getElementById('dlHighlight').value = log.highlight || '';
   document.getElementById('dlNote').value      = log.note      || '';
   ['dlBlocker','dlHighlight','dlNote'].forEach(id => dlResize(document.getElementById(id)));
-  document.getElementById('dlMoodBadge').textContent = log.mood || '';
+  document.getElementById('dlMoodBadge').innerHTML = moodIconHtml(log.mood);
   document.querySelectorAll('#dlMoodRow .dl-mood-pill').forEach(btn=>{
     btn.classList.toggle('active', btn.dataset.mood === log.mood);
   });
