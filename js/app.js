@@ -1219,7 +1219,7 @@ function renderDateStrip(){
   const today = localDateStr(new Date());
   const chips = [];
   const isMobile = window.innerWidth <= 768;
-  const range = isMobile ? 1 : 3; // มือถือ: วันนี้ ±1 (3 วัน) / desktop: วันนี้ ±3 (7 วัน)
+  const range = isMobile ? 2 : 3; // มือถือ: วันนี้ ±2 (5 วัน) / desktop: วันนี้ ±3 (7 วัน)
   chips.push(`<button class="ds-chip ds-nav ds-nav-icon" onclick="shiftDay(-1)" title="ก่อนหน้า" aria-label="ก่อนหน้า"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>`);
   for(let i=-range; i<=range; i++){
     const dt = new Date(cur);
