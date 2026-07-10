@@ -3753,8 +3753,12 @@
   color: var(--text-2);
 }
 /* bill icon/name/amount for preview sidebar */
-.fin-bills-preview .bill-card { border-left: none; background: none; margin: 0; padding: .5rem 0; }
-.fin-bills-preview .bill-card:last-child { padding-bottom: 0; }
+.fin-bills-preview .bill-card {
+  border-left: none; background: none; margin: 0; padding: .55rem 0;
+  display: flex; align-items: center; gap: .65rem;
+  border-bottom: 1px solid var(--border);
+}
+.fin-bills-preview .bill-card:last-child { padding-bottom: 0; border-bottom: none; }
 .bill-icon {
   width: 32px; height: 32px;
   border-radius: 8px;
@@ -3776,6 +3780,13 @@
 .bill-due  { background: rgba(245,158,11,.15);  color: #fbbf24; }
 
 /* ── Responsive: mobile Finance ── */
+@media (max-width: 480px) {
+  .fin-bills-preview { padding: .85rem .9rem; }
+  .fin-bills-preview .bill-card { padding: .5rem 0; gap: .55rem; }
+  .bill-icon { width: 28px; height: 28px; font-size: .8rem; border-radius: 7px; }
+  .bill-name { font-size: .76rem; }
+  .bill-amount { font-size: .64rem; }
+}
 @media (max-width: 900px) {
   .two-col { grid-template-columns: 1fr; }
   .two-col-side { position: static; }
