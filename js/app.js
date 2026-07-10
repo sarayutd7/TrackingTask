@@ -1299,10 +1299,18 @@ function renderDL(){
   document.getElementById('dlHighlight').value = log.highlight || '';
   document.getElementById('dlNote').value      = log.note      || '';
   ['dlBlocker','dlHighlight','dlNote'].forEach(id => dlResize(document.getElementById(id)));
-  document.getElementById('dlMoodBadge').innerHTML = moodIconHtml(log.mood);
+  const badge = document.getElementById('dlMoodBadge');
+  if(badge) badge.innerHTML = moodIconHtml(log.mood);
   document.querySelectorAll('#dlMoodRow .dl-mood-pill').forEach(btn=>{
     btn.classList.toggle('active', btn.dataset.mood === log.mood);
   });
+  const label = document.getElementById('dlDateLabel');
+  if(label){
+    const d = new Date(currentDate + 'T00:00:00');
+    label.textContent = d.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const isToday = currentDate === today;
+    label.style.color = isToday ? 'var(--accent)' : 'var(--text)';
+  }
 }
 
 function dlSave(field, val){

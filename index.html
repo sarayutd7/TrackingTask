@@ -273,6 +273,16 @@
 
   <!-- Tab Daily: Daily Log -->
   <div class="tab-pane" id="tabDaily" style="display:none">
+    <!-- Date navigation -->
+    <div class="dl-date-nav">
+      <button class="dl-date-nav-btn" onclick="shiftDay(-1)" title="วันก่อนหน้า">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="dl-date-nav-date" onclick="document.getElementById('datePicker').showPicker?document.getElementById('datePicker').showPicker():document.getElementById('datePicker').click()" id="dlDateLabel"></button>
+      <button class="dl-date-nav-btn" onclick="shiftDay(1)" title="วันถัดไป">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
     <div class="dl-section dl-section-fullpage">
       <div class="dl-field">
         <label class="dl-label">อารมณ์วันนี้</label>

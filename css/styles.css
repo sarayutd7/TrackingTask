@@ -1260,6 +1260,41 @@
     border-radius: var(--r-lg);
     padding: .75rem 1rem .9rem;
   }
+  /* Daily tab date navigation */
+  .dl-date-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: .75rem 1.5rem .5rem;
+  }
+  .dl-date-nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-2);
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .dl-date-nav-btn:hover { background: var(--surface3); color: var(--text); }
+  .dl-date-nav-date {
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--text);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: .3rem .75rem;
+    border-radius: 8px;
+    transition: background .15s;
+    font-family: var(--font);
+  }
+  .dl-date-nav-date:hover { background: var(--surface2); }
+
   /* fullpage variant — used in #tabDaily, no top margin, fills pane */
   .dl-section-fullpage {
     margin-top: 0;
