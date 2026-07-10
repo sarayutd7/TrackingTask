@@ -1,5 +1,5 @@
 {
-  "version": "1.2.17",
+  "version": "1.2.19",
   "releaseDate": "2026-07-10",
-  "changelog": "Date strip redesign: fixed prev/next arrows, scrollable dates, today shown bigger"
+  "changelog": "Fixed admin.html missing PWA meta tags — likely cause of unresponsive bottom nav in standalone Home Screen mode"
 }
