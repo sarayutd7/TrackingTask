@@ -4,7 +4,7 @@ const PIN_RE = /^\d{6}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
 const MAX_FAILED_ATTEMPTS = 5; // ครั้งที่ 6 จะถูกล็อกและ "ส่งอีเมล" แจ้งเตือน
-const ADMIN_USERNAMES = new Set(["Yut", "sarayutd7"]);
+const ADMIN_USERNAMES = new Set(["Yut", "sarayutd7", "sarayutd7@gmail.com", "sarayut.duangarpai@gmail.com"]);
 const ALL_MENUS = ["task", "tool", "finance"];
 
 const ALLOWED_ORIGINS = new Set([
