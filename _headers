@@ -3,3 +3,19 @@
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
+
+# No build step means index.html/js/css/sw.js keep the same filename on every
+# deploy, so without this, browsers and Cloudflare's edge cache can keep
+# serving an old cached copy indefinitely after a deploy. Force revalidation
+# on every load instead (still cheap — a 304 when nothing changed).
+/*.html
+  Cache-Control: no-cache, must-revalidate
+
+/*.js
+  Cache-Control: no-cache, must-revalidate
+
+/*.css
+  Cache-Control: no-cache, must-revalidate
+
+/sw.js
+  Cache-Control: no-cache, must-revalidate

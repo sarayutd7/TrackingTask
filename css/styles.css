@@ -3102,23 +3102,23 @@
   .ql-toggle-card:hover { border-color: var(--border-hover); }
   .ql-toggle-card.on.pin  { border-color: var(--yellow); background: rgba(232,198,76,.1); }
   .ql-toggle-card.on.hide { border-color: var(--text-3); background: rgba(90,89,104,.1); }
-  .ql-toggle-icon { font-size: .95rem; }
+  .ql-toggle-icon { font-size: 1.4rem; display: inline-flex; }
   .ql-toggle-info { flex: 1; }
   .ql-toggle-name { font-size: .8rem; font-weight: 700; }
   .ql-toggle-card.on.pin  .ql-toggle-name { color: var(--yellow); }
   .ql-toggle-card.on.hide .ql-toggle-name { color: var(--text-2); }
   .ql-toggle-desc { font-size: .68rem; color: var(--text-3); margin-top: .1rem; }
   .ql-toggle-switch {
-    width: 30px; height: 17px; border-radius: 9px;
+    width: 46px; height: 26px; border-radius: 13px;
     background: var(--surface3); position: relative; flex-shrink: 0; transition: background .15s;
   }
   .ql-toggle-card.on .ql-toggle-switch { background: var(--accent); }
   .ql-toggle-card.on.pin  .ql-toggle-switch { background: var(--yellow); }
   .ql-toggle-switch::after {
-    content: ''; position: absolute; top: 2px; left: 2px;
-    width: 13px; height: 13px; border-radius: 50%; background: #fff; transition: transform .15s;
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .15s;
   }
-  .ql-toggle-card.on .ql-toggle-switch::after { transform: translateX(13px); }
+  .ql-toggle-card.on .ql-toggle-switch::after { transform: translateX(20px); }
   /* image drop zone */
   .ql-img-drop {
     border: 1.5px dashed var(--border-hover); border-radius: 10px;
