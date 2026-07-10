@@ -2825,6 +2825,7 @@
   .ds-chip:hover { background: var(--surface3, #252840); color: var(--text); }
   .ds-chip.ds-cur { background: var(--accent) !important; border-color: transparent; color: #fff !important; font-weight: 600; }
   .ds-chip.ds-nav { background: var(--surface); border-color: var(--border); color: var(--text-3); font-size: .8rem; }
+  .ds-chip.ds-nav-icon { padding: .38rem; width: 32px; height: 32px; flex-shrink: 0; }
 
   /* Card style upgrades */
   .card {
@@ -3007,7 +3008,6 @@
       top: 0;
       z-index: 10;
     }
-    .ds-chip { flex: 1; justify-content: center; }
   }
 
   /* Desktop: hide bottom nav, show sidebar, remove side padding from shell so sidebar sits flush */

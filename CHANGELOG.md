@@ -7,6 +7,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.10] — 2026-07-10
+
+### Added
+
+- Finance modal (`#finOverlay`) now has a **วันที่ทำรายการ** date field — new/edited entries can be assigned to any date instead of always using whichever date the Daily Task tab happens to be on. Editing an entry and changing its date moves it between `DB._finance[dateKey]` buckets; linked recurring-bill payments and income logs now also use the picked date.
+
+### Fixed
+
+- Date strip (`#dateStripBar`) on iPhone portrait only showed ~3 days before requiring a scroll. The `← ก่อนหน้า` / `ถัดไป →` nav buttons took up a large share of the strip's width; replaced them with compact icon-only arrow buttons, freeing enough room for ~5 date chips to be visible at once (horizontal scroll still available for the rest). Also removed a stray `.ds-chip { flex:1 }` mobile override that fought the strip's intended content-sized, horizontally-scrollable chip layout.
+
+---
+
 ## [1.2.9] — 2026-07-10
 
 ### Fixed
