@@ -219,6 +219,8 @@ function lockHide(){
   document.getElementById('headerAdminBtn').style.display = isAdmin ? '' : 'none';
   const sbAdmin = document.getElementById('sb-admin');
   if(sbAdmin) sbAdmin.style.display = isAdmin ? '' : 'none';
+  const bnbAdmin = document.getElementById('bnb-admin');
+  if(bnbAdmin) bnbAdmin.style.display = isAdmin ? '' : 'none';
   if(loggedIn && uname){
     greetingEl.textContent = `Hi, ${uname} วันนี้เป็นอย่างไรบ้าง`;
     greetingEl.style.display = '';
