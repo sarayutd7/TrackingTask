@@ -7,6 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.7] — 2026-07-10
+
+### Changed — Faster cross-device sync
+
+- `POLL_INTERVAL_MS` reduced from 15s to 5s (`js/app.js`) — changes made on one device/tab now show up on other open sessions of the same account much sooner, without needing a manual refresh
+
+---
+
 ## [1.2.4] — 2026-07-10
 
 ### Changed

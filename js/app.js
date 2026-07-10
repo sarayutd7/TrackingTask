@@ -3440,7 +3440,7 @@ async function finPMDelete(i){
 // ── Cross-device auto-refresh ──────────────────────────
 // บัญชีเดียวกันเปิดหลายเครื่อง/แท็บพร้อมกัน: poll ข้อมูลใหม่จาก server เป็นระยะ
 // แล้ว re-render ให้อัตโนมัติโดยไม่ต้องกดรีเฟรช (ข้ามถ้ากำลังเปิดฟอร์มแก้ไขอยู่ กันข้อมูลที่พิมพ์ค้างหาย)
-const POLL_INTERVAL_MS = 15000;
+const POLL_INTERVAL_MS = 5000;
 const EDIT_OVERLAY_IDS = ['overlay','colOverlay','rschedOverlay','qlOverlay','billOverlay','billPayOverlay','incomeSourceOverlay','incomeLogOverlay','finTagOverlay','finOverlay','finPMOverlay'];
 function isEditingNow(){
   return EDIT_OVERLAY_IDS.some(id=>{
