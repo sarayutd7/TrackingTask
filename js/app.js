@@ -263,33 +263,33 @@ function closeSidebar(){
 }
 
 function switchTab(tab){
-  ['tabTask','tabTool','tabFinance'].forEach(id=>{
+  ['tabTask','tabDaily','tabTool','tabFinance'].forEach(id=>{
     const el = document.getElementById(id);
     if(!el) return;
     el.classList.remove('active-pane');
     el.style.display = 'none';
   });
-  const active = {task:'tabTask',tool:'tabTool',finance:'tabFinance'}[tab];
+  const active = {task:'tabTask',daily:'tabDaily',tool:'tabTool',finance:'tabFinance'}[tab];
   if(active){
     const el = document.getElementById(active);
     el.style.display = '';
-    // trigger animation by removing then re-adding the class
     requestAnimationFrame(()=>{ el.classList.add('active-pane'); });
   }
   document.getElementById('tabBtnTask').classList.toggle('active',    tab==='task');
+  document.getElementById('tabBtnDaily').classList.toggle('active',   tab==='daily');
   document.getElementById('tabBtnTool').classList.toggle('active',    tab==='tool');
   document.getElementById('tabBtnFinance').classList.toggle('active', tab==='finance');
-  // sync sidebar
-  ['task','tool','finance'].forEach(t=>{
+  // sync sidebar + bottom nav
+  ['task','daily','tool','finance'].forEach(t=>{
     const sb = document.getElementById('sb-'+t);
     const bnb = document.getElementById('bnb-'+t);
     if(sb)  sb.classList.toggle('sb-on',  t===tab);
     if(bnb) bnb.classList.toggle('bnb-on', t===tab);
   });
-  if(tab==='tool')    renderDL();
-  if(tab==='finance'){ renderFinance(); if(finSubTab==='bills') renderBills(); if(finSubTab==='income') renderIncomeSources(); }
+  if(tab==='daily')   { renderDL(); }
+  if(tab==='finance') { renderFinance(); if(finSubTab==='bills') renderBills(); if(finSubTab==='income') renderIncomeSources(); }
   // update mobile title & close drawer
-  const titles = {task:'Daily Task', tool:'Note (QL)', finance:'รายรับ-รายจ่าย'};
+  const titles = {task:'Daily Task', daily:'บันทึกประจำวัน', tool:'Note (QL)', finance:'รายรับ-รายจ่าย'};
   const titleEl = document.getElementById('mobileTabTitle');
   if(titleEl) titleEl.textContent = titles[tab] || '';
   const topbarDateEl = document.getElementById('topbarDate');
@@ -1319,8 +1319,10 @@ function dlSetMood(emoji){
 }
 
 function dlToggle(){
-  document.getElementById('dlBody').classList.toggle('collapsed');
-  document.getElementById('dlChevron').classList.toggle('closed');
+  const body = document.getElementById('dlBody');
+  const chev = document.getElementById('dlChevron');
+  if(body) body.classList.toggle('collapsed');
+  if(chev) chev.classList.toggle('closed');
 }
 
 function dlResize(el){
@@ -3863,7 +3865,7 @@ loadFile().then(() => {
   startAutoRefresh();
   // เปิดแท็บตาม ?tab= ใน URL ถ้ามี (เช่น กลับมาจาก Admin Panel)
   const tabParam = new URLSearchParams(location.search).get('tab');
-  if(['task','tool','finance'].includes(tabParam)) switchTab(tabParam);
+  if(['task','daily','tool','finance'].includes(tabParam)) switchTab(tabParam);
 });
 // ── Weather Background Animation removed ──────────────────────────────────────
 loadAppVersion();

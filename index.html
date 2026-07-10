@@ -149,6 +149,12 @@
           </div>
           <span class="sb-item-label">Daily Task</span>
         </div>
+        <div class="sb-item" id="sb-daily" onclick="switchTab('daily')">
+          <div class="sb-item-icon">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+          </div>
+          <span class="sb-item-label">บันทึกประจำวัน</span>
+        </div>
         <div class="sb-item" id="sb-tool" onclick="switchTab('tool')">
           <div class="sb-item-icon">
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
@@ -218,6 +224,7 @@
       <!-- Tab Navigation — hidden, replaced by sidebar/bottom-nav -->
       <div class="tab-nav" aria-hidden="true">
         <button class="tab-btn active" id="tabBtnTask" onclick="switchTab('task')">Daily Task</button>
+        <button class="tab-btn" id="tabBtnDaily" onclick="switchTab('daily')">บันทึกประจำวัน</button>
         <button class="tab-btn" id="tabBtnTool" onclick="switchTab('tool')">Note</button>
         <button class="tab-btn" id="tabBtnFinance" onclick="switchTab('finance')">รายรับ-รายจ่าย</button>
       </div>
@@ -265,100 +272,60 @@
       <div id="mbPanes"></div>
     </div>
 
-    <!-- Daily Log -->
-    <div class="dl-section">
-      <div class="dl-header" onclick="dlToggle()">
-        <span class="dl-header-icon">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
-        </span>
-        <span class="dl-title">บันทึกประจำวัน</span>
-        <span class="dl-mood-badge" id="dlMoodBadge"></span>
-        <span class="dl-weather" id="dlWeather" title=""></span>
-        <span class="dl-chevron" id="dlChevron">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
-        </span>
-      </div>
-      <div class="dl-body" id="dlBody">
-        <div class="dl-field">
-          <label class="dl-label">อารมณ์วันนี้</label>
-          <div class="dl-mood-row" id="dlMoodRow">
-            <button class="dl-mood-pill" data-mood="😄" style="--mood-color:#f59e0b" onclick="event.stopPropagation();dlSetMood('😄')" title="สุขมาก">
-              <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="9"/>
-                <circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/>
-                <circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/>
-                <path d="M8 14s1.5 3 4 3 4-3 4-3"/>
-              </svg>
-            </button>
-            <button class="dl-mood-pill" data-mood="🙂" style="--mood-color:#84cc16" onclick="event.stopPropagation();dlSetMood('🙂')" title="สุข">
-              <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="9"/>
-                <circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/>
-                <circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/>
-                <path d="M9 14.5s1 2 3 2 3-2 3-2"/>
-              </svg>
-            </button>
-            <button class="dl-mood-pill" data-mood="😐" style="--mood-color:#94a3b8" onclick="event.stopPropagation();dlSetMood('😐')" title="ปกติ">
-              <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="9"/>
-                <circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/>
-                <circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/>
-                <line x1="9" y1="15" x2="15" y2="15"/>
-              </svg>
-            </button>
-            <button class="dl-mood-pill" data-mood="😔" style="--mood-color:#60a5fa" onclick="event.stopPropagation();dlSetMood('😔')" title="เศร้า">
-              <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="9"/>
-                <circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/>
-                <circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/>
-                <path d="M9 16s1-2 3-2 3 2 3 2"/>
-              </svg>
-            </button>
-            <button class="dl-mood-pill" data-mood="😴" style="--mood-color:#a78bfa" onclick="event.stopPropagation();dlSetMood('😴')" title="เหนื่อย">
-              <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="9"/>
-                <path d="M8 10.5c.5-.5 1.5-.5 2 0"/>
-                <path d="M14 10.5c.5-.5 1.5-.5 2 0"/>
-                <path d="M9.5 15s1-1 2.5-1 2.5 1 2.5 1"/>
-                <text x="16" y="8" font-size="4" fill="currentColor" stroke="none">z</text>
-              </svg>
-            </button>
-            <button class="dl-mood-pill" data-mood="😡" style="--mood-color:#f87171" onclick="event.stopPropagation();dlSetMood('😡')" title="โกรธ">
-              <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="9"/>
-                <circle cx="9" cy="11" r="1.2" fill="currentColor" stroke="none"/>
-                <circle cx="15" cy="11" r="1.2" fill="currentColor" stroke="none"/>
-                <path d="M7.5 8.5l3 1.5"/>
-                <path d="M16.5 8.5l-3 1.5"/>
-                <path d="M9 16s1-2 3-2 3 2 3 2"/>
-              </svg>
-            </button>
-          </div>
+  </div>
+
+  <!-- Tab Daily: Daily Log -->
+  <div class="tab-pane" id="tabDaily" style="display:none">
+    <div class="dl-section dl-section-fullpage">
+      <div class="dl-field">
+        <label class="dl-label">อารมณ์วันนี้</label>
+        <div class="dl-mood-row" id="dlMoodRow">
+          <button class="dl-mood-pill" data-mood="😄" style="--mood-color:#f59e0b" onclick="dlSetMood('😄')" title="สุขมาก">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/><path d="M8 14s1.5 3 4 3 4-3 4-3"/></svg>
+          </button>
+          <button class="dl-mood-pill" data-mood="🙂" style="--mood-color:#84cc16" onclick="dlSetMood('🙂')" title="สุข">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/><path d="M9 14.5s1 2 3 2 3-2 3-2"/></svg>
+          </button>
+          <button class="dl-mood-pill" data-mood="😐" style="--mood-color:#94a3b8" onclick="dlSetMood('😐')" title="ปกติ">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          </button>
+          <button class="dl-mood-pill" data-mood="😔" style="--mood-color:#60a5fa" onclick="dlSetMood('😔')" title="เศร้า">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/><path d="M9 16s1-2 3-2 3 2 3 2"/></svg>
+          </button>
+          <button class="dl-mood-pill" data-mood="😴" style="--mood-color:#a78bfa" onclick="dlSetMood('😴')" title="เหนื่อย">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 10.5c.5-.5 1.5-.5 2 0"/><path d="M14 10.5c.5-.5 1.5-.5 2 0"/><path d="M9.5 15s1-1 2.5-1 2.5 1 2.5 1"/><text x="16" y="8" font-size="4" fill="currentColor" stroke="none">z</text></svg>
+          </button>
+          <button class="dl-mood-pill" data-mood="😡" style="--mood-color:#f87171" onclick="dlSetMood('😡')" title="โกรธ">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="11" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="11" r="1.2" fill="currentColor" stroke="none"/><path d="M7.5 8.5l3 1.5"/><path d="M16.5 8.5l-3 1.5"/><path d="M9 16s1-2 3-2 3 2 3 2"/></svg>
+          </button>
         </div>
-        <div class="dl-grid">
-          <div class="dl-field">
-            <label class="dl-label">
-              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              Blocker — ติดปัญหาอะไร?
-            </label>
-            <textarea class="dl-ta" id="dlBlocker" placeholder="เช่น รอ access, รอ clarify requirement…" oninput="dlResize(this)" onblur="dlSave('blocker',this.value)"></textarea>
-          </div>
-          <div class="dl-field">
-            <label class="dl-label">
-              <svg width="11" height="11" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-              Highlight — วันนี้ทำสำเร็จอะไร?
-            </label>
-            <textarea class="dl-ta" id="dlHighlight" placeholder="เช่น fix bug X เสร็จ, ส่ง test case ครบ…" oninput="dlResize(this)" onblur="dlSave('highlight',this.value)"></textarea>
-          </div>
+      </div>
+      <div class="dl-grid">
+        <div class="dl-field">
+          <label class="dl-label">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Blocker — ติดปัญหาอะไร?
+          </label>
+          <textarea class="dl-ta" id="dlBlocker" placeholder="เช่น รอ access, รอ clarify requirement…" oninput="dlResize(this)" onblur="dlSave('blocker',this.value)"></textarea>
         </div>
         <div class="dl-field">
           <label class="dl-label">
-            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Note — บันทึกอิสระ / สิ่งที่ต้องติดตามพรุ่งนี้
+            <svg width="11" height="11" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Highlight — วันนี้ทำสำเร็จอะไร?
           </label>
-          <textarea class="dl-ta" id="dlNote" placeholder="บันทึกอะไรก็ได้ เช่น สิ่งที่ต้อง followup, คำถามที่ต้องถาม…" oninput="dlResize(this)" onblur="dlSave('note',this.value)"></textarea>
+          <textarea class="dl-ta" id="dlHighlight" placeholder="เช่น fix bug X เสร็จ, ส่ง test case ครบ…" oninput="dlResize(this)" onblur="dlSave('highlight',this.value)"></textarea>
         </div>
       </div>
+      <div class="dl-field">
+        <label class="dl-label">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Note — บันทึกอิสระ / สิ่งที่ต้องติดตามพรุ่งนี้
+        </label>
+        <textarea class="dl-ta" id="dlNote" placeholder="บันทึกอะไรก็ได้ เช่น สิ่งที่ต้อง followup, คำถามที่ต้องถาม…" oninput="dlResize(this)" onblur="dlSave('note',this.value)"></textarea>
+      </div>
+      <!-- mood badge + weather (hidden, used for data sync) -->
+      <span class="dl-mood-badge" id="dlMoodBadge" style="display:none"></span>
+      <span class="dl-weather" id="dlWeather" style="display:none" title=""></span>
     </div>
   </div>
 
@@ -675,6 +642,11 @@
         <span class="bnb-badge" id="bnb-badge-task" style="display:none"></span>
       </div>
       <span class="bnb-label">Daily Task</span>
+      <span class="bnb-dot"></span>
+    </button>
+    <button class="bnb-item" id="bnb-daily" onclick="switchTab('daily')">
+      <div class="bnb-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></div>
+      <span class="bnb-label">Daily</span>
       <span class="bnb-dot"></span>
     </button>
     <button class="bnb-item" id="bnb-tool" onclick="switchTab('tool')">
