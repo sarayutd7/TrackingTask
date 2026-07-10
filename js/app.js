@@ -336,6 +336,8 @@ function openModal(status, id=null){
     document.getElementById('taskTimeEnd').value   = t.timeEnd   || '';
     selectStatus(t.status);
     t.priority ? selectPriority(t.priority) : clearPriority();
+    taskEditHidden = !!t.hidden;
+    document.getElementById('taskHideToggle').classList.toggle('on', taskEditHidden);
   } else {
     document.getElementById('modalTitle').textContent = 'เพิ่มงานใหม่';
     document.getElementById('taskTitle').value = '';
@@ -344,6 +346,8 @@ function openModal(status, id=null){
     document.getElementById('taskTimeEnd').value   = '';
     selectStatus(status || COLS[0]?.id || 'todo');
     clearPriority();
+    taskEditHidden = false;
+    document.getElementById('taskHideToggle').classList.toggle('on', false);
   }
   document.getElementById('overlay').style.display='flex';
   setTimeout(()=>document.getElementById('taskTitle').focus(),60);
@@ -351,6 +355,12 @@ function openModal(status, id=null){
 
 function closeModal(){ document.getElementById('overlay').style.display='none'; editId=null; }
 function closeOnBg(e){ if(e.target===document.getElementById('overlay')) closeModal(); }
+
+let taskEditHidden = false;
+function taskToggleHide(){
+  taskEditHidden = !taskEditHidden;
+  document.getElementById('taskHideToggle').classList.toggle('on', taskEditHidden);
+}
 
 // ── Column Management ────────────────────────────────
 let editColId = null;
@@ -439,7 +449,9 @@ async function saveTask(){
       tasks[idx].priority  = selectedPriority || '';
       tasks[idx].timeStart = timeStart;
       tasks[idx].timeEnd   = timeEnd;
+      tasks[idx].hidden    = taskEditHidden;
       tasks[idx].updatedAt = new Date().toISOString();
+      if(taskEditHidden) taskUnlockedIds.delete(tasks[idx].id);
     }
   } else {
     tasks.push({
@@ -450,6 +462,7 @@ async function saveTask(){
       priority:  selectedPriority || '',
       timeStart,
       timeEnd,
+      hidden:    taskEditHidden,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     });
@@ -473,6 +486,58 @@ async function moveTask(id, newStatus){
   setTasks(currentDate, tasks);
   await writeFile();
   render();
+}
+
+// ── Hidden tasks (PIN-lock) ──────────────────────────
+let taskUnlockedIds = new Set(); // เก็บแค่ใน session นี้ ไม่ persist — กลับมาเปิดแอปใหม่ต้องใส่ PIN อีก
+let taskPendingUnlockId = null;
+
+async function taskToggleQuickHide(id){
+  const tasks = getTasks(currentDate);
+  const t = tasks.find(x=>x.id===id);
+  if(!t) return;
+  t.hidden = !t.hidden;
+  t.updatedAt = new Date().toISOString();
+  if(t.hidden) taskUnlockedIds.delete(id);
+  setTasks(currentDate, tasks);
+  await writeFile();
+  render();
+}
+
+function taskRequestUnlock(id){
+  taskPendingUnlockId = id;
+  document.getElementById('taskUnlockPin').value = '';
+  document.getElementById('taskUnlockError').textContent = '';
+  document.getElementById('taskUnlockOverlay').style.display = 'flex';
+  setTimeout(()=>document.getElementById('taskUnlockPin').focus(), 60);
+}
+
+function closeTaskUnlock(){
+  document.getElementById('taskUnlockOverlay').style.display = 'none';
+  taskPendingUnlockId = null;
+}
+
+async function submitTaskUnlock(){
+  const pin = document.getElementById('taskUnlockPin').value;
+  const errorEl = document.getElementById('taskUnlockError');
+  if(!PIN_RE.test(pin)){ errorEl.textContent = 'PIN ต้องเป็นตัวเลข 6 หลักเท่านั้น'; return; }
+  try {
+    const r = await fetch(API + '/verify-pin', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', ...authHeaders()},
+      body: JSON.stringify({ pin })
+    });
+    const data = await r.json();
+    if(!r.ok){
+      errorEl.textContent = data.error || 'PIN ไม่ถูกต้อง';
+      return;
+    }
+    if(taskPendingUnlockId) taskUnlockedIds.add(taskPendingUnlockId);
+    closeTaskUnlock();
+    render();
+  } catch(e){
+    errorEl.textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง';
+  }
 }
 
 
@@ -823,6 +888,20 @@ function renderCard(t){
   const col = getColById(t.status);
   const c = col ? col.color : 'gray';
   const last = isLastCol(t.status);
+  const isLocked = t.hidden && !taskUnlockedIds.has(t.id);
+  if(isLocked){
+    return `
+    <div class="card ${c} is-locked"${last?' data-done="1"':''}>
+      <div class="ql-card-locked-body">
+        <div class="ql-lock-circle">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2.5"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div class="ql-card-locked-text">งานถูกซ่อนไว้</div>
+        <div class="ql-card-locked-sub">ต้องใส่ PIN เพื่อดู</div>
+        <button class="ql-unlock-btn" onclick="event.stopPropagation();taskRequestUnlock('${t.id}')">ปลดล็อก</button>
+      </div>
+    </div>`;
+  }
   // backward-compat: HTML notes render as-is; old [text](url) markdown still parsed
   const noteIsHtml = t.note && /<[a-z][\s\S]*>/i.test(t.note);
   const links = (!noteIsHtml && t.note) ? extractLinks(t.note) : [];
@@ -867,6 +946,11 @@ function renderCard(t){
     <div class="card-footer">
       <span class="card-time">${fmtTime(t.updatedAt)}</span>
       <div class="card-actions" onclick="event.stopPropagation()">
+        <button class="icon-btn hide" title="${t.hidden?'เลิกซ่อน':'ซ่อนงานนี้'}" onclick="taskToggleQuickHide('${t.id}')">
+          ${t.hidden
+            ? `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2.5"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`
+            : `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2.5"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`}
+        </button>
         ${!isLast ? `<button class="icon-btn sched" title="ย้ายไปวันอื่น" onclick="openReschedule('${t.id}')"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2.5"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 12 13 15 16"/></svg></button>` : ''}
         <button class="icon-btn move" title="${esc(moveTitle)}" onclick="moveTask('${t.id}','${nextId}')">${moveSvg}</button>
         <button class="icon-btn del" title="ลบ" onclick="deleteTask('${t.id}')">
@@ -986,6 +1070,18 @@ function renderMobileBoard(g, tasks){
     });
 
     const cardsHtml = sorted.length ? sorted.map(t=>{
+      const isLocked = t.hidden && !taskUnlockedIds.has(t.id);
+      if(isLocked){
+        return `<div class="mb-task-card c-${col.color} is-locked">
+          <div class="ql-card-locked-body">
+            <div class="ql-lock-circle">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2.5"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="ql-card-locked-text">งานถูกซ่อนไว้</div>
+            <button class="ql-unlock-btn" onclick="event.stopPropagation();taskRequestUnlock('${t.id}')">ปลดล็อก</button>
+          </div>
+        </div>`;
+      }
       const pbadge = t.priority&&priorityLabels[t.priority]
         ? `<span class="priority-badge ${t.priority}">${priorityLabels[t.priority]}</span>` : '';
       const timeRange = (t.timeStart||t.timeEnd)
@@ -993,9 +1089,13 @@ function renderMobileBoard(g, tasks){
       const moveSvg  = isLast ? moveSvgBack : moveSvgNext;
       const moveTitle= isLast ? 'ย้อนกลับ' : (nextCol?nextCol.name:'→');
       const done = isLast ? ' done' : '';
+      const hideSvg = t.hidden
+        ? `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2.5"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`
+        : `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2.5"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
       return `<div class="mb-task-card c-${col.color}" onclick="openModal('${esc(col.id)}','${t.id}')">
         <div class="mb-task-top">
           <span class="mb-task-title${done}">${esc(t.title)}</span>
+          <div class="mb-move-btn" title="${t.hidden?'เลิกซ่อน':'ซ่อนงานนี้'}" onclick="event.stopPropagation();taskToggleQuickHide('${t.id}')">${hideSvg}</div>
           <div class="mb-move-btn" title="${esc(moveTitle)}" onclick="event.stopPropagation();moveTask('${t.id}','${nextId}')">${moveSvg}</div>
         </div>
         <div class="mb-task-meta">
