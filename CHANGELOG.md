@@ -7,6 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.15] — 2026-07-10
+
+### Changed
+
+- Date strip on mobile now shows 5 days (today ±2, e.g. `‹ 8 9 10 11 12 ›`) instead of 3, matching the requested layout — still no chip cut off at the screen edge. Desktop unchanged at 7 days.
+
+---
+
 ## [1.2.14] — 2026-07-10
 
 ### Changed
