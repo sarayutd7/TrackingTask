@@ -1,5 +1,5 @@
 {
-  "version": "1.2.24",
+  "version": "1.2.25",
   "releaseDate": "2026-07-10",
-  "changelog": "Mobile-friendly touch targets and forms across the app"
+  "changelog": "Fix: navigating admin → index.html no longer forces re-login within the same browser session"
 }

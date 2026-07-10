@@ -7,6 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.25] — 2026-07-10
+
+### Fixed
+
+- **Navigating admin → main app no longer forces re-login.** v1.2.18 added "always show lock screen on app load" to prevent auto-login from a stored token. But navigating from `admin.html` back to `index.html` is a page navigation within the same browser tab — `auth.js` reloads and was calling `lockShow()` unconditionally, clearing the session. Fixed by using a `sessionStorage` flag (`ttSessionAuth`): the flag survives same-tab navigation but is cleared when the browser tab is closed or the user explicitly logs out. Login still requires credentials on a fresh browser open; navigating between pages in the same session no longer interrupts the user.
+
+---
+
 ## [1.2.24] — 2026-07-10
 
 ### Fixed — App-wide mobile touch-friendliness

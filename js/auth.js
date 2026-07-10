@@ -245,6 +245,7 @@ function lockApp(){
   localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem(AUTH_USER_KEY);
   localStorage.removeItem(AUTH_IS_ADMIN_KEY);
+  sessionStorage.removeItem('ttSessionAuth');
   DB = {};
   render();
   renderDL();
@@ -252,6 +253,7 @@ function lockApp(){
 }
 
 async function afterAuthSuccess(){
+  sessionStorage.setItem('ttSessionAuth', '1');
   lockHide();
   applyMenuPermissions();
   function renderAll() {
@@ -550,5 +552,10 @@ async function submitForgotPinConfirm(){
   }
 }
 
-// เรียกตอน app โหลด — บังคับให้ login ใหม่ทุกครั้งที่เปิดแอป ไม่ auto-login จาก token เดิม
-lockShow();
+// เรียกตอน app โหลด — ถ้ามี token และ session ยังอยู่ (เช่น navigate กลับจาก admin.html) ให้ auto-login
+// sessionStorage flag 'ttSessionAuth' หายเมื่อปิด browser tab แต่คงอยู่ระหว่างการ navigate ภายใน tab
+if(localStorage.getItem(AUTH_TOKEN_KEY) && sessionStorage.getItem('ttSessionAuth') === '1'){
+  afterAuthSuccess();
+} else {
+  lockShow();
+}

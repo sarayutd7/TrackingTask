@@ -119,6 +119,7 @@ function adminLogout(){
   localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem(AUTH_USER_KEY);
   localStorage.removeItem(AUTH_IS_ADMIN_KEY);
+  sessionStorage.removeItem('ttSessionAuth');
   window.location.href = 'index.html';
 }
 
