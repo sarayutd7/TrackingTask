@@ -7,6 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.19] — 2026-07-10
+
+### Fixed
+
+- `admin.html` was missing the Apple PWA meta tags (`apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, `apple-mobile-web-app-title`, `theme-color`, apple-touch-icon) that `index.html` has. When the app is launched from an iOS Home Screen icon (standalone mode) and the user navigates from `index.html` into `admin.html`, the missing tags meant that page wasn't declared standalone-capable — a likely cause of the reported bug where the bottom nav on Admin Panel was visible but unresponsive to taps specifically in Home Screen standalone mode (not reproducible in a regular Safari tab or in desktop testing). Added the matching tags so both pages behave consistently in standalone mode.
+
+---
+
 ## [1.2.18] — 2026-07-10
 
 ### Changed — Security
