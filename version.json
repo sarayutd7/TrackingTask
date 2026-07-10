@@ -1,5 +1,5 @@
 {
-  "version": "1.2.22",
+  "version": "1.2.23",
   "releaseDate": "2026-07-10",
-  "changelog": "Fixed Finance bills preview widget stacking vertically instead of compact rows on mobile"
+  "changelog": "Note tab: token-chip filter tags + glow-blob card backgrounds"
 }

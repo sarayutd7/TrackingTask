@@ -1590,9 +1590,10 @@ function qlCardHtml(item, i){
   const tagLabel  = item.tag ? qlTagLabel(item.tag) : '';
   const tagColor  = item.tag ? qlTagColor(item.tag) : '';
   // ถ้าไม่ได้เลือกสีการ์ดเอง (plain) แต่มี tag ติดอยู่ ให้ทำพื้นหลังการ์ดตามสี tag แทน
-  // เพื่อให้เห็นความแตกต่างของแต่ละ tag ได้ทันทีโดยไม่ต้องเลือกสีเอง
+  // เพื่อให้เห็นความแตกต่างของแต่ละ tag ได้ทันทีโดยไม่ต้องเลือกสีเอง — glow blob มุมขวาบน
+  // ให้ความรู้สึกพรีเมียมใกล้เคียงสไตล์ Aurora ของแอป แทนที่จะเป็นพื้นสีเรียบ
   const useTagBg  = color === 'plain' && tagColor;
-  const cardBgStyle   = useTagBg ? ` style="background:${tagColor}14;border-color:${tagColor}38"` : '';
+  const cardBgStyle   = useTagBg ? ` style="background:radial-gradient(90px 90px at 100% 0%, ${tagColor}40, transparent 70%), rgba(20,22,35,0.9);border-color:${tagColor}38"` : '';
   const accentBgStyle = useTagBg ? ` style="background:${tagColor}"` : '';
   const tagChip   = tagLabel
     ? `<span class="note-tag-chip" style="background:${tagColor}22;color:${tagColor};border:1px solid ${tagColor}44">${esc(tagLabel)}</span>`

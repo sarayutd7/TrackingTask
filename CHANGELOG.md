@@ -7,6 +7,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.23] — 2026-07-10
+
+### Changed — Note tab visual refresh
+
+- Filter tag chips (`#qlFilterBar`) now show a bigger rounded-square color swatch (`.ql-filter-dot`, 14×14px) instead of a tiny 7px dot, so each tag's color reads clearly even before it's the active filter ("token chip" style).
+- Note cards with no manually-chosen color (tag-tinted, from v1.2.20) now use a soft radial "glow blob" in the top-right corner instead of a flat wash — closer to the app's existing Aurora aesthetic.
+
+---
+
 ## [1.2.22] — 2026-07-10
 
 ### Fixed
