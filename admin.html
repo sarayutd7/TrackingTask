@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -8,134 +8,173 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=20260705-1">
+<link rel="stylesheet" href="css/styles.css?v=20260710-1">
 <style>
   @keyframes auroraShimmer { 0%{background-position:0% 0%} 100%{background-position:300% 0%} }
 
-  body {
-    margin: 0;
-    background: #0f1117;
-    color: #f1f5f9;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
-    min-height: 100vh;
+  /* ── Admin-specific layout ── */
+  .adm-content { flex: 1; overflow-y: auto; padding: 1.5rem; }
+  .adm-subheader { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.25rem; }
+  .adm-panel-badge {
+    background: rgba(16,185,129,0.15); color: #10b981;
+    border: 1px solid rgba(16,185,129,0.3);
+    border-radius: 8px; padding: 4px 10px;
+    font-size: 12px; font-weight: 700; letter-spacing: .5px;
+    flex-shrink: 0;
   }
-
-  .adm-shell { display: flex; flex-direction: column; min-height: 100vh; }
+  .adm-subheader-text { font-size: .88rem; color: var(--text-2); }
 
   /* Stats */
-  .adm-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .adm-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 1.25rem; }
   .adm-stat {
-    background: rgba(99,102,241,0.055);
-    border: 1px solid rgba(255,255,255,0.07);
+    background: var(--surface); border: 1px solid var(--border);
     border-radius: 14px; padding: 1rem 1.1rem;
     display: flex; align-items: center; gap: .75rem;
     transition: border-color .2s;
   }
-  .adm-stat:hover { border-color: rgba(99,102,241,0.3); }
-  .adm-stat-icon {
-    width: 40px; height: 40px; border-radius: 11px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .adm-stat-num { font-size: 1.5rem; font-weight: 800; line-height: 1; color: #f1f5f9; }
-  .adm-stat-label { font-size: .72rem; color: #94a3b8; margin-top: 3px; }
+  .adm-stat:hover { border-color: var(--border-hover); }
+  .adm-stat-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; }
+  .adm-stat-num { font-size: 1.6rem; font-weight: 800; line-height: 1; color: var(--text); }
+  .adm-stat-label { font-size: .72rem; color: var(--text-3); margin-top: 3px; text-transform: uppercase; letter-spacing: .5px; }
 
   /* Toolbar */
-  .adm-toolbar {
-    display: flex; align-items: center; gap: .6rem;
-    padding: 16px 24px 12px; flex-wrap: wrap;
-  }
+  .adm-toolbar { display: flex; align-items: center; gap: .6rem; margin-bottom: 1rem; flex-wrap: wrap; }
   .adm-search-wrap {
-    flex: 1; min-width: 180px;
+    flex: 1; min-width: 200px;
     display: flex; align-items: center; gap: 8px;
-    background: rgba(99,102,241,0.06);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 12px;
-    padding: 10px 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 14px;
     transition: border-color .2s;
   }
-  .adm-search-wrap:focus-within { border-color: rgba(99,102,241,0.4); }
-  .adm-search-wrap svg { color: #475569; flex-shrink: 0; }
-  .adm-search-input {
-    background: none; border: none; outline: none;
-    color: #f1f5f9; font-size: .85rem; width: 100%;
-  }
-  .adm-search-input::placeholder { color: #475569; }
+  .adm-search-wrap:focus-within { border-color: rgba(99,102,241,0.45); }
+  .adm-search-wrap svg { color: var(--text-3); flex-shrink: 0; }
+  .adm-search-input { background: none; border: none; outline: none; color: var(--text); font-size: .85rem; width: 100%; font-family: var(--font, inherit); }
+  .adm-search-input::placeholder { color: var(--text-3); }
 
-  /* User cards */
+  /* Filter chips */
+  .adm-filter-chips { display: flex; gap: .4rem; }
+  .adm-filter-chip {
+    padding: .3rem .75rem; border-radius: 999px; font-size: .78rem; font-weight: 600;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text-3);
+    cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  .adm-filter-chip:hover { border-color: var(--border-hover); color: var(--text-2); }
+  .adm-filter-chip.active { background: rgba(99,102,241,.2); border-color: rgba(99,102,241,.5); color: #a5b4fc; }
+
+  /* User grid */
+  .adm-user-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* User card */
   .adm-user-card {
-    background: rgba(99,102,241,0.055);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 14px; padding: 1rem 1.2rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.1rem 1.2rem;
+    display: flex; flex-direction: column; gap: .6rem;
     transition: border-color .2s;
   }
-  .adm-user-card:hover { border-color: rgba(99,102,241,0.25); }
+  .adm-user-card:hover { border-color: var(--border-hover); }
+
   .adm-user-top { display: flex; align-items: flex-start; gap: .75rem; }
   .adm-avatar {
-    width: 42px; height: 42px; border-radius: 50%;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    display: flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; border-radius: 50%;
+    display: grid; place-items: center;
     font-size: 1rem; font-weight: 700; color: #fff;
     flex-shrink: 0;
   }
   .adm-user-info { flex: 1; min-width: 0; }
-  .adm-user-name { font-size: .95rem; font-weight: 700; color: #f1f5f9; }
-  .adm-user-email { font-size: .76rem; color: #475569; margin-top: 2px; }
+  .adm-user-name { font-size: .95rem; font-weight: 700; color: var(--text); }
+  .adm-user-email { font-size: .76rem; color: var(--text-3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Status badges */
   .adm-status-badge {
     display: inline-flex; align-items: center; gap: .3rem;
     font-size: .7rem; font-weight: 700; padding: .25rem .6rem;
-    border-radius: 6px; flex-shrink: 0;
+    border-radius: 6px; flex-shrink: 0; white-space: nowrap;
   }
   .adm-status-ok   { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
-  .adm-status-dis  { background: rgba(244,63,94,0.12);  color: #f43f5e; border: 1px solid rgba(244,63,94,0.3); }
+  .adm-status-dis  { background: rgba(148,163,184,0.1);  color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
   .adm-status-lock { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
 
-  .adm-user-stats {
-    display: flex; gap: 1rem; margin: .6rem 0 .6rem 3.25rem;
-    font-size: .76rem; color: #475569; flex-wrap: wrap;
-  }
-  .adm-user-stats b { color: #94a3b8; }
-
-  .adm-perms { display: flex; gap: .4rem; flex-wrap: wrap; margin: .4rem 0 .75rem 3.25rem; }
+  /* Permission chips */
+  .adm-perm-row { display: flex; gap: .4rem; flex-wrap: wrap; }
   .adm-perm-chip {
-    display: inline-flex; align-items: center; gap: .3rem;
-    padding: .3rem .7rem; border-radius: 7px; font-size: .75rem; font-weight: 600;
-    border: 1px solid rgba(255,255,255,0.07);
-    background: rgba(99,102,241,0.08);
-    color: #94a3b8; cursor: pointer; transition: all .15s;
-    user-select: none;
+    padding: .25rem .6rem; border-radius: 6px; font-size: .73rem; font-weight: 600;
+    cursor: pointer; border: 1px solid transparent; transition: all .15s; user-select: none;
   }
-  .adm-perm-chip.on { background: rgba(99,102,241,0.3); color: #f1f5f9; border-color: rgba(99,102,241,0.5); }
-  .adm-perm-chip .chip-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .adm-perm-chip.on.task    { background: rgba(59,130,246,.18); color: #60a5fa; border-color: rgba(59,130,246,.3); }
+  .adm-perm-chip.on.tool    { background: rgba(20,184,166,.18); color: #2dd4bf; border-color: rgba(20,184,166,.3); }
+  .adm-perm-chip.on.finance { background: rgba(139,92,246,.18); color: #c4b5fd; border-color: rgba(139,92,246,.3); }
+  .adm-perm-chip.on.admin-chip { background: rgba(244,63,94,.18); color: #fb7185; border-color: rgba(244,63,94,.3); }
+  .adm-perm-chip.off { background: var(--surface2); color: var(--text-3); border-color: var(--border); }
 
-  .adm-user-actions { display: flex; gap: .5rem; margin-left: 3.25rem; flex-wrap: wrap; }
+  .adm-last-login { font-size: .74rem; color: var(--text-3); }
 
-  .adm-error { font-size: .82rem; color: #f43f5e; padding: 0 24px 4px; min-height: 1.2rem; }
-  .adm-empty { text-align: center; padding: 3rem 1rem; color: #475569; font-size: .88rem; }
+  .adm-warn-banner {
+    background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.25);
+    border-radius: 8px; padding: .4rem .75rem; font-size: .76rem; color: #f59e0b;
+  }
 
-  /* Denied panel */
+  .adm-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .25rem; }
+  .adm-btn {
+    display: inline-flex; align-items: center; gap: .35rem;
+    padding: .4rem .85rem; border-radius: 9px; font-size: .78rem; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text-2); transition: all .15s; flex: 1; justify-content: center;
+    font-family: var(--font, inherit);
+  }
+  .adm-btn:hover { border-color: var(--border-hover); color: var(--text); }
+  .adm-btn.danger:hover  { background: rgba(244,63,94,.12); border-color: rgba(244,63,94,.3); color: #f43f5e; }
+  .adm-btn.success:hover { background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.3); color: #10b981; }
+  .adm-btn.warn:hover    { background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.3); color: #f59e0b; }
+
+  .adm-empty { text-align: center; padding: 3rem; color: var(--text-3); font-size: .88rem; }
+  .adm-error { font-size: .82rem; color: #f43f5e; margin-bottom: .5rem; min-height: 1.2rem; }
+
+  /* Access denied */
   .adm-denied-card {
     max-width: 360px; margin: 0 auto;
-    background: rgba(244,63,94,0.06);
-    border: 1px solid rgba(244,63,94,0.2);
-    border-radius: 20px;
-    padding: 2.5rem 2rem;
-    text-align: center;
+    background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.2);
+    border-radius: 20px; padding: 2.5rem 2rem; text-align: center;
   }
   .adm-denied-icon {
     width: 64px; height: 64px; border-radius: 18px;
-    background: rgba(244,63,94,0.12);
-    border: 1px solid rgba(244,63,94,0.25);
+    background: rgba(244,63,94,0.12); border: 1px solid rgba(244,63,94,0.25);
     display: flex; align-items: center; justify-content: center;
     margin: 0 auto 1.25rem;
   }
 
-  @media (max-width: 640px) {
+  /* Mobile topbar (visible <769px, hidden on desktop) */
+  .adm-mobile-topbar {
+    display: none;
+    align-items: center;
+    gap: .5rem;
+    padding: .7rem 1rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 3px; z-index: 50;
+  }
+
+  @media (max-width: 768px) {
+    .adm-mobile-topbar { display: flex; }
     .adm-stats { grid-template-columns: 1fr 1fr; }
-    .adm-user-stats, .adm-perms, .adm-user-actions { margin-left: 0; }
+    .adm-user-grid { grid-template-columns: 1fr; }
+    .adm-content { padding: 1rem; }
+  }
+  @media (max-width: 640px) {
+    .adm-filter-chips { flex-wrap: wrap; }
   }
   @media (max-width: 380px) {
     .adm-stats { grid-template-columns: 1fr; }
+  }
+
+  /* Desktop topbar */
+  .adm-topbar {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .7rem 1.25rem;
+    background: rgba(10,12,20,0.88);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 3px; z-index: 50;
+    flex-shrink: 0;
   }
 </style>
 </head>
@@ -144,65 +183,164 @@
 <!-- Aurora shimmer bar -->
 <div style="position:fixed;top:0;left:0;right:0;height:3px;z-index:9999;background:linear-gradient(90deg,#6366f1,#8b5cf6,#06b6d4,#10b981,#f59e0b,#f43f5e,#6366f1);background-size:300% 100%;animation:auroraShimmer 5s linear infinite"></div>
 
-<div class="adm-shell">
+<div class="app-shell" style="display:flex;height:100vh;overflow:hidden;padding-top:3px">
 
-  <!-- Header -->
-  <div style="display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid rgba(99,102,241,0.12);background:rgba(10,12,20,0.88);backdrop-filter:blur(16px);position:sticky;top:3px;z-index:10">
-    <div style="width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:10px;display:grid;place-items:center;flex-shrink:0">
-      <svg width="18" height="18" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-    </div>
-    <div>
-      <h1 style="margin:0;font-size:16px;font-weight:700;color:#f1f5f9;letter-spacing:-.3px">แผงผู้ดูแลระบบ</h1>
-      <p style="margin:0;font-size:12px;color:#94a3b8">TrackingTask Admin Panel</p>
-    </div>
-    <span style="margin-left:auto;background:rgba(244,63,94,0.15);color:#f43f5e;border:1px solid rgba(244,63,94,0.3);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;letter-spacing:.5px">ADMIN</span>
-    <a href="index.html" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.07);background:rgba(99,102,241,0.08);color:#94a3b8;font-size:.8rem;text-decoration:none;transition:all .15s;white-space:nowrap" onmouseover="this.style.borderColor='rgba(99,102,241,0.3)';this.style.color='#f1f5f9'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.color='#94a3b8'">
-      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-      กลับหน้าหลัก
-    </a>
-  </div>
+  <!-- ── Sidebar ── -->
+  <aside class="app-sidebar" id="appSidebar" style="height:100vh;overflow-y:auto">
 
-  <!-- Access denied -->
-  <div id="adminDenied" style="display:none;flex:1;display:none;align-items:center;justify-content:center;padding:3rem 1.5rem">
-    <div class="adm-denied-card">
-      <div class="adm-denied-icon">
-        <svg width="28" height="28" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+    <!-- Brand + user -->
+    <div class="sb-top">
+      <div class="sb-brand">
+        <div class="sb-logo-box">
+          <svg width="22" height="22" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div>
+          <div class="sb-brand-name">TrackingTask</div>
+          <div class="app-version-badge" id="sbVersion">v1.2.4</div>
+        </div>
       </div>
-      <div style="font-size:1.05rem;font-weight:700;color:#f1f5f9;margin-bottom:.5rem">ไม่มีสิทธิ์เข้าถึงหน้านี้</div>
-      <div style="font-size:.85rem;color:#94a3b8;margin-bottom:1.5rem">หน้านี้สำหรับ Super Admin เท่านั้น</div>
-      <a href="index.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:.875rem;font-weight:600;text-decoration:none">กลับหน้าหลัก</a>
-    </div>
-  </div>
 
-  <!-- Main content -->
-  <div id="adminContent" style="display:none;flex:1">
-
-    <!-- Stats grid -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:20px 24px 0" class="adm-stats" id="adminStatsGrid"></div>
-
-    <!-- Error -->
-    <div class="adm-error" id="adminError"></div>
-
-    <!-- Toolbar -->
-    <div class="adm-toolbar">
-      <div class="adm-search-wrap">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" class="adm-search-input" id="adminSearchInput" placeholder="ค้นหาชื่อผู้ใช้หรืออีเมล…" oninput="adminSearch(this.value)">
+      <!-- User card -->
+      <div class="sb-user-card">
+        <div class="sb-avatar" id="sbAvatar">A</div>
+        <div class="sb-user-info">
+          <div class="sb-user-name" id="sbUserName">—</div>
+          <div class="sb-user-email" id="sbUserEmail" style="font-size:.68rem;color:var(--text-3)">—</div>
+        </div>
       </div>
-      <span id="adminSearchCount" style="font-size:.78rem;color:#94a3b8;white-space:nowrap"></span>
-      <button onclick="loadAdminUsers()" style="display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.07);background:rgba(99,102,241,0.08);color:#94a3b8;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap" onmouseover="this.style.borderColor='rgba(99,102,241,0.3)';this.style.color='#f1f5f9'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.color='#94a3b8'">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-        รีเฟรช
+
+      <!-- Weather placeholder -->
+      <div class="sb-weather-card">
+        <svg width="20" height="20" fill="none" stroke="#06b6d4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <div>
+          <div class="weather-temp" id="sbWeatherTemp">—°C</div>
+          <div class="weather-loc" id="sbWeatherLoc">กำลังโหลด…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <div class="sb-section-label">เมนูหลัก</div>
+    <nav class="sb-nav">
+      <a href="index.html#task" class="sb-item" style="text-decoration:none">
+        <span class="sb-item-icon">
+          <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </span>
+        <span class="sb-item-label">Daily Task</span>
+      </a>
+      <a href="index.html#tool" class="sb-item" style="text-decoration:none">
+        <span class="sb-item-icon">
+          <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </span>
+        <span class="sb-item-label">Note (QL)</span>
+      </a>
+      <a href="index.html#finance" class="sb-item" style="text-decoration:none">
+        <span class="sb-item-icon">
+          <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 1 0 0 7h5a3.5 3.5 0 1 1 0 7H6"/></svg>
+        </span>
+        <span class="sb-item-label">Finance</span>
+      </a>
+      <!-- Admin — active, no link -->
+      <div class="sb-item sb-on" style="cursor:default">
+        <span class="sb-item-icon">
+          <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </span>
+        <span class="sb-item-label">Admin</span>
+      </div>
+    </nav>
+
+    <!-- Footer -->
+    <div class="sb-footer">
+      <button class="sb-footer-btn" onclick="adminToggleTheme()" title="เปลี่ยนธีม">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        ธีม
+      </button>
+      <button class="sb-footer-btn sb-footer-btn-logout" onclick="adminLogout()" title="ออกจากระบบ">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        ออกจากระบบ
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Right column ── -->
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden">
+
+    <!-- Topbar -->
+    <div class="adm-topbar">
+      <div class="topbar-titles">
+        <span class="topbar-title">Admin Panel</span>
+        <span class="topbar-date" id="adminTopbarDate"></span>
+      </div>
+      <div class="topbar-spacer"></div>
+      <!-- Notification -->
+      <button class="hamburger-btn topbar-btn" title="การแจ้งเตือน">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </button>
+      <!-- Account -->
+      <button class="hamburger-btn topbar-btn" title="บัญชี" onclick="window.location='index.html'">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </button>
     </div>
 
-    <!-- User list -->
-    <div id="adminUserList" style="padding:0 24px 32px;display:flex;flex-direction:column;gap:8px"></div>
+    <!-- Access denied -->
+    <div id="adminDenied" style="display:none;flex:1;align-items:center;justify-content:center;padding:3rem 1.5rem">
+      <div class="adm-denied-card">
+        <div class="adm-denied-icon">
+          <svg width="28" height="28" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        </div>
+        <div style="font-size:1.05rem;font-weight:700;color:var(--text);margin-bottom:.5rem">ไม่มีสิทธิ์เข้าถึงหน้านี้</div>
+        <div style="font-size:.85rem;color:var(--text-3);margin-bottom:1.5rem">หน้านี้สำหรับ Super Admin เท่านั้น</div>
+        <a href="index.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:.875rem;font-weight:600;text-decoration:none">กลับหน้าหลัก</a>
+      </div>
+    </div>
 
-  </div>
+    <!-- Main content -->
+    <div id="adminContent" style="display:none" class="adm-content">
 
-</div>
+      <!-- Sub-header -->
+      <div class="adm-subheader">
+        <span class="adm-panel-badge">ADMIN PANEL</span>
+        <span class="adm-subheader-text">จัดการผู้ใช้งานระบบ TrackingTask</span>
+      </div>
 
-<script src="js/admin.js?v=20260705-1"></script>
+      <!-- Stats -->
+      <div class="adm-stats" id="adminStatsGrid"></div>
+
+      <!-- Toolbar -->
+      <div class="adm-toolbar">
+        <div class="adm-search-wrap">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="adm-search-input" id="adminSearchInput" placeholder="ค้นหาชื่อผู้ใช้หรืออีเมล…" oninput="adminSearch(this.value)">
+        </div>
+        <div class="adm-filter-chips" id="adminFilterChips">
+          <button class="adm-filter-chip active" data-filter="all"    onclick="setAdminFilter('all')">ทั้งหมด</button>
+          <button class="adm-filter-chip"         data-filter="active"  onclick="setAdminFilter('active')">Active</button>
+          <button class="adm-filter-chip"         data-filter="disabled" onclick="setAdminFilter('disabled')">Disabled</button>
+          <button class="adm-filter-chip"         data-filter="locked"  onclick="setAdminFilter('locked')">Locked</button>
+        </div>
+        <button class="btn btn-accent" onclick="adminAddUser()" style="white-space:nowrap;display:inline-flex;align-items:center;gap:.4rem;padding:.45rem 1rem;border-radius:10px;font-size:.82rem;font-weight:600">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          เพิ่มผู้ใช้
+        </button>
+        <button onclick="loadAdminUsers()" class="adm-btn" style="flex:none;padding:.45rem .9rem" title="รีเฟรช">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          รีเฟรช
+        </button>
+      </div>
+
+      <!-- Error -->
+      <div class="adm-error" id="adminError"></div>
+
+      <!-- User list -->
+      <div id="adminUserList"></div>
+
+    </div><!-- /adminContent -->
+  </div><!-- /right col -->
+</div><!-- /app-shell -->
+
+<!-- Toast -->
+<div id="admToast" style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.7rem 1.1rem;font-size:.84rem;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.35);transition:opacity .3s"></div>
+
+<script src="js/admin.js?v=20260710-1"></script>
 </body>
 </html>

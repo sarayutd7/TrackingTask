@@ -2973,7 +2973,7 @@
     .bottom-nav-bar { display: flex; }
     .shell { padding-top: 0; padding-bottom: 80px; padding-left: 0; padding-right: 0; }
     .app-main { padding: 0; }
-    .tab-pane { padding: 0 .75rem; }
+    .tab-pane { padding: 1rem .75rem 0; }
     .date-display { display: none; }
     .date-strip-bar {
       display: flex;
@@ -3000,15 +3000,13 @@
     .shell { padding-bottom: 0; padding-left: 0; padding-right: 0; }
     /* app-main gets its own padding */
     .app-main { padding: 0; }
-    .tab-pane { padding: 0 1.5rem; }
+    .tab-pane { padding: 1rem 1.5rem 0; }
     .date-display { display: none; }
     .app-layout { align-items: stretch; }
     .app-sidebar { min-height: unset; align-self: stretch; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
   }
 
-  /* Align top spacing of Note / Finance tabs with Daily Task */
-  #qlListView,
-  #tabFinance { padding-top: 1rem; }
+  /* qlListView already gets padding from .tab-pane */
 
   /* ── Note edit form cards ── */
   .ql-edit-card {
