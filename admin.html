@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=20260710-1">
+<link rel="stylesheet" href="css/styles.css?v=20260710-2">
 <style>
   @keyframes auroraShimmer { 0%{background-position:0% 0%} 100%{background-position:300% 0%} }
 
@@ -184,6 +184,12 @@
     border-bottom: 1px solid var(--border);
     position: sticky; top: 3px; z-index: 50;
     flex-shrink: 0;
+  }
+
+  /* Mobile touch-friendliness: avoid iOS zoom-on-focus + bigger tap targets */
+  @media (max-width: 768px) {
+    .adm-search-input { font-size: 16px; }
+    .adm-btn { padding: .6rem .85rem; min-height: 40px; font-size: .8rem; }
   }
 </style>
 </head>

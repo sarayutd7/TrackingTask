@@ -7,6 +7,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.24] — 2026-07-10
+
+### Fixed — App-wide mobile touch-friendliness
+
+- All text inputs/textareas/selects inside modals (Task, Note, Finance, Bill, Income), the lock/login screen, and both search boxes (Note search, topbar search) now render at 16px on mobile — prevents iOS Safari from auto-zooming the page every time a field is focused.
+- `.btn` now has a ~44px minimum tap height on mobile (was ~30px), and modal footer buttons (`.modal-actions`) stack to full width for easier thumb reach instead of staying squeezed to the right edge.
+- Admin Panel: user-search input also fixed for the zoom bug, and the enable/disable/permissions/delete action buttons are taller and easier to tap on mobile.
+
+---
+
 ## [1.2.23] — 2026-07-10
 
 ### Changed — Note tab visual refresh
