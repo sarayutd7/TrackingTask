@@ -1,5 +1,5 @@
 {
-  "version": "1.2.15",
+  "version": "1.2.17",
   "releaseDate": "2026-07-10",
-  "changelog": "Date strip: show 5 days on mobile (today ±2)"
+  "changelog": "Date strip redesign: fixed prev/next arrows, scrollable dates, today shown bigger"
 }

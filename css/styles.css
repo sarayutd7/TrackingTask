@@ -2804,43 +2804,61 @@
     line-height: 1;
   }
 
-  /* ── Date strip (Daily Task, mobile) ── */
+  /* ── Date strip (Daily Task) ── */
   .date-strip-bar {
     display: flex;
-    gap: .3rem;
-    padding: .5rem .9rem .5rem;
-    overflow-x: auto;
+    align-items: center;
+    gap: .4rem;
+    padding: .5rem .75rem;
     background: rgba(15,17,23,0.82);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(99,102,241,0.12);
-    -webkit-overflow-scrolling: touch;
     transition: background .25s;
   }
   .date-strip-bar:empty { display: none; }
-  .date-strip-bar::-webkit-scrollbar { display: none; }
+  /* nav arrows stay fixed at both ends — only the chip track scrolls */
+  .ds-nav-fixed {
+    flex-shrink: 0; width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-3); transition: background .15s, color .15s;
+  }
+  .ds-nav-fixed:hover { background: var(--surface3, #252840); color: var(--text); }
+  .ds-scroll-track {
+    flex: 1; min-width: 0;
+    display: flex; align-items: center;
+    gap: .35rem;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ds-scroll-track::-webkit-scrollbar { display: none; }
   .ds-chip {
     display: inline-flex; align-items: center; justify-content: center;
-    padding: .38rem .9rem;
+    padding: .3rem .7rem;
     border-radius: 999px; cursor: pointer;
-    flex-shrink: 0; transition: background .15s;
+    flex-shrink: 0; transition: background .15s, font-size .15s, padding .15s;
     border: 1px solid var(--border);
     background: var(--surface2);
     font-family: var(--font);
-    font-size: .82rem; font-weight: 500;
+    font-size: .76rem; font-weight: 500;
     color: var(--text-2);
     white-space: nowrap;
   }
   .ds-chip:hover { background: var(--surface3, #252840); color: var(--text); }
-  .ds-chip.ds-cur { background: var(--accent) !important; border-color: transparent; color: #fff !important; font-weight: 600; }
+  /* current date shown bigger — past/future days stay small */
+  .ds-chip.ds-cur {
+    background: var(--accent) !important; border-color: transparent; color: #fff !important;
+    font-weight: 700; font-size: .95rem; padding: .42rem .95rem;
+  }
   .ds-chip.ds-today:not(.ds-cur) { border-color: var(--accent); color: var(--text); }
   .ds-today-dot {
     display: inline-block; width: 6px; height: 6px; border-radius: 50%;
     background: var(--accent); margin-left: 5px; vertical-align: middle;
   }
   .ds-chip.ds-cur .ds-today-dot { background: #fff; }
-  .ds-chip.ds-nav { background: var(--surface); border-color: var(--border); color: var(--text-3); font-size: .8rem; }
-  .ds-chip.ds-nav-icon { padding: .38rem; width: 32px; height: 32px; flex-shrink: 0; }
 
   /* Card style upgrades */
   .card {

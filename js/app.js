@@ -1212,16 +1212,16 @@ function render(){
 
 // Date strip — 7-day week view around currentDate (mobile)
 function renderDateStrip(){
-  const bar = document.getElementById('dateStripBar');
-  if(!bar) return;
+  const track = document.getElementById('dsScrollTrack');
+  if(!track) return;
   const cur = new Date(currentDate+'T00:00:00');
   const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   const today = localDateStr(new Date());
+  // เรนเดอร์ช่วงกว้าง (±10 วัน) แล้วปล่อยให้ track เลื่อนซ้าย/ขวาเอง —
+  // ‹ › (ปุ่มคงที่นอก track) ใช้ shiftDay ไปทีละวัน ส่วนการเลื่อนดูวันอื่นๆ ทำผ่านการปัด
+  const RANGE = 10;
   const chips = [];
-  const isMobile = window.innerWidth <= 768;
-  const range = isMobile ? 2 : 3; // มือถือ: วันนี้ ±2 (5 วัน) / desktop: วันนี้ ±3 (7 วัน)
-  chips.push(`<button class="ds-chip ds-nav ds-nav-icon" onclick="shiftDay(-1)" title="ก่อนหน้า" aria-label="ก่อนหน้า"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>`);
-  for(let i=-range; i<=range; i++){
+  for(let i=-RANGE; i<=RANGE; i++){
     const dt = new Date(cur);
     dt.setDate(cur.getDate()+i);
     const ds = localDateStr(dt);
@@ -1229,10 +1229,11 @@ function renderDateStrip(){
     const isToday = ds===today;
     const todayDot = isToday ? '<span class="ds-today-dot"></span>' : '';
     const label = `${dt.getDate()} ${MONTHS_TH[dt.getMonth()]}${todayDot}`;
-    chips.push(`<button class="ds-chip${isCur?' ds-cur':''}${isToday?' ds-today':''}" onclick="setDateFromStrip('${ds}')" title="${isToday?'วันนี้':''}">${label}</button>`);
+    chips.push(`<button class="ds-chip${isCur?' ds-cur':''}${isToday?' ds-today':''}" data-ds="${ds}" onclick="setDateFromStrip('${ds}')" title="${isToday?'วันนี้':''}">${label}</button>`);
   }
-  chips.push(`<button class="ds-chip ds-nav ds-nav-icon" onclick="shiftDay(1)" title="ถัดไป" aria-label="ถัดไป"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>`);
-  bar.innerHTML = chips.join('');
+  track.innerHTML = chips.join('');
+  const curChip = track.querySelector('.ds-chip.ds-cur');
+  if(curChip) curChip.scrollIntoView({ block: 'nearest', inline: 'center' });
 }
 
 function setDateFromStrip(ds){
@@ -3850,6 +3851,9 @@ loadFile().then(() => {
   loadFinTags();
   renderFinance();
   startAutoRefresh();
+  // เปิดแท็บตาม ?tab= ใน URL ถ้ามี (เช่น กลับมาจาก Admin Panel)
+  const tabParam = new URLSearchParams(location.search).get('tab');
+  if(['task','tool','finance'].includes(tabParam)) switchTab(tabParam);
 });
 // ── Weather Background Animation removed ──────────────────────────────────────
 loadAppVersion();
