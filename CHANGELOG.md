@@ -7,6 +7,38 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.10] — 2026-07-10
+
+### Added
+
+- Finance modal (`#finOverlay`) now has a **วันที่ทำรายการ** date field — new/edited entries can be assigned to any date instead of always using whichever date the Daily Task tab happens to be on. Editing an entry and changing its date moves it between `DB._finance[dateKey]` buckets; linked recurring-bill payments and income logs now also use the picked date.
+
+### Fixed
+
+- Date strip (`#dateStripBar`) on iPhone portrait only showed ~3 days before requiring a scroll. The `← ก่อนหน้า` / `ถัดไป →` nav buttons took up a large share of the strip's width; replaced them with compact icon-only arrow buttons, freeing enough room for ~5 date chips to be visible at once (horizontal scroll still available for the rest). Also removed a stray `.ds-chip { flex:1 }` mobile override that fought the strip's intended content-sized, horizontally-scrollable chip layout.
+
+---
+
+## [1.2.9] — 2026-07-10
+
+### Fixed
+
+- **Sidebar drawer footer invisible on mobile**: `.app-layout` had `position:relative; z-index:1`, which trapped `.app-sidebar`'s `z-index:300` inside a stacking context capped at `1` — so the theme-toggle and logout buttons in the sidebar footer rendered *behind* `.bottom-nav-bar` (`z-index:200`) and were invisible even though they were correctly positioned in the DOM. Removed the unneeded `z-index` from `.app-layout` so the sidebar's own `z-index:300` applies as originally intended.
+- **Mood badge showed a raw OS emoji**: the collapsed Daily Log header (`#dlMoodBadge`) displayed the stored mood as a literal emoji character, which looked inconsistent with the custom SVG face icons used on the mood picker pills. Added a `MOOD_ICONS`/`moodIconHtml()` mapping so the badge now renders the same custom SVG icon (in the mood's color) instead of the native emoji glyph.
+- **Changelog was a small centered popup**: converted to a full-page view on mobile (100vw/100dvh, no border radius) with a back-arrow button instead of a close (✕) button, matching in-app page navigation instead of a modal dialog.
+
+---
+
+## [1.2.8] — 2026-07-10
+
+### Fixed — Mobile usability
+
+- Viewport meta tag no longer disables pinch-zoom (`user-scalable=no, maximum-scale=1.0` removed)
+- Topbar date pill is now centered in the topbar instead of sitting left-aligned next to the page title
+- Add-task button (`.add-btn`/`.mb-add-btn`) made larger and higher-contrast (solid accent border/background instead of faint dashed muted style, bigger icon and text) for easier tapping on mobile
+
+---
+
 ## [1.2.7] — 2026-07-10
 
 ### Changed — Faster cross-device sync

@@ -785,7 +785,7 @@ function renderBoard(){
       </div>
       <div class="col-body" id="list-${esc(col.id)}"></div>
       <button class="add-btn add-task-btn" style="width:94%" onclick="openModal('${esc(col.id)}')">
-        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         เพิ่มงาน
       </button>
     </div>`;
@@ -1019,7 +1019,7 @@ function renderMobileBoard(g, tasks){
       </div>
       <div class="mb-task-list">${cardsHtml}</div>
       <button class="mb-add-btn" onclick="openModal('${esc(col.id)}')">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         เพิ่มงาน
       </button>
       <div class="mb-pane-spacer"></div>
@@ -1118,17 +1118,17 @@ function renderDateStrip(){
   const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   const today = localDateStr(new Date());
   const chips = [];
-  chips.push(`<button class="ds-chip ds-nav" onclick="shiftDay(-1)">← ก่อนหน้า</button>`);
+  chips.push(`<button class="ds-chip ds-nav ds-nav-icon" onclick="shiftDay(-1)" title="ก่อนหน้า" aria-label="ก่อนหน้า"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>`);
   for(let i=-3; i<=3; i++){
     const dt = new Date(cur);
     dt.setDate(cur.getDate()+i);
     const ds = localDateStr(dt);
     const isCur = ds===currentDate;
     const isToday = ds===today;
-    const label = `${dt.getDate()} ${MONTHS_TH[dt.getMonth()]}${isToday?' (วันนี้)':''}`;
-    chips.push(`<button class="ds-chip${isCur?' ds-cur':''}" onclick="setDateFromStrip('${ds}')">${label}</button>`);
+    const label = `${dt.getDate()} ${MONTHS_TH[dt.getMonth()]}${isToday?' •':''}`;
+    chips.push(`<button class="ds-chip${isCur?' ds-cur':''}" onclick="setDateFromStrip('${ds}')" title="${isToday?'วันนี้':''}">${label}</button>`);
   }
-  chips.push(`<button class="ds-chip ds-nav" onclick="shiftDay(1)">ถัดไป →</button>`);
+  chips.push(`<button class="ds-chip ds-nav ds-nav-icon" onclick="shiftDay(1)" title="ถัดไป" aria-label="ถัดไป"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>`);
   bar.innerHTML = chips.join('');
 }
 
@@ -1171,13 +1171,27 @@ function saveDL(){
   _saveDLTimer = setTimeout(() => writeFile(), 1500);
 }
 
+const MOOD_ICONS = {
+  '😄': { color:'#f59e0b', svg:'<circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/><path d="M8 14s1.5 3 4 3 4-3 4-3"/>' },
+  '🙂': { color:'#84cc16', svg:'<circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/><path d="M9 14.5s1 2 3 2 3-2 3-2"/>' },
+  '😐': { color:'#94a3b8', svg:'<circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/><line x1="9" y1="15" x2="15" y2="15"/>' },
+  '😔': { color:'#60a5fa', svg:'<circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/><path d="M9 16s1-2 3-2 3 2 3 2"/>' },
+  '😴': { color:'#a78bfa', svg:'<circle cx="12" cy="12" r="9"/><path d="M8 10.5c.5-.5 1.5-.5 2 0"/><path d="M14 10.5c.5-.5 1.5-.5 2 0"/><path d="M9.5 15s1-1 2.5-1 2.5 1 2.5 1"/><text x="16" y="8" font-size="4" fill="currentColor" stroke="none">z</text>' },
+  '😡': { color:'#f87171', svg:'<circle cx="12" cy="12" r="9"/><circle cx="9" cy="11" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="11" r="1.2" fill="currentColor" stroke="none"/><path d="M7.5 8.5l3 1.5"/><path d="M16.5 8.5l-3 1.5"/><path d="M9 16s1-2 3-2 3 2 3 2"/>' },
+};
+function moodIconHtml(emoji){
+  const m = MOOD_ICONS[emoji];
+  if(!m) return '';
+  return `<svg width="18" height="18" fill="none" stroke="${m.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">${m.svg}</svg>`;
+}
+
 function renderDL(){
   const log = DL[currentDate] || {};
   document.getElementById('dlBlocker').value   = log.blocker   || '';
   document.getElementById('dlHighlight').value = log.highlight || '';
   document.getElementById('dlNote').value      = log.note      || '';
   ['dlBlocker','dlHighlight','dlNote'].forEach(id => dlResize(document.getElementById(id)));
-  document.getElementById('dlMoodBadge').textContent = log.mood || '';
+  document.getElementById('dlMoodBadge').innerHTML = moodIconHtml(log.mood);
   document.querySelectorAll('#dlMoodRow .dl-mood-pill').forEach(btn=>{
     btn.classList.toggle('active', btn.dataset.mood === log.mood);
   });
@@ -3166,6 +3180,7 @@ function openFinanceModal(id=null){
     document.getElementById('finModalTitle').textContent = 'แก้ไขรายการ';
     document.getElementById('finItem').value = e.item || '';
     document.getElementById('finAmount').value = e.amount || '';
+    document.getElementById('finDate').value = found.date || currentDate;
     document.getElementById('finTime').value = e.time || '';
     document.getElementById('finNote').value = e.note || '';
     selectFinType(e.type || 'income');
@@ -3198,6 +3213,7 @@ function openFinanceModal(id=null){
     document.getElementById('finModalTitle').textContent = 'เพิ่มรายการ';
     document.getElementById('finItem').value = '';
     document.getElementById('finAmount').value = '';
+    document.getElementById('finDate').value = currentDate;
     const now = new Date();
     document.getElementById('finTime').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
     document.getElementById('finNote').value = '';
@@ -3256,33 +3272,34 @@ async function saveFinance(){
   let existingBillId = null;
   let existingIncomeSourceId = null;
   let financeId;
-  let saveDate = currentDate;      // วันที่จะบันทึก: currentDate สำหรับรายการใหม่, editDate สำหรับแก้ไข
+  const pickedDate = document.getElementById('finDate').value || currentDate;
+  let saveDate = pickedDate;      // วันที่จะบันทึก: วันที่เลือกในฟอร์ม (ทั้งรายการใหม่และแก้ไข)
   let entries = getFinance(saveDate);
 
   if(finEditId){
     const found = findFinanceById(finEditId);
     if(!found) return;
-    saveDate = found.date;          // บันทึกกลับไปยังวันเดิม ไม่ใช่วันที่เลือกอยู่
-    entries = getFinance(saveDate);
-    const idx = entries.findIndex(x=>x.id===finEditId);
+    const oldDate = found.date;
+    const oldEntries = getFinance(oldDate);
+    const idx = oldEntries.findIndex(x=>x.id===finEditId);
     if(idx<0) return;
-    existingBillId = entries[idx].billId || null;
-    existingIncomeSourceId = entries[idx].incomeSourceId || null;
-    financeId = entries[idx].id;
+    existingBillId = oldEntries[idx].billId || null;
+    existingIncomeSourceId = oldEntries[idx].incomeSourceId || null;
+    financeId = oldEntries[idx].id;
     if(existingBillId && !isRecurring){
-      const ok = confirm(`"${entries[idx].item}" เป็นรายจ่ายประจำอยู่ การเอา tag นี้ออกจะลบรายการรายจ่ายประจำที่ผูกไว้ด้วย (ประวัติการจ่ายเดือนอื่นจะไม่ถูกลบ) ต้องการดำเนินการต่อหรือไม่?`);
+      const ok = confirm(`"${oldEntries[idx].item}" เป็นรายจ่ายประจำอยู่ การเอา tag นี้ออกจะลบรายการรายจ่ายประจำที่ผูกไว้ด้วย (ประวัติการจ่ายเดือนอื่นจะไม่ถูกลบ) ต้องการดำเนินการต่อหรือไม่?`);
       if(!ok) return;
       unlinkFinanceBill(existingBillId);
       existingBillId = null;
     }
     if(existingIncomeSourceId && !isIncomeTag){
-      const ok = confirm(`"${entries[idx].item}" เป็นแหล่งรายรับอยู่ การเอา tag นี้ออกจะลบแหล่งรายรับที่ผูกไว้ด้วย (ประวัติการรับเงินเดือนอื่นจะไม่ถูกลบ) ต้องการดำเนินการต่อหรือไม่?`);
+      const ok = confirm(`"${oldEntries[idx].item}" เป็นแหล่งรายรับอยู่ การเอา tag นี้ออกจะลบแหล่งรายรับที่ผูกไว้ด้วย (ประวัติการรับเงินเดือนอื่นจะไม่ถูกลบ) ต้องการดำเนินการต่อหรือไม่?`);
       if(!ok) return;
       unlinkFinanceIncomeSource(existingIncomeSourceId);
       existingIncomeSourceId = null;
     }
-    entries[idx] = {
-      ...entries[idx],
+    const updatedEntry = {
+      ...oldEntries[idx],
       type: selectedFinType,
       item, amount, time,
       paymentMethod: selectedFinPM,
@@ -3290,6 +3307,13 @@ async function saveFinance(){
       tag, billId: existingBillId, incomeSourceId: existingIncomeSourceId,
       updatedAt: now.toISOString()
     };
+    if(oldDate === saveDate){
+      entries[idx] = updatedEntry;   // ไม่เปลี่ยนวัน — แก้ในตำแหน่งเดิม
+    } else {
+      oldEntries.splice(idx, 1);     // เปลี่ยนวัน — ย้ายรายการไปวันใหม่
+      setFinance(oldDate, oldEntries);
+      entries.push(updatedEntry);
+    }
   } else {
     financeId = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
     entries.push({
@@ -3305,7 +3329,7 @@ async function saveFinance(){
   }
 
   if(isRecurring){
-    const month = currentDate.slice(0,7);
+    const month = saveDate.slice(0,7);
     if(existingBillId){
       const bills = getBills();
       const bIdx = bills.findIndex(b=>b.id===existingBillId);
@@ -3324,7 +3348,7 @@ async function saveFinance(){
         createdAt: now.toISOString(), updatedAt: now.toISOString()
       });
       const payments = getBillPayments(month);
-      payments.push({ billId, paid: true, paidDate: currentDate, paidAmount: amount, financeEntryId: financeId, amount, image: finSlipData });
+      payments.push({ billId, paid: true, paidDate: saveDate, paidAmount: amount, financeEntryId: financeId, amount, image: finSlipData });
       setBillPayments(month, payments);
       const idx2 = entries.findIndex(x=>x.id===financeId);
       if(idx2>-1) entries[idx2].billId = billId;
@@ -3340,7 +3364,7 @@ async function saveFinance(){
       const logs = getIncomeLogs();
       const log = logs.find(l=>l.financeEntryId===financeId);
       if(log){ log.amount = amount; log.paymentMethod = selectedFinPM; log.note = note; }
-      else logs.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,8), sourceId: existingIncomeSourceId, amount, date: currentDate, time, paymentMethod: selectedFinPM, note, financeEntryId: financeId, createdAt: now.toISOString() });
+      else logs.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,8), sourceId: existingIncomeSourceId, amount, date: saveDate, time, paymentMethod: selectedFinPM, note, financeEntryId: financeId, createdAt: now.toISOString() });
       setIncomeLogs(logs);
     } else {
       const sourceId = Date.now().toString(36)+Math.random().toString(36).slice(2,6)+'s';
@@ -3350,7 +3374,7 @@ async function saveFinance(){
         createdAt: now.toISOString(), updatedAt: now.toISOString()
       });
       const logs = getIncomeLogs();
-      logs.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,8), sourceId, amount, date: currentDate, time, paymentMethod: selectedFinPM, note, financeEntryId: financeId, createdAt: now.toISOString() });
+      logs.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,8), sourceId, amount, date: saveDate, time, paymentMethod: selectedFinPM, note, financeEntryId: financeId, createdAt: now.toISOString() });
       setIncomeLogs(logs);
       const idx2 = entries.findIndex(x=>x.id===financeId);
       if(idx2>-1) entries[idx2].incomeSourceId = sourceId;
