@@ -7,6 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.21] — 2026-07-10
+
+### Changed
+
+- Theme toggle button (sidebar footer, both `index.html` and `admin.html`) now swaps its icon between a moon (dark theme) and a sun (light theme) to match the active theme, instead of always showing a static moon/sun icon regardless of state — consistent with the desktop header's theme button which already did this via emoji.
+
+---
+
 ## [1.2.20] — 2026-07-10
 
 ### Changed

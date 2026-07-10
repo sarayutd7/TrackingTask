@@ -1,5 +1,5 @@
 {
-  "version": "1.2.20",
+  "version": "1.2.21",
   "releaseDate": "2026-07-10",
-  "changelog": "Note cards: background color now matches the note's tag"
+  "changelog": "Theme button icon now swaps between moon/sun to match the active theme"
 }
