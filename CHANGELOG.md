@@ -7,6 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.11] — 2026-07-10
+
+### Added
+
+- **Daily Task: hide individual tasks behind a PIN**, mirroring the existing hidden-Note feature. Task editor (`#overlay`) has a new "ซ่อนงานนี้" toggle; hidden tasks render as a locked placeholder card (lock icon + "ปลดล็อก" button) on both desktop and mobile boards instead of showing their title/note. Unlocking requires the account PIN (`POST /verify-pin`) and is session-only (`taskUnlockedIds` Set — resets on next app load, same as `qlUnlockedIds` for Notes). A quick lock/unlock icon button was also added to each card's action row for one-tap hide/unhide without opening the editor.
+
+---
+
 ## [1.2.10] — 2026-07-10
 
 ### Added

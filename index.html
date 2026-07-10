@@ -129,7 +129,7 @@
           </div>
           <div>
             <div class="sb-brand-name">TrackingTask</div>
-            <button id="appVersion" class="app-version-badge" onclick="openChangelogModal()" title="ดู Changelog">v1.2.10</button>
+            <button id="appVersion" class="app-version-badge" onclick="openChangelogModal()" title="ดู Changelog">v1.2.11</button>
           </div>
         </div>
         <div class="sb-user-card">
@@ -756,6 +756,16 @@
       <label>สถานะ</label>
       <div class="status-row" id="statusRow"></div>
     </div>
+    <div class="field">
+      <div class="ql-toggle-card hide" id="taskHideToggle" onclick="taskToggleHide()">
+        <span class="ql-toggle-icon"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2.5"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+        <div class="ql-toggle-info">
+          <div class="ql-toggle-name">ซ่อนงานนี้</div>
+          <div class="ql-toggle-desc">ต้องใส่ PIN เพื่อดู</div>
+        </div>
+        <div class="ql-toggle-switch"></div>
+      </div>
+    </div>
     </div><!-- /modal-body -->
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">ยกเลิก</button>
@@ -1308,6 +1318,28 @@
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeQlUnlock()">ยกเลิก</button>
       <button class="btn btn-accent" onclick="submitQlUnlock()">ปลดล็อก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task Unlock (ใส่ PIN เพื่อดูงานที่ซ่อนไว้) -->
+<div class="overlay" id="taskUnlockOverlay" style="display:none" onclick="if(event.target===this) closeTaskUnlock()">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-header">
+      <span class="modal-title">🔒 ใส่ PIN เพื่อดูงานนี้</span>
+      <button class="close-btn" onclick="closeTaskUnlock()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <input class="lock-input" type="password" inputmode="numeric" pattern="\d*" maxlength="6" id="taskUnlockPin" placeholder="PIN 6 หลัก" onkeydown="if(event.key==='Enter') submitTaskUnlock()">
+        <div class="lock-error" id="taskUnlockError"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeTaskUnlock()">ยกเลิก</button>
+      <button class="btn btn-accent" onclick="submitTaskUnlock()">ปลดล็อก</button>
     </div>
   </div>
 </div>

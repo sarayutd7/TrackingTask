@@ -455,6 +455,14 @@
     box-shadow: 0 4px 20px rgba(99,102,241,0.15);
     transform: translateY(-1px);
   }
+  .card.is-locked {
+    background: rgba(255,255,255,0.02) !important;
+    border-color: rgba(255,255,255,0.07) !important;
+    border-style: dashed !important;
+    cursor: default;
+  }
+  .card.is-locked::before { background: transparent !important; }
+  .card.is-locked:hover { transform: none; box-shadow: none; background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.07); }
 
   .card-title {
     font-size: .88rem;
@@ -556,6 +564,7 @@
   .icon-btn.move:hover  { color: var(--green); }
   .icon-btn.del:hover   { color: var(--red); }
   .icon-btn.sched:hover { color: var(--blue); }
+  .icon-btn.hide:hover  { color: var(--amber); }
 
   /* ── Lock Screen ── */
   .lock-screen {
@@ -2962,6 +2971,8 @@
     .mb-task-card.c-pink::before   { background: var(--pink); }
     .mb-task-card.c-teal::before   { background: var(--teal); }
     .mb-task-card.c-gray::before   { background: var(--gray); }
+    .mb-task-card.is-locked { border-style: dashed !important; background: rgba(255,255,255,0.02) !important; cursor: default; }
+    .mb-task-card.is-locked::before { background: transparent !important; }
     .mb-task-top { display: flex; align-items: flex-start; gap: .5rem; }
     .mb-task-title {
       font-size: .86rem; font-weight: 600; color: var(--text);
