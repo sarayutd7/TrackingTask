@@ -3572,10 +3572,38 @@ async function loadAppVersion(){
   } catch(e){}
 }
 
-function openChangelogModal() {
+async function openChangelogModal() {
   const body = document.getElementById('changelogBody');
-  if (body) {
-    body.innerHTML = `
+  if (body && !body.dataset.loaded) {
+    body.innerHTML = '<div style="padding:1rem;color:var(--text-3)">กำลังโหลด...</div>';
+    try {
+      const r = await fetch('/CHANGELOG.md');
+      if (r.ok) {
+        const md = await r.text();
+        // Parse sections by ## [version] header
+        const sections = md.split(/^## \[/m).slice(1);
+        const badges = { Fixed:'cl-badge-patch', Changed:'cl-badge-minor', Added:'cl-badge-minor', Security:'cl-badge-patch', Removed:'cl-badge-patch' };
+        body.innerHTML = sections.map(s => {
+          const header = s.match(/^([^\]]+)\] — (\d{4}-\d{2}-\d{2})/);
+          if (!header) return '';
+          const ver = header[1], date = header[2];
+          const rest = s.slice(header[0].length + 1);
+          // group by ### subheader
+          const groups = rest.split(/^### /m).slice(1);
+          const content = groups.map(g => {
+            const [name, ...lines] = g.split('\n');
+            const items = lines.filter(l => l.trim().startsWith('-')).map(l => `<li>${esc(l.replace(/^- /,'').trim())}</li>`).join('');
+            const badgeClass = badges[name.trim()] || 'cl-badge-patch';
+            return `<div class="cl-badge ${badgeClass}">${esc(name.trim())}</div><ul class="cl-list">${items}</ul>`;
+          }).join('');
+          return `<div class="cl-entry"><div class="cl-version-tag">v${esc(ver)} <span class="cl-date">${esc(date)}</span></div>${content}</div>`;
+        }).join('');
+        body.dataset.loaded = '1';
+      }
+    } catch(_) {}
+    if (!body.dataset.loaded) {
+      // fallback legacy hardcoded
+      body.innerHTML = `
       <div class="cl-entry">
         <div class="cl-version-tag">v1.1.1 <span class="cl-date">2026-07-09</span></div>
         <div class="cl-badge cl-badge-patch">UI Polish</div>
@@ -3670,6 +3698,7 @@ function openChangelogModal() {
         </ul>
       </div>
     `;
+    }
   }
   document.getElementById('changelogModal').style.display = 'flex';
 }
