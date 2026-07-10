@@ -7,6 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.22] — 2026-07-10
+
+### Fixed
+
+- Finance "บิลประจำเดือน" (monthly bills) preview widget was missing `display: flex` on `.fin-bills-preview .bill-card`, so the icon/name/amount/status of each bill stacked as separate block-level rows instead of sitting in one compact horizontal row. This made each bill take up 3-4x more vertical space than intended, especially painful on mobile where it filled the whole screen for just a few bills. Added the missing flex layout plus a tighter mobile breakpoint (smaller icon/padding under 480px).
+
+---
+
 ## [1.2.21] — 2026-07-10
 
 ### Changed
