@@ -7,6 +7,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.12] — 2026-07-10
+
+### Fixed — Stale cached JS/CSS/HTML across devices
+
+- The production domain (trackingtask.online) is served via Cloudflare Pages. Since this project has no build step, `index.html`/`js/app.js`/`css/styles.css`/`sw.js` keep the exact same filenames on every deploy — without explicit cache headers, browsers and Cloudflare's edge cache can keep serving an old cached copy indefinitely, even after a new version is deployed and the version badge would otherwise show the latest number (the badge text itself lives in `index.html`, which can update independently of a stale cached `app.js`, silently breaking newly-added JS behavior with no visible error).
+- Added `Cache-Control: no-cache, must-revalidate` in `_headers` for `*.html`, `*.js`, `*.css`, and `sw.js` so every load revalidates with the server (a cheap 304 when nothing changed) instead of trusting a possibly stale cached copy.
+- **Devices already stuck on a stale cache from before this fix need one manual hard-refresh / "clear website data" to escape it** — this fix only prevents the problem going forward.
+
+---
+
 ## [1.2.11] — 2026-07-10
 
 ### Added

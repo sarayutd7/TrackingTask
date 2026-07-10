@@ -1,5 +1,5 @@
 {
-  "version": "1.2.11",
+  "version": "1.2.12",
   "releaseDate": "2026-07-10",
-  "changelog": "Daily Task: hide individual tasks behind PIN (like hidden Notes)"
+  "changelog": "Fixed stale cached JS/CSS/HTML across devices — force revalidation via Cache-Control headers"
 }
