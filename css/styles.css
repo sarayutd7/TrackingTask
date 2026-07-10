@@ -2066,11 +2066,18 @@
   #qlFilterBar::-webkit-scrollbar { display: none; }
   #qlFilterBar .ql-filter-btn {
     flex-shrink: 0 !important;
-    padding: .45rem .9rem;
+    padding: .4rem .8rem .4rem .55rem;
     font-size: .78rem;
     border-radius: 8px !important;
     min-height: 36px;
     white-space: nowrap;
+  }
+  /* token-chip swatch: bigger rounded square instead of a tiny dot, so the
+     tag's color reads clearly even before the chip is active */
+  #qlFilterBar .ql-filter-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 5px;
   }
 
   .ql-search-wrap {
