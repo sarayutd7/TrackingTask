@@ -1,5 +1,5 @@
 {
-  "version": "1.2.7",
+  "version": "1.2.8",
   "releaseDate": "2026-07-10",
-  "changelog": "Faster cross-device sync — poll interval reduced from 15s to 5s"
+  "changelog": "Mobile: enabled pinch-zoom, centered topbar date, bigger add-task buttons"
 }

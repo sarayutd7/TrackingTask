@@ -7,6 +7,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.8] — 2026-07-10
+
+### Fixed — Mobile usability
+
+- Viewport meta tag no longer disables pinch-zoom (`user-scalable=no, maximum-scale=1.0` removed)
+- Topbar date pill is now centered in the topbar instead of sitting left-aligned next to the page title
+- Add-task button (`.add-btn`/`.mb-add-btn`) made larger and higher-contrast (solid accent border/background instead of faint dashed muted style, bigger icon and text) for easier tapping on mobile
+
+---
+
 ## [1.2.7] — 2026-07-10
 
 ### Changed — Faster cross-device sync
