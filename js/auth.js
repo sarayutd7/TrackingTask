@@ -41,6 +41,7 @@ async function handleGoogleCredential(response){
     localStorage.setItem(AUTH_TOKEN_KEY, data.token);
     localStorage.setItem(AUTH_USER_KEY, data.username);
     localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(data.allowedMenus || ['task','tool','finance']));
+    localStorage.setItem(AUTH_IS_ADMIN_KEY, data.isAdmin ? '1' : '0');
     await afterAuthSuccess();
   } catch(e){
     if(errorEl) errorEl.textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง';
@@ -129,6 +130,7 @@ async function microsoftSignIn(){
     localStorage.setItem(AUTH_TOKEN_KEY, data.token);
     localStorage.setItem(AUTH_USER_KEY, data.username);
     localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(data.allowedMenus || ['task','tool','finance']));
+    localStorage.setItem(AUTH_IS_ADMIN_KEY, data.isAdmin ? '1' : '0');
     await afterAuthSuccess();
   } catch(e){
     errorEl.textContent = 'เข้าสู่ระบบด้วย Microsoft ไม่สำเร็จ ลองใหม่อีกครั้ง';

@@ -215,7 +215,7 @@ async function loginOrRegisterOAuthUser(env, email, provider, corsHdrs) {
   const now = Math.floor(Date.now() / 1000);
   const token = await signJWT({ sub: username, iat: now, exp: now + TOKEN_TTL_SECONDS }, env.JWT_SECRET);
   const allowedMenus = Array.isArray(userRec.allowedMenus) ? userRec.allowedMenus : ALL_MENUS.slice();
-  return jsonResponse({ token, username, allowedMenus }, 200, corsHdrs);
+  return jsonResponse({ token, username, allowedMenus, isAdmin: ADMIN_USERNAMES.has(username) }, 200, corsHdrs);
 }
 
 // ── Request metadata (สำหรับแปะใน email แจ้งเตือนความปลอดภัย) ──
