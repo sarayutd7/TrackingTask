@@ -7,6 +7,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.17] — 2026-07-10
+
+### Changed — Date strip redesign
+
+- `‹`/`›` nav arrows are now fixed at both ends of the date strip (`.ds-nav-fixed`) — they no longer scroll away with the date chips.
+- The date chips live in their own scrollable track (`#dsScrollTrack`) rendering a wide ±10-day range; swiping/scrolling reveals more days in either direction instead of being capped to a fixed count.
+- Today's/selected chip renders visibly bigger (`.ds-chip.ds-cur`, `.95rem` font) while other days stay smaller (`.76rem`), and the current chip auto-scrolls into view centered whenever the date changes.
+- Same structure and behavior on both mobile and desktop — desktop just has more room, so naturally more days are visible at once, with scrolling available for the rest either way.
+
+---
+
 ## [1.2.16] — 2026-07-10
 
 ### Added
