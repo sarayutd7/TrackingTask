@@ -7,6 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.18] — 2026-07-10
+
+### Changed — Security
+
+- App no longer auto-logs in from a stored JWT token on page load. Previously, if a valid token existed in `localStorage` (up to its 30-day TTL), opening the app skipped the lock screen entirely. Now `lockShow()` always runs on load, requiring PIN (or OAuth) entry every time the app is opened, even with a still-valid token sitting in storage.
+
+---
+
 ## [1.2.17] — 2026-07-10
 
 ### Changed — Date strip redesign
