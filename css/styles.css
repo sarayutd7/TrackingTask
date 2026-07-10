@@ -3804,3 +3804,38 @@
   .fin-card-new { flex-direction: row; align-items: center; gap: .75rem; }
   .fin-card-new::before { top: 0; left: 0; right: auto; bottom: 0; width: 3px; height: auto; }
 }
+
+/* ── Mobile touch-friendliness: form zoom fix + bigger tap targets ── */
+@media (max-width: 768px) {
+  /* iOS Safari zooms the viewport when a focused input's font-size is below 16px */
+  .field input,
+  .field textarea,
+  .field select,
+  .lock-input,
+  .ql-search-input,
+  .topbar-search-input,
+  input[type="date"] {
+    font-size: 16px;
+  }
+
+  .btn {
+    padding: .7rem 1.1rem;
+    min-height: 44px;
+    font-size: .88rem;
+  }
+
+  .lock-submit { min-height: 48px; }
+
+  .close-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .modal-actions {
+    flex-wrap: wrap;
+  }
+  .modal-actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
