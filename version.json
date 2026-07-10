@@ -1,5 +1,5 @@
 {
-  "version": "1.2.12",
+  "version": "1.2.13",
   "releaseDate": "2026-07-10",
-  "changelog": "Fixed stale cached JS/CSS/HTML across devices — force revalidation via Cache-Control headers"
+  "changelog": "Bigger toggle switches; date strip shows 3 days on mobile, 7 on desktop"
 }

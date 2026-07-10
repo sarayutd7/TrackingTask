@@ -7,6 +7,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.13] — 2026-07-10
+
+### Changed
+
+- Toggle switches (`.ql-toggle-switch`, used by the Note pin/hide toggles and the new Task hide toggle) enlarged from 30×17px to 46×26px, with a bigger thumb and icon, for an easier tap target.
+- Date strip (`#dateStripBar`) now shows a different range depending on screen size: **3 days (today ±1) on mobile** (`window.innerWidth <= 768`) so no chip gets cut off at the screen edge, and **7 days (today ±3) on desktop** as before.
+
+---
+
 ## [1.2.12] — 2026-07-10
 
 ### Fixed — Stale cached JS/CSS/HTML across devices
