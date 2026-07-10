@@ -3850,6 +3850,9 @@ loadFile().then(() => {
   loadFinTags();
   renderFinance();
   startAutoRefresh();
+  // เปิดแท็บตาม ?tab= ใน URL ถ้ามี (เช่น กลับมาจาก Admin Panel)
+  const tabParam = new URLSearchParams(location.search).get('tab');
+  if(['task','tool','finance'].includes(tabParam)) switchTab(tabParam);
 });
 // ── Weather Background Animation removed ──────────────────────────────────────
 loadAppVersion();

@@ -7,6 +7,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.16] — 2026-07-10
+
+### Added
+
+- **Admin Panel: bottom nav on mobile** (`admin.html`) — previously there was no way to navigate back to Daily Task/Note/Finance from the Admin Panel on mobile (the desktop sidebar has links, but the sidebar is hidden on small screens). Added the same bottom nav bar pattern used on the main app, with "Admin" shown active.
+- `index.html` now reads a `?tab=task|tool|finance` query param on load and switches to that tab — used by the new Admin bottom nav links and by the desktop sidebar's "back to app" links (which previously used `#task`/`#tool`/`#finance` hash fragments that `app.js` never actually read, so they silently did nothing beyond landing on the default tab).
+
+### Fixed
+
+- `admin.html` viewport meta tag also had `user-scalable=no, maximum-scale=1.0` (same issue fixed on `index.html` in v1.2.8) — removed so pinch-zoom works there too.
+- Added extra bottom padding to `.adm-content` on mobile so the new fixed bottom nav doesn't cover the last item in a long, scrolled user list.
+
+---
+
 ## [1.2.15] — 2026-07-10
 
 ### Changed
