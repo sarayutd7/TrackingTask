@@ -350,7 +350,7 @@
     border: 1px solid rgba(99,102,241,0.18);
     border-radius: 16px;
     padding: 0;
-    min-height: 200px;
+    min-height: 400px;
     min-width: 0;
     width: 100%;
     box-sizing: border-box;
@@ -2771,7 +2771,7 @@
   .app-main { flex: 1; min-width: 0; overscroll-behavior: none; display: flex; flex-direction: column; min-height: 0; background: transparent; }
   .tab-pane { flex: 1; overflow-y: auto; overscroll-behavior: contain; background: transparent; }
   /* Task tab only: flex column so board-scroll-wrap can fill remaining height */
-  #tabTask { overflow-y: hidden; display: flex; flex-direction: column; min-height: 0; }
+  #tabTask { overflow-y: hidden; display: flex; flex-direction: column; min-height: 0; padding-top: .5rem; padding-bottom: .5rem; }
 
   /* ── Bottom Nav (mobile) ── */
   .bottom-nav-bar {
