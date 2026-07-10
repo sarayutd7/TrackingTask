@@ -1585,6 +1585,11 @@ function qlCardHtml(item, i){
   }
   const tagLabel  = item.tag ? qlTagLabel(item.tag) : '';
   const tagColor  = item.tag ? qlTagColor(item.tag) : '';
+  // ถ้าไม่ได้เลือกสีการ์ดเอง (plain) แต่มี tag ติดอยู่ ให้ทำพื้นหลังการ์ดตามสี tag แทน
+  // เพื่อให้เห็นความแตกต่างของแต่ละ tag ได้ทันทีโดยไม่ต้องเลือกสีเอง
+  const useTagBg  = color === 'plain' && tagColor;
+  const cardBgStyle   = useTagBg ? ` style="background:${tagColor}14;border-color:${tagColor}38"` : '';
+  const accentBgStyle = useTagBg ? ` style="background:${tagColor}"` : '';
   const tagChip   = tagLabel
     ? `<span class="note-tag-chip" style="background:${tagColor}22;color:${tagColor};border:1px solid ${tagColor}44">${esc(tagLabel)}</span>`
     : '';
@@ -1616,9 +1621,9 @@ function qlCardHtml(item, i){
     ? `<span class="note-type-badge">📄 Permanent</span>`
     : `<span class="note-type-badge">💡 Fleeting</span>`;
   return `
-  <div class="ql-card note-card nc-${color}${isPinned?' is-pinned':''}" data-tag="${esc(item.tag||'')}" onclick="if(window.innerWidth<=768)qlOpenRead(${i})">
+  <div class="ql-card note-card nc-${color}${isPinned?' is-pinned':''}" data-tag="${esc(item.tag||'')}"${cardBgStyle} onclick="if(window.innerWidth<=768)qlOpenRead(${i})">
     <div class="note-card-inner">
-      <div class="note-accent"></div>
+      <div class="note-accent"${accentBgStyle}></div>
       ${isPinned ? `<div class="note-footer" style="margin-bottom:6px"><span class="pin-icon">📌</span>${tagChip?`<span style="margin-left:4px">${tagChip}</span>`:''}</div>` : ''}
       <div class="note-title">${esc(item.name)}</div>
       ${detailContent ? `<div class="note-body">${detailContent}</div>` : ''}

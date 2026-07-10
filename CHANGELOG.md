@@ -7,6 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.2.20] — 2026-07-10
+
+### Changed
+
+- Note cards with the default "plain" color now get a background/border tint automatically derived from their tag's color (`qlTagColor()`), instead of all looking the same dark shade regardless of tag. Notes with a manually-chosen color (`nc-red`/`nc-blue`/etc.) are unaffected — that explicit choice still takes priority.
+
+---
+
 ## [1.2.19] — 2026-07-10
 
 ### Fixed
