@@ -180,6 +180,47 @@ async function verifyOAuthIdToken(idToken, jwksUrl, expectedAud, issuerOk) {
   return payload;
 }
 
+// ── GitHub OAuth (authorization-code flow) ─────────────
+// GitHub ไม่ออก id_token/JWKS แบบ Google/Microsoft — ต้องแลก code เป็น access_token ฝั่งเซิร์ฟเวอร์
+// ด้วย client_secret (เก็บเป็น Worker secret เท่านั้น ห้ามหลุดไปฝั่ง frontend)
+async function verifyGithubCodeAndGetEmail(env, code, redirectUri) {
+  try {
+    const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        client_id: env.GITHUB_CLIENT_ID,
+        client_secret: env.GITHUB_CLIENT_SECRET,
+        code,
+        redirect_uri: redirectUri,
+      }),
+    });
+    if (!tokenRes.ok) return null;
+    const tokenData = await tokenRes.json();
+    const accessToken = tokenData.access_token;
+    if (!accessToken) return null;
+
+    const ghHeaders = {
+      "Authorization": `Bearer ${accessToken}`,
+      "User-Agent": "TrackingTask",
+      "Accept": "application/vnd.github+json",
+    };
+
+    const userRes = await fetch("https://api.github.com/user", { headers: ghHeaders });
+    if (!userRes.ok) return null;
+    const user = await userRes.json();
+    if (user.email) return user.email.toLowerCase();
+
+    const emailsRes = await fetch("https://api.github.com/user/emails", { headers: ghHeaders });
+    if (!emailsRes.ok) return null;
+    const emails = await emailsRes.json();
+    const primary = (Array.isArray(emails) ? emails : []).find((e) => e.primary && e.verified);
+    return primary ? primary.email.toLowerCase() : null;
+  } catch (e) {
+    return null;
+  }
+}
+
 // ถ้าอีเมลนี้ถูก "เชื่อม" (link) ไว้กับบัญชี username+PIN เดิมแล้ว ให้ login เข้าบัญชีนั้นแทน
 // ไม่ใช่สร้างบัญชีแยกใหม่ตามอีเมล — ป้องกันปัญหาบัญชีซ้ำซ้อนเวลาคนเดิม sign in ด้วย Google/Microsoft
 async function loginOrRegisterOAuthUser(env, email, provider, corsHdrs) {
@@ -464,6 +505,27 @@ export default {
         return jsonResponse({ error: "ยืนยันตัวตนกับ Microsoft ไม่สำเร็จ" }, 401, CORS_HEADERS);
       }
       return await loginOrRegisterOAuthUser(env, email, "microsoft", CORS_HEADERS);
+    }
+
+    if (url.pathname === "/oauth/github" && request.method === "POST") {
+      if (!env.GITHUB_CLIENT_ID || !env.GITHUB_CLIENT_SECRET) {
+        return jsonResponse({ error: "ยังไม่ได้ตั้งค่า GitHub Sign-In บนเซิร์ฟเวอร์" }, 501, CORS_HEADERS);
+      }
+      let body;
+      try {
+        body = await request.json();
+      } catch (e) {
+        return jsonResponse({ error: "Invalid JSON" }, 400, CORS_HEADERS);
+      }
+      const { code, redirectUri } = body || {};
+      if (!code) {
+        return jsonResponse({ error: "ไม่พบรหัสยืนยันจาก GitHub" }, 400, CORS_HEADERS);
+      }
+      const email = await verifyGithubCodeAndGetEmail(env, code, redirectUri);
+      if (!email) {
+        return jsonResponse({ error: "ยืนยันตัวตนกับ GitHub ไม่สำเร็จ" }, 401, CORS_HEADERS);
+      }
+      return await loginOrRegisterOAuthUser(env, email, "github", CORS_HEADERS);
     }
 
     if (url.pathname === "/login" && request.method === "POST") {
