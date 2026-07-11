@@ -9,7 +9,7 @@ const MENU_TAB_BTN = { task: 'tabBtnTask', daily: 'tabBtnDaily', tool: 'tabBtnTo
 // Client ID (ไม่ใช่ secret) จาก Google Cloud Console / Azure Portal / GitHub OAuth App — เติมแล้วปุ่มจะโชว์เอง
 const GOOGLE_CLIENT_ID = '273491289869-2hv9a0829st3nnelhhok3mq3dplf8ckv.apps.googleusercontent.com';
 const MICROSOFT_CLIENT_ID = '';
-const GITHUB_CLIENT_ID = '';
+const GITHUB_CLIENT_ID = 'Ov23liJ8U0I7RpS2GYJ2';
 let msalInstance = null;
 
 function initOAuthSignIn(){
