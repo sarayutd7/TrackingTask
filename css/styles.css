@@ -3898,6 +3898,7 @@
   .lock-input,
   .ql-search-input,
   .topbar-search-input,
+  .dl-ta,
   input[type="date"] {
     font-size: 16px;
   }

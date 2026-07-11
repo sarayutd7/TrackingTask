@@ -7,6 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.3.1] — 2026-07-11
+
+### Fixed
+
+- Daily Log textareas (`.dl-ta` — blocker/highlight/note fields) were missed by the v1.2.24 mobile font-size fix (they use a separate class from the standard `.field textarea`), so focusing them on iOS still triggered the browser's auto-zoom. Added `.dl-ta` to the same mobile `font-size: 16px` override.
+
+---
+
 ## [1.3.0] — 2026-07-11
 
 ### Added — GitHub sign-in
