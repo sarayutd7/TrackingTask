@@ -11,3 +11,8 @@ RESEND_FROM_EMAIL = "TrackingTask <noreply@trackingtask.online>"
 GOOGLE_CLIENT_ID = "273491289869-2hv9a0829st3nnelhhok3mq3dplf8ckv.apps.googleusercontent.com"
 # Client ID (ไม่ใช่ secret) จาก Azure Portal — เติมแล้ว wrangler deploy ใหม่
 # MICROSOFT_CLIENT_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+# Client ID (ไม่ใช่ secret) จาก GitHub OAuth App (https://github.com/settings/developers)
+# ต้องตั้ง Authorization callback URL ให้ตรงกับ URL หน้า index.html ที่ deploy จริง
+# GITHUB_CLIENT_ID = "xxxxxxxxxxxxxxxxxxxx"
+# GITHUB_CLIENT_SECRET ต้องเก็บเป็น Worker secret เท่านั้น (ห้ามใส่ในไฟล์นี้):
+#   wrangler secret put GITHUB_CLIENT_SECRET

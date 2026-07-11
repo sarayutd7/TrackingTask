@@ -7,6 +7,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.3.0] — 2026-07-11
+
+### Added — GitHub sign-in
+
+- New "เข้าสู่ระบบด้วย GitHub" OAuth option alongside the existing Google/Microsoft buttons. Since GitHub doesn't issue an OpenID id_token, this uses the standard authorization-code flow: the frontend redirects to GitHub's consent screen, GitHub redirects back with a one-time `code`, and the Worker (`POST /oauth/github`) exchanges it server-side for an access token (via `GITHUB_CLIENT_SECRET`, never exposed to the browser) and fetches the user's verified email to log in or auto-register.
+- Requires server setup before it's usable: register an OAuth App at github.com/settings/developers, set `GITHUB_CLIENT_ID` in `wrangler.toml` and `js/auth.js`, and run `wrangler secret put GITHUB_CLIENT_SECRET`. Until configured, the button stays hidden (same pattern as the Microsoft button today).
+
+### Changed — Login screen layout
+
+- The Username/PIN fields are now hidden by default behind a "เข้าสู่ระบบด้วย Username / PIN" link whenever at least one OAuth option (Google/Microsoft/GitHub) is available, putting one-tap sign-in front and center. If no OAuth provider is configured, the PIN fields show as before — there's always a way in.
+
+---
+
 ## [1.2.25] — 2026-07-10
 
 ### Fixed

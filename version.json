@@ -1,5 +1,5 @@
 {
-  "version": "1.2.25",
-  "releaseDate": "2026-07-10",
-  "changelog": "Fix: navigating admin → index.html no longer forces re-login within the same browser session"
+  "version": "1.3.0",
+  "releaseDate": "2026-07-11",
+  "changelog": "Login page: GitHub sign-in + hide Username/PIN behind a link"
 }
