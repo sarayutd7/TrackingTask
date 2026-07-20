@@ -5,106 +5,9 @@ const AUTH_MENUS_KEY = 'trackingTaskAllowedMenus';
 const AUTH_IS_ADMIN_KEY = 'trackingTaskIsAdmin';
 const MENU_TAB_BTN = { task: 'tabBtnTask', daily: 'tabBtnDaily', tool: 'tabBtnTool', finance: 'tabBtnFinance', timeline: 'tabBtnTimeline' };
 
-// ── Sign in with Google / Microsoft / GitHub ─────────
-// Client ID (ไม่ใช่ secret) จาก Google Cloud Console / Azure Portal / GitHub OAuth App — เติมแล้วปุ่มจะโชว์เอง
+// ── Google account linking (Settings only — no OAuth sign-in on the login screen) ─────────
+// Client ID (ไม่ใช่ secret) จาก Google Cloud Console — ใช้แค่ตอน "เชื่อมบัญชี Google" ใน Settings
 const GOOGLE_CLIENT_ID = '273491289869-2hv9a0829st3nnelhhok3mq3dplf8ckv.apps.googleusercontent.com';
-const MICROSOFT_CLIENT_ID = '';
-const GITHUB_CLIENT_ID = 'Ov23liJ8U0I7RpS2GYJ2';
-let msalInstance = null;
-
-function initOAuthSignIn(){
-  if(!GOOGLE_CLIENT_ID && !MICROSOFT_CLIENT_ID && !GITHUB_CLIENT_ID) return;
-  document.getElementById('oauthSignInSection').style.display = '';
-  document.getElementById('lockOauthDivider').style.display = '';
-  document.getElementById('lockToggleManual').style.display = '';
-  // มี OAuth ให้เลือกอย่างน้อยหนึ่งทาง — ซ่อนช่อง Username/PIN ไว้ก่อน ให้กดลิงก์ค่อยแสดง
-  // (แต่ไม่ทับสถานะถ้าผู้ใช้กดลิงก์เปิดเองแล้ว เพราะฟังก์ชันนี้ถูกเรียกซ้ำระหว่างรอสคริปต์ Google โหลด)
-  const manualBox = document.getElementById('lockManualFields');
-  if(manualBox.dataset.userToggled !== '1') manualBox.style.display = 'none';
-  if(MICROSOFT_CLIENT_ID){
-    document.getElementById('msSignInBtn').style.display = '';
-  }
-  if(GITHUB_CLIENT_ID){
-    document.getElementById('ghSignInBtn').style.display = '';
-  }
-  if(GOOGLE_CLIENT_ID){
-    if(window.google && window.google.accounts){
-      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
-      google.accounts.id.renderButton(document.getElementById('googleSignInBtn'), { theme: 'outline', size: 'large', width: 280 });
-    } else {
-      setTimeout(initOAuthSignIn, 200);
-    }
-  }
-}
-
-function lockToggleManualFields(){
-  const box = document.getElementById('lockManualFields');
-  const link = document.getElementById('lockToggleManual');
-  const showing = box.style.display !== 'none';
-  box.style.display = showing ? 'none' : '';
-  box.dataset.userToggled = showing ? '0' : '1';
-  if(link) link.textContent = showing ? 'เข้าสู่ระบบด้วย Username / PIN' : 'กลับไปเข้าสู่ระบบด้วยบัญชีอื่น';
-  if(!showing) setTimeout(()=>document.getElementById('lockUser').focus(), 80);
-}
-
-function generateOAuthState(){
-  const arr = new Uint8Array(16);
-  crypto.getRandomValues(arr);
-  return Array.from(arr, b => b.toString(16).padStart(2,'0')).join('');
-}
-
-function githubSignIn(){
-  if(!GITHUB_CLIENT_ID) return;
-  const state = generateOAuthState();
-  sessionStorage.setItem('ghOAuthState', state);
-  const redirectUri = location.origin + location.pathname;
-  const url = 'https://github.com/login/oauth/authorize'
-    + '?client_id=' + encodeURIComponent(GITHUB_CLIENT_ID)
-    + '&scope=' + encodeURIComponent('read:user user:email')
-    + '&redirect_uri=' + encodeURIComponent(redirectUri)
-    + '&state=' + encodeURIComponent(state);
-  location.href = url;
-}
-
-async function handleGithubOAuthCode(code){
-  const errorEl = document.getElementById('lockError');
-  try {
-    const r = await fetch(API + '/oauth/github', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ code, redirectUri: location.origin + location.pathname })
-    });
-    const data = await r.json();
-    if(!r.ok){ if(errorEl) errorEl.textContent = data.error || 'เข้าสู่ระบบด้วย GitHub ไม่สำเร็จ'; return; }
-    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
-    localStorage.setItem(AUTH_USER_KEY, data.username);
-    localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(data.allowedMenus || ['task','daily','tool','finance','timeline']));
-    localStorage.setItem(AUTH_IS_ADMIN_KEY, data.isAdmin ? '1' : '0');
-    await afterAuthSuccess();
-  } catch(e){
-    if(errorEl) errorEl.textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง';
-  }
-}
-
-async function handleGoogleCredential(response){
-  const errorEl = document.getElementById('lockError');
-  try {
-    const r = await fetch(API + '/oauth/google', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ credential: response.credential })
-    });
-    const data = await r.json();
-    if(!r.ok){ if(errorEl) errorEl.textContent = data.error || 'เข้าสู่ระบบด้วย Google ไม่สำเร็จ'; return; }
-    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
-    localStorage.setItem(AUTH_USER_KEY, data.username);
-    localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(data.allowedMenus || ['task','daily','tool','finance','timeline']));
-    localStorage.setItem(AUTH_IS_ADMIN_KEY, data.isAdmin ? '1' : '0');
-    await afterAuthSuccess();
-  } catch(e){
-    if(errorEl) errorEl.textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง';
-  }
-}
 
 function renderAccountGoogleLink(linkedEmail){
   const linkedBox = document.getElementById('accountGoogleLinked');
@@ -144,10 +47,6 @@ async function handleGoogleLinkCredential(response){
     if(!r.ok){ errorEl.textContent = data.error || 'เชื่อมต่อ Google ไม่สำเร็จ'; return; }
     renderAccountGoogleLink(data.linkedGoogleEmail);
     showToast('เชื่อมต่อบัญชี Google สำเร็จ ✅');
-    // คืน Google Identity Services กลับไปใช้ callback สำหรับหน้า login ตามปกติ
-    if(window.google && window.google.accounts){
-      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
-    }
   } catch(e){
     errorEl.textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง';
   }
@@ -164,34 +63,6 @@ async function unlinkGoogleAccount(){
     showToast('ยกเลิกการเชื่อมต่อ Google แล้ว');
   } catch(e){
     errorEl.textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง';
-  }
-}
-
-async function microsoftSignIn(){
-  const errorEl = document.getElementById('lockError');
-  errorEl.textContent = '';
-  try {
-    if(!msalInstance){
-      msalInstance = new msal.PublicClientApplication({
-        auth: { clientId: MICROSOFT_CLIENT_ID, authority: 'https://login.microsoftonline.com/common' }
-      });
-      await msalInstance.initialize();
-    }
-    const result = await msalInstance.loginPopup({ scopes: ['openid','email','profile'] });
-    const r = await fetch(API + '/oauth/microsoft', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ credential: result.idToken })
-    });
-    const data = await r.json();
-    if(!r.ok){ errorEl.textContent = data.error || 'เข้าสู่ระบบด้วย Microsoft ไม่สำเร็จ'; return; }
-    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
-    localStorage.setItem(AUTH_USER_KEY, data.username);
-    localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(data.allowedMenus || ['task','daily','tool','finance','timeline']));
-    localStorage.setItem(AUTH_IS_ADMIN_KEY, data.isAdmin ? '1' : '0');
-    await afterAuthSuccess();
-  } catch(e){
-    errorEl.textContent = 'เข้าสู่ระบบด้วย Microsoft ไม่สำเร็จ ลองใหม่อีกครั้ง';
   }
 }
 
@@ -251,7 +122,6 @@ function lockShow(){
   document.getElementById('lockPw').value = '';
   document.getElementById('lockPwConfirm').value = '';
   document.getElementById('lockError').textContent = '';
-  delete document.getElementById('lockManualFields').dataset.userToggled;
   lockLoginMode();
   document.getElementById('lockScreen').style.display = 'flex';
   document.getElementById('headerLockBtn').style.display = 'none';
@@ -262,11 +132,7 @@ function lockShow(){
   if(_sbLock) _sbLock.style.display = 'none';
   if(_sbAcc)  _sbAcc.style.display  = 'none';
   document.getElementById('userGreeting').style.display = 'none';
-  initOAuthSignIn();
-  setTimeout(()=>{
-    const manual = document.getElementById('lockManualFields');
-    if(!manual || manual.style.display !== 'none') document.getElementById('lockUser').focus();
-  }, 80);
+  setTimeout(()=>document.getElementById('lockUser').focus(), 80);
 }
 
 function lockHide(){
@@ -496,9 +362,6 @@ async function openAccountModal(){
 
 function closeAccountModal(){
   document.getElementById('accountOverlay').style.display = 'none';
-  if(window.google && window.google.accounts && GOOGLE_CLIENT_ID){
-    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
-  }
 }
 
 async function saveAccount(){
@@ -615,30 +478,10 @@ async function submitForgotPinConfirm(){
   }
 }
 
-// เรียกตอน app โหลด
-// 1) ถ้าเพิ่งถูก redirect กลับมาจาก GitHub OAuth (มี ?code=...&state=...) ให้แลก code เป็น token
-// 2) ไม่งั้นถ้ามี token และ session ยังอยู่ (เช่น navigate กลับจาก admin.html) ให้ auto-login
-//    sessionStorage flag 'ttSessionAuth' หายเมื่อปิด browser tab แต่คงอยู่ระหว่างการ navigate ภายใน tab
-// 3) ไม่งั้นโชว์หน้า login
-(function initAuthEntry(){
-  const params = new URLSearchParams(location.search);
-  const code = params.get('code');
-  const state = params.get('state');
-  const savedState = sessionStorage.getItem('ghOAuthState');
-  const isGithubCallback = !!(code && state && savedState && state === savedState);
-  if(isGithubCallback){
-    sessionStorage.removeItem('ghOAuthState');
-    const cleanParams = new URLSearchParams(location.search);
-    cleanParams.delete('code'); cleanParams.delete('state');
-    const qs = cleanParams.toString();
-    history.replaceState({}, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
-    lockShow();
-    handleGithubOAuthCode(code);
-    return;
-  }
-  if(localStorage.getItem(AUTH_TOKEN_KEY) && sessionStorage.getItem('ttSessionAuth') === '1'){
-    afterAuthSuccess();
-  } else {
-    lockShow();
-  }
-})();
+// เรียกตอน app โหลด — ถ้ามี token และ session ยังอยู่ (เช่น navigate กลับจาก admin.html) ให้ auto-login
+// sessionStorage flag 'ttSessionAuth' หายเมื่อปิด browser tab แต่คงอยู่ระหว่างการ navigate ภายใน tab
+if(localStorage.getItem(AUTH_TOKEN_KEY) && sessionStorage.getItem('ttSessionAuth') === '1'){
+  afterAuthSuccess();
+} else {
+  lockShow();
+}

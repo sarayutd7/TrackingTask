@@ -657,25 +657,6 @@
     transition: opacity .15s;
   }
   .lock-submit:hover { opacity: .88; }
-  .lock-oauth-btn {
-    display: flex; align-items: center; justify-content: center; gap: .55rem;
-    margin-top: .5rem;
-  }
-  .lock-oauth-btn.ms { background: #2f2f2f; }
-  .lock-oauth-btn.gh { background: #17181c; border: 1px solid var(--border-hover); }
-  .lock-oauth-divider {
-    text-align: center; color: var(--text-3); font-size: .75rem;
-    margin: .9rem 0 .7rem;
-  }
-  .lock-toggle-manual {
-    display: block;
-    text-align: center;
-    font-size: .78rem;
-    color: var(--text-3);
-    text-decoration: underline;
-    cursor: pointer;
-  }
-  .lock-toggle-manual:hover { color: var(--text-2); }
   .lock-footer {
     margin-top: 1.1rem;
     font-size: .73rem;

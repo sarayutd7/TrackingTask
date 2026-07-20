@@ -1,5 +1,5 @@
 {
-  "version": "1.4.0",
+  "version": "1.4.1",
   "releaseDate": "2026-07-20",
-  "changelog": "Add Timeline tab: 24-hour schedule with 30-min grid, drag-to-create/move/resize blocks, no-overlap enforcement"
+  "changelog": "Remove OAuth sign-in buttons from login screen (Username/PIN only)"
 }

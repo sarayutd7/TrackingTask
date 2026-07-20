@@ -7,6 +7,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.4.1] — 2026-07-20
+
+### Removed — Login screen simplified back to Username/PIN only
+
+- Removed the Google, Microsoft, and GitHub OAuth sign-in buttons from the login screen (added in v1.2.x–v1.3.0). Login shows the Username/PIN fields directly again, no toggle link needed.
+- Removed the now-unreachable `/oauth/google`, `/oauth/microsoft`, `/oauth/github` Worker routes and their supporting helpers.
+- Google account **linking** (Settings → link Google account, for existing PIN accounts) is unaffected — that's a separate feature from login and still works via `/account/link-google`.
+- Removed the now-unused Microsoft MSAL script tag.
+
+---
+
 ## [1.4.0] — 2026-07-20
 
 ### Added
