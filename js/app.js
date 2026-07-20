@@ -169,6 +169,7 @@ function shiftDay(delta){
   render();
   renderDL();
   renderFinance();
+  renderTimeline();
 }
 function prevDay(){ shiftDay(-1); }
 function nextDay(){ shiftDay(+1); }
@@ -176,7 +177,7 @@ function nextDay(){ shiftDay(+1); }
 // ── Init ────────────────────────────────────────────
 const dp = document.getElementById('datePicker');
 dp.value = today;
-dp.addEventListener('change', e => { currentDate = e.target.value; render(); renderDL(); renderFinance(); });
+dp.addEventListener('change', e => { currentDate = e.target.value; render(); renderDL(); renderFinance(); renderTimeline(); });
 
 // โหลด localStorage ไว้ก่อน จนกว่า server จะตอบ (เฉพาะของ account ที่ login อยู่เท่านั้น)
 try {
