@@ -3,7 +3,7 @@ const AUTH_TOKEN_KEY = 'trackingTaskToken';
 const AUTH_USER_KEY = 'trackingTaskUser';
 const AUTH_MENUS_KEY = 'trackingTaskAllowedMenus';
 const AUTH_IS_ADMIN_KEY = 'trackingTaskIsAdmin';
-const MENU_TAB_BTN = { task: 'tabBtnTask', daily: 'tabBtnDaily', tool: 'tabBtnTool', finance: 'tabBtnFinance' };
+const MENU_TAB_BTN = { task: 'tabBtnTask', daily: 'tabBtnDaily', tool: 'tabBtnTool', finance: 'tabBtnFinance', timeline: 'tabBtnTimeline' };
 
 // ── Sign in with Google / Microsoft / GitHub ─────────
 // Client ID (ไม่ใช่ secret) จาก Google Cloud Console / Azure Portal / GitHub OAuth App — เติมแล้วปุ่มจะโชว์เอง
@@ -78,7 +78,7 @@ async function handleGithubOAuthCode(code){
     if(!r.ok){ if(errorEl) errorEl.textContent = data.error || 'เข้าสู่ระบบด้วย GitHub ไม่สำเร็จ'; return; }
     localStorage.setItem(AUTH_TOKEN_KEY, data.token);
     localStorage.setItem(AUTH_USER_KEY, data.username);
-    localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(data.allowedMenus || ['task','daily','tool','finance']));
+    localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(data.allowedMenus || ['task','daily','tool','finance','timeline']));
     localStorage.setItem(AUTH_IS_ADMIN_KEY, data.isAdmin ? '1' : '0');
     await afterAuthSuccess();
   } catch(e){
@@ -98,7 +98,7 @@ async function handleGoogleCredential(response){
     if(!r.ok){ if(errorEl) errorEl.textContent = data.error || 'เข้าสู่ระบบด้วย Google ไม่สำเร็จ'; return; }
     localStorage.setItem(AUTH_TOKEN_KEY, data.token);
     localStorage.setItem(AUTH_USER_KEY, data.username);
-    localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(data.allowedMenus || ['task','daily','tool','finance']));
+    localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(data.allowedMenus || ['task','daily','tool','finance','timeline']));
     localStorage.setItem(AUTH_IS_ADMIN_KEY, data.isAdmin ? '1' : '0');
     await afterAuthSuccess();
   } catch(e){
@@ -187,7 +187,7 @@ async function microsoftSignIn(){
     if(!r.ok){ errorEl.textContent = data.error || 'เข้าสู่ระบบด้วย Microsoft ไม่สำเร็จ'; return; }
     localStorage.setItem(AUTH_TOKEN_KEY, data.token);
     localStorage.setItem(AUTH_USER_KEY, data.username);
-    localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(data.allowedMenus || ['task','daily','tool','finance']));
+    localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(data.allowedMenus || ['task','daily','tool','finance','timeline']));
     localStorage.setItem(AUTH_IS_ADMIN_KEY, data.isAdmin ? '1' : '0');
     await afterAuthSuccess();
   } catch(e){
@@ -210,7 +210,7 @@ function applyMenuPermissions(){
     if(btn) btn.style.display = allowed.includes(tab) ? '' : 'none';
   });
   const activeBtn = document.querySelector('.tab-btn.active');
-  const btnTabMap = { tabBtnDaily:'daily', tabBtnTool:'tool', tabBtnFinance:'finance', tabBtnTask:'task' };
+  const btnTabMap = { tabBtnDaily:'daily', tabBtnTool:'tool', tabBtnFinance:'finance', tabBtnTask:'task', tabBtnTimeline:'timeline' };
   const activeTab = (activeBtn && btnTabMap[activeBtn.id]) || 'task';
   if(!allowed.includes(activeTab) && allowed.length && typeof switchTab === 'function'){
     switchTab(allowed[0]);
@@ -419,7 +419,7 @@ async function lockSubmit(){
     }
     localStorage.setItem(AUTH_TOKEN_KEY, data.token);
     localStorage.setItem(AUTH_USER_KEY, data.username);
-    localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(data.allowedMenus || ['task','daily','tool','finance']));
+    localStorage.setItem(AUTH_MENUS_KEY, JSON.stringify(data.allowedMenus || ['task','daily','tool','finance','timeline']));
     localStorage.setItem(AUTH_IS_ADMIN_KEY, data.isAdmin ? '1' : '0');
     errorEl.textContent='';
     if(isRegister) showToast('สมัครสมาชิกสำเร็จ 🔓');

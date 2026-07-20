@@ -343,7 +343,7 @@ async function migrateLegacyDataTo(username, env) {
 // แทนที่จะเก็บข้อมูลทั้งหมดของ user ไว้ใน key เดียว (data:<username>)
 // แยกเป็น 3 key ตามเมนู เพื่อให้แต่ละเมนูเป็นอิสระต่อกัน
 const TASK_OWN_KEYS = new Set(["_logs"]);
-const TOOL_OWN_KEYS = new Set(["_ql", "_qlTags"]);
+const TOOL_OWN_KEYS = new Set(["_ql", "_qlTags", "_timeline"]);
 const FINANCE_OWN_KEYS = new Set([
   "_finance", "_bills", "_billPayments", "_incomeSources", "_incomeLogs", "_finPM", "_finTags",
 ]);

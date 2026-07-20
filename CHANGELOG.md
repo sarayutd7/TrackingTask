@@ -7,6 +7,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this
 
 ---
 
+## [1.4.0] — 2026-07-20
+
+### Added
+
+- **Timeline tab**: a full 24-hour schedule view with a 30-minute slot grid.
+  - Drag on empty space to create a new block (ghost preview while dragging).
+  - Drag an existing block to move it; drag the resize handle at the bottom to change duration.
+  - Double-click a block or press "เพิ่มกิจกรรม" to open the modal for title, start/end time, and colour.
+  - No-overlap enforcement — conflicting placements are rejected with an inline error.
+  - Six colour options: indigo, green, amber, rose, teal, blue.
+  - Date navigation shared with Daily Task (`shiftDay` / date picker).
+  - "Now" line with a red dot shown when viewing today.
+  - Data persisted to `DB._timeline` (Cloudflare KV `tool` key) with localStorage fallback.
+  - Appears in sidebar, bottom nav, and tab-nav; included in `allowedMenus` defaults.
+
+---
+
 ## [1.3.1] — 2026-07-11
 
 ### Fixed

@@ -137,7 +137,7 @@
           </div>
           <div>
             <div class="sb-brand-name">TrackingTask</div>
-            <button id="appVersion" class="app-version-badge" onclick="openChangelogModal()" title="ดู Changelog">v1.3.1</button>
+            <button id="appVersion" class="app-version-badge" onclick="openChangelogModal()" title="ดู Changelog">v1.4.0</button>
           </div>
         </div>
         <div class="sb-user-card">
@@ -162,6 +162,12 @@
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
           </div>
           <span class="sb-item-label">บันทึกประจำวัน</span>
+        </div>
+        <div class="sb-item" id="sb-timeline" onclick="switchTab('timeline')">
+          <div class="sb-item-icon">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <span class="sb-item-label">Timeline</span>
         </div>
         <div class="sb-item" id="sb-tool" onclick="switchTab('tool')">
           <div class="sb-item-icon">
@@ -233,6 +239,7 @@
       <div class="tab-nav" aria-hidden="true">
         <button class="tab-btn active" id="tabBtnTask" onclick="switchTab('task')">Daily Task</button>
         <button class="tab-btn" id="tabBtnDaily" onclick="switchTab('daily')">บันทึกประจำวัน</button>
+        <button class="tab-btn" id="tabBtnTimeline" onclick="switchTab('timeline')">Timeline</button>
         <button class="tab-btn" id="tabBtnTool" onclick="switchTab('tool')">Note</button>
         <button class="tab-btn" id="tabBtnFinance" onclick="switchTab('finance')">รายรับ-รายจ่าย</button>
       </div>
@@ -277,6 +284,44 @@
       <div id="mbPanes"></div>
     </div>
 
+  </div>
+
+  <!-- Tab Timeline -->
+  <div class="tab-pane" id="tabTimeline" style="display:none">
+    <!-- Header row -->
+    <div class="tl-hdr">
+      <div class="tl-hdr-nav">
+        <button class="tl-nav-btn" onclick="shiftDay(-1)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="tl-date-lbl" id="tlDateLabel" onclick="document.getElementById('datePicker').showPicker?document.getElementById('datePicker').showPicker():document.getElementById('datePicker').click()"></button>
+        <button class="tl-nav-btn" onclick="shiftDay(1)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="tl-hdr-hint">
+        <span>คลิกช่องว่าง = สร้าง</span>
+        <span>ลาก = ย้าย</span>
+        <span>ดับเบิลคลิก = แก้ไข</span>
+      </div>
+      <button class="tl-add-btn" onclick="tlOpenModal()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        เพิ่มกิจกรรม
+      </button>
+    </div>
+
+    <!-- Timeline grid -->
+    <div class="tl-wrap" id="tlWrap">
+      <div class="tl-grid">
+        <div class="tl-labels" id="tlLabels"></div>
+        <div class="tl-canvas" id="tlCanvas">
+          <div class="tl-ghost" id="tlGhost" style="display:none"></div>
+          <div class="tl-now-line" id="tlNowLine" style="display:none">
+            <div class="tl-now-dot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Tab Daily: Daily Log -->
@@ -664,6 +709,11 @@
       <span class="bnb-label">Daily</span>
       <span class="bnb-dot"></span>
     </button>
+    <button class="bnb-item" id="bnb-timeline" onclick="switchTab('timeline')">
+      <div class="bnb-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <span class="bnb-label">Timeline</span>
+      <span class="bnb-dot"></span>
+    </button>
     <button class="bnb-item" id="bnb-tool" onclick="switchTab('tool')">
       <div class="bnb-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></div>
       <span class="bnb-label">Note</span>
@@ -680,6 +730,36 @@
       <span class="bnb-dot"></span>
     </a>
   </nav>
+
+<!-- Timeline modal -->
+<div class="tl-modal-bg" id="tlModalBg" style="display:none" onclick="if(event.target===this)tlCloseModal()">
+  <div class="tl-modal">
+    <div class="tl-modal-title" id="tlModalTitle">เพิ่มกิจกรรม</div>
+    <div class="tl-form-row">
+      <div class="tl-form-label">ชื่อกิจกรรม</div>
+      <input class="tl-form-input" id="tlFTitle" placeholder="เช่น ประชุม, พักกลางวัน…" maxlength="60" onkeydown="if(event.key==='Enter')tlSaveModal()">
+    </div>
+    <div class="tl-form-row-2">
+      <div class="tl-form-row">
+        <div class="tl-form-label">เวลาเริ่ม</div>
+        <input class="tl-form-input" id="tlFStart" type="time">
+      </div>
+      <div class="tl-form-row">
+        <div class="tl-form-label">เวลาสิ้นสุด</div>
+        <input class="tl-form-input" id="tlFEnd" type="time">
+      </div>
+    </div>
+    <div class="tl-form-row">
+      <div class="tl-form-label">สี</div>
+      <div class="tl-color-row" id="tlColorRow"></div>
+    </div>
+    <div id="tlModalError" style="font-size:.75rem;color:#f43f5e;display:none;margin-top:-.25rem"></div>
+    <div class="tl-modal-actions">
+      <button class="tl-btn-ghost" onclick="tlCloseModal()">ยกเลิก</button>
+      <button class="tl-btn-save" onclick="tlSaveModal()">บันทึก</button>
+    </div>
+  </div>
+</div>
 
 </div><!-- /shell -->
 

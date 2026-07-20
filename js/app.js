@@ -263,24 +263,26 @@ function closeSidebar(){
 }
 
 function switchTab(tab){
-  ['tabTask','tabDaily','tabTool','tabFinance'].forEach(id=>{
+  ['tabTask','tabDaily','tabTool','tabFinance','tabTimeline'].forEach(id=>{
     const el = document.getElementById(id);
     if(!el) return;
     el.classList.remove('active-pane');
     el.style.display = 'none';
   });
-  const active = {task:'tabTask',daily:'tabDaily',tool:'tabTool',finance:'tabFinance'}[tab];
+  const active = {task:'tabTask',daily:'tabDaily',tool:'tabTool',finance:'tabFinance',timeline:'tabTimeline'}[tab];
   if(active){
     const el = document.getElementById(active);
     el.style.display = '';
     requestAnimationFrame(()=>{ el.classList.add('active-pane'); });
   }
-  document.getElementById('tabBtnTask').classList.toggle('active',    tab==='task');
-  document.getElementById('tabBtnDaily').classList.toggle('active',   tab==='daily');
-  document.getElementById('tabBtnTool').classList.toggle('active',    tab==='tool');
-  document.getElementById('tabBtnFinance').classList.toggle('active', tab==='finance');
+  document.getElementById('tabBtnTask').classList.toggle('active',     tab==='task');
+  document.getElementById('tabBtnDaily').classList.toggle('active',    tab==='daily');
+  document.getElementById('tabBtnTool').classList.toggle('active',     tab==='tool');
+  document.getElementById('tabBtnFinance').classList.toggle('active',  tab==='finance');
+  const tlBtn = document.getElementById('tabBtnTimeline');
+  if(tlBtn) tlBtn.classList.toggle('active', tab==='timeline');
   // sync sidebar + bottom nav
-  ['task','daily','tool','finance'].forEach(t=>{
+  ['task','daily','tool','finance','timeline'].forEach(t=>{
     const sb = document.getElementById('sb-'+t);
     const bnb = document.getElementById('bnb-'+t);
     if(sb)  sb.classList.toggle('sb-on',  t===tab);
@@ -288,8 +290,13 @@ function switchTab(tab){
   });
   if(tab==='daily')   { renderDL(); }
   if(tab==='finance') { renderFinance(); if(finSubTab==='bills') renderBills(); if(finSubTab==='income') renderIncomeSources(); }
+  if(tab==='timeline'){
+    if(!document.getElementById('tlCanvas')?.dataset.dragBound) tlInitDrag();
+    renderTimeline();
+    if(currentDate===today) tlScrollToNow();
+  }
   // update mobile title & close drawer
-  const titles = {task:'Daily Task', daily:'บันทึกประจำวัน', tool:'Note (QL)', finance:'รายรับ-รายจ่าย'};
+  const titles = {task:'Daily Task', daily:'บันทึกประจำวัน', tool:'Note (QL)', finance:'รายรับ-รายจ่าย', timeline:'Timeline'};
   const titleEl = document.getElementById('mobileTabTitle');
   if(titleEl) titleEl.textContent = titles[tab] || '';
   const topbarDateEl = document.getElementById('topbarDate');
@@ -3855,6 +3862,309 @@ function closeChangelogModal() {
   document.getElementById('changelogModal').style.display = 'none';
 }
 
+// ── Timeline ─────────────────────────────────────────
+let TL_BLOCKS = {}; // { dateKey: [{id,title,startMin,endMin,color}] }
+const TL_SLOT = 48;  // px per 30 min
+const TL_SLOTS = 48; // 24h × 2
+
+function getTLBlocks(d){ return (TL_BLOCKS[d] || []); }
+function setTLBlocks(d, arr){ TL_BLOCKS[d] = arr; }
+function tlNextId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
+function tlOverlaps(a,b){ return a.startMin < b.endMin && a.endMin > b.startMin; }
+function tlHasConflict(candidate, excludeId, dateKey){
+  return getTLBlocks(dateKey).some(b => b.id !== excludeId && tlOverlaps(b, candidate));
+}
+function tlMinsToTop(m){ return (m/30)*TL_SLOT; }
+function tlMinsToH(m){ return (m/30)*TL_SLOT; }
+function tlSnapToSlot(px){ return Math.round(px/TL_SLOT)*TL_SLOT; }
+function tlPxToMins(px){ return Math.round(px/TL_SLOT)*30; }
+function tlFmtTime(mins){
+  const h=Math.floor(mins/60), m=mins%60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+function tlParseTime(s){ const [h,m]=s.split(':').map(Number); return h*60+m; }
+
+function loadTL(){
+  const fromFile = (DB._timeline && typeof DB._timeline==='object') ? DB._timeline : {};
+  const lsKey = userKey('tlBlocks');
+  let fromLS = {};
+  try { fromLS = JSON.parse(localStorage.getItem(lsKey)||'{}'); } catch(_){}
+  TL_BLOCKS = Object.assign({}, fromLS, fromFile);
+}
+function saveTL(){
+  localStorage.setItem(userKey('tlBlocks'), JSON.stringify(TL_BLOCKS));
+  if(!DB._timeline) DB._timeline = {};
+  Object.assign(DB._timeline, TL_BLOCKS);
+  writeFile();
+}
+
+const TL_COLORS = [
+  {id:'indigo',bg:'rgba(99,102,241,.85)',text:'#fff'},
+  {id:'green', bg:'rgba(34,197,94,.82)', text:'#fff'},
+  {id:'amber', bg:'rgba(245,158,11,.85)',text:'#fff'},
+  {id:'rose',  bg:'rgba(244,63,94,.82)', text:'#fff'},
+  {id:'teal',  bg:'rgba(20,184,166,.82)',text:'#fff'},
+  {id:'blue',  bg:'rgba(96,165,250,.85)',text:'#fff'},
+];
+
+function tlColorById(id){ return TL_COLORS.find(c=>c.id===id) || TL_COLORS[0]; }
+
+function renderTimeline(){
+  const canvas = document.getElementById('tlCanvas');
+  if(!canvas) return;
+
+  // Build grid if not already built
+  if(!canvas.dataset.gridBuilt){ tlBuildGrid(); canvas.dataset.gridBuilt='1'; }
+
+  // Update date label
+  const lbl = document.getElementById('tlDateLabel');
+  if(lbl){
+    const d = new Date(currentDate+'T00:00:00');
+    lbl.textContent = d.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    lbl.style.color = currentDate===today ? 'var(--accent)' : 'var(--text)';
+  }
+
+  // Remove old blocks
+  canvas.querySelectorAll('.tl-block').forEach(e=>e.remove());
+
+  // Update now-line
+  const nowLine = document.getElementById('tlNowLine');
+  if(nowLine){
+    if(currentDate===today){
+      const d=new Date(), mins=d.getHours()*60+d.getMinutes();
+      nowLine.style.display=''; nowLine.style.top=tlMinsToTop(mins)+'px';
+    } else {
+      nowLine.style.display='none';
+    }
+  }
+
+  // Render blocks
+  getTLBlocks(currentDate).forEach(b=>{
+    const col = tlColorById(b.color);
+    const el = document.createElement('div');
+    el.className = 'tl-block';
+    el.dataset.id = b.id;
+    el.style.top = tlMinsToTop(b.startMin)+'px';
+    el.style.height = tlMinsToH(b.endMin-b.startMin)+'px';
+    el.style.background = col.bg;
+    el.style.color = col.text;
+    el.innerHTML = `
+      <div class="tl-block-title">${esc(b.title)}</div>
+      <div class="tl-block-time">${tlFmtTime(b.startMin)} – ${tlFmtTime(b.endMin)}</div>
+      <button class="tl-block-del" onclick="tlDeleteBlock('${b.id}')" title="ลบ">✕</button>
+      <div class="tl-block-resize" data-id="${b.id}"></div>
+    `;
+    el.addEventListener('dblclick', e=>{ e.stopPropagation(); tlOpenModal(b.id); });
+    el.addEventListener('mousedown', e=>{
+      if(e.target.classList.contains('tl-block-resize')||e.target.classList.contains('tl-block-del')) return;
+      e.preventDefault();
+      const origTop = tlMinsToTop(b.startMin);
+      const duration = b.endMin - b.startMin;
+      tlDragState = { type:'move', blockId:b.id, startY:e.clientY, origTop, duration };
+      el.classList.add('tl-dragging');
+    });
+    el.querySelector('.tl-block-resize').addEventListener('mousedown', e=>{
+      e.preventDefault(); e.stopPropagation();
+      tlDragState = { type:'resize', blockId:b.id, startY:e.clientY, origH:tlMinsToH(b.endMin-b.startMin), startMin:b.startMin };
+    });
+    canvas.appendChild(el);
+  });
+}
+
+let tlDragState = null;
+
+function tlInitDrag(){
+  const canvas = document.getElementById('tlCanvas');
+  if(!canvas || canvas.dataset.dragBound) return;
+  canvas.dataset.dragBound = '1';
+
+  const TL_TOTAL = TL_SLOT * TL_SLOTS;
+
+  canvas.addEventListener('mousedown', e=>{
+    const isCanvasItself = e.target === canvas;
+    const isHourLine = e.target.classList.contains('tl-hour-line');
+    const isGhost = e.target.classList.contains('tl-ghost');
+    if(!isCanvasItself && !isHourLine && !isGhost) return;
+    e.preventDefault();
+    const wrap = document.getElementById('tlWrap');
+    const rect = canvas.getBoundingClientRect();
+    const y = e.clientY - rect.top + wrap.scrollTop;
+    const snapY = tlSnapToSlot(y);
+    tlDragState = { type:'create', startY:e.clientY, origTop:snapY, ghostTop:snapY, ghostH:TL_SLOT };
+    const ghost = document.getElementById('tlGhost');
+    if(ghost){ ghost.style.display=''; ghost.style.top=snapY+'px'; ghost.style.height=TL_SLOT+'px'; }
+  });
+
+  document.addEventListener('mousemove', e=>{
+    if(!tlDragState) return;
+    const TL_TOTAL_H = TL_SLOT * TL_SLOTS;
+    if(tlDragState.type==='create'){
+      const dy = e.clientY - tlDragState.startY;
+      const ghostH = Math.max(TL_SLOT, tlSnapToSlot(Math.abs(dy))||TL_SLOT);
+      const top = dy>=0 ? tlDragState.origTop : Math.max(0, tlSnapToSlot(tlDragState.origTop+dy));
+      tlDragState.ghostTop=top; tlDragState.ghostH=ghostH;
+      const ghost = document.getElementById('tlGhost');
+      if(ghost){ ghost.style.top=top+'px'; ghost.style.height=ghostH+'px'; }
+    }
+    if(tlDragState.type==='move'){
+      const dy = e.clientY - tlDragState.startY;
+      const newTop = Math.max(0, Math.min(TL_TOTAL_H - tlMinsToH(tlDragState.duration), tlSnapToSlot(tlDragState.origTop+dy)));
+      const el = document.getElementById('tlCanvas')?.querySelector(`[data-id="${tlDragState.blockId}"]`);
+      if(el) el.style.top = newTop+'px';
+      tlDragState.currentTop = newTop;
+    }
+    if(tlDragState.type==='resize'){
+      const dy = e.clientY - tlDragState.startY;
+      const newH = Math.max(TL_SLOT, tlSnapToSlot(tlDragState.origH+dy));
+      const maxH = TL_TOTAL_H - tlMinsToTop(tlDragState.startMin);
+      const el = document.getElementById('tlCanvas')?.querySelector(`[data-id="${tlDragState.blockId}"]`);
+      if(el) el.style.height = Math.min(newH,maxH)+'px';
+      tlDragState.currentH = Math.min(newH,maxH);
+    }
+  });
+
+  document.addEventListener('mouseup', e=>{
+    if(!tlDragState) return;
+    const ghost = document.getElementById('tlGhost');
+    if(tlDragState.type==='create'){
+      if(ghost) ghost.style.display='none';
+      const top = tlDragState.ghostTop ?? tlDragState.origTop;
+      const h   = tlDragState.ghostH ?? TL_SLOT;
+      const startMin = tlPxToMins(top), endMin = startMin + tlPxToMins(h);
+      if(endMin > startMin && !tlHasConflict({startMin,endMin}, null, currentDate)){
+        tlOpenModal(null, startMin, endMin);
+      }
+    } else if(tlDragState.type==='move'){
+      const newTop = tlDragState.currentTop ?? 0;
+      const newStart = tlPxToMins(newTop);
+      const arr = getTLBlocks(currentDate);
+      const blk = arr.find(b=>b.id===tlDragState.blockId);
+      if(blk){
+        const newEnd = newStart + (blk.endMin - blk.startMin);
+        if(!tlHasConflict({startMin:newStart,endMin:newEnd}, tlDragState.blockId, currentDate)){
+          blk.startMin=newStart; blk.endMin=newEnd;
+          setTLBlocks(currentDate, arr);
+          saveTL();
+        }
+      }
+      const el = document.getElementById('tlCanvas')?.querySelector(`[data-id="${tlDragState.blockId}"]`);
+      if(el) el.classList.remove('tl-dragging');
+      renderTimeline();
+    } else if(tlDragState.type==='resize'){
+      const h = tlDragState.currentH ?? TL_SLOT;
+      const arr = getTLBlocks(currentDate);
+      const blk = arr.find(b=>b.id===tlDragState.blockId);
+      if(blk){
+        const newEnd = blk.startMin + tlPxToMins(h);
+        if(newEnd > blk.startMin && !tlHasConflict({startMin:blk.startMin,endMin:newEnd}, blk.id, currentDate)){
+          blk.endMin = newEnd;
+          setTLBlocks(currentDate, arr);
+          saveTL();
+        }
+      }
+      renderTimeline();
+    }
+    tlDragState = null;
+  });
+}
+
+let tlEditingId = null;
+let tlSelColor = 'indigo';
+
+function tlOpenModal(id=null, startMin=null, endMin=null){
+  tlEditingId = id;
+  const blk = id ? getTLBlocks(currentDate).find(b=>b.id===id) : null;
+  document.getElementById('tlModalTitle').textContent = id ? 'แก้ไขกิจกรรม' : 'เพิ่มกิจกรรม';
+  document.getElementById('tlFTitle').value = blk ? blk.title : '';
+  document.getElementById('tlFStart').value = tlFmtTime(blk ? blk.startMin : (startMin ?? 9*60));
+  document.getElementById('tlFEnd').value   = tlFmtTime(blk ? blk.endMin   : (endMin   ?? 10*60));
+  tlSelColor = blk ? blk.color : 'indigo';
+  document.getElementById('tlModalError').style.display='none';
+  tlBuildColorRow();
+  document.getElementById('tlModalBg').style.display='flex';
+  setTimeout(()=>document.getElementById('tlFTitle').focus(), 80);
+}
+
+function tlCloseModal(){
+  document.getElementById('tlModalBg').style.display='none';
+  tlEditingId=null;
+}
+
+function tlBuildColorRow(){
+  const row = document.getElementById('tlColorRow');
+  if(!row) return;
+  row.innerHTML = '';
+  TL_COLORS.forEach(c=>{
+    const chip = document.createElement('div');
+    chip.className = 'tl-color-chip' + (tlSelColor===c.id ? ' tl-sel' : '');
+    chip.style.background = c.bg.replace(/[\d.]+\)$/,'1)');
+    chip.dataset.id = c.id;
+    chip.onclick = ()=>{
+      tlSelColor = c.id;
+      row.querySelectorAll('.tl-color-chip').forEach(ch=>ch.classList.toggle('tl-sel', ch.dataset.id===c.id));
+    };
+    row.appendChild(chip);
+  });
+}
+
+function tlSaveModal(){
+  const title = document.getElementById('tlFTitle').value.trim();
+  const startMin = tlParseTime(document.getElementById('tlFStart').value);
+  const endMin   = tlParseTime(document.getElementById('tlFEnd').value);
+  const errEl = document.getElementById('tlModalError');
+  if(!title){ errEl.textContent='กรุณาใส่ชื่อกิจกรรม'; errEl.style.display=''; return; }
+  if(endMin<=startMin){ errEl.textContent='เวลาสิ้นสุดต้องมากกว่าเวลาเริ่ม'; errEl.style.display=''; return; }
+  if(tlHasConflict({startMin,endMin}, tlEditingId, currentDate)){
+    errEl.textContent='เวลาทับซ้อนกับกิจกรรมอื่น'; errEl.style.display=''; return;
+  }
+  const arr = getTLBlocks(currentDate);
+  if(tlEditingId){
+    const blk = arr.find(b=>b.id===tlEditingId);
+    if(blk){ blk.title=title; blk.startMin=startMin; blk.endMin=endMin; blk.color=tlSelColor; }
+  } else {
+    arr.push({ id:tlNextId(), title, startMin, endMin, color:tlSelColor });
+  }
+  setTLBlocks(currentDate, arr);
+  saveTL();
+  renderTimeline();
+  tlCloseModal();
+}
+
+function tlDeleteBlock(id){
+  setTLBlocks(currentDate, getTLBlocks(currentDate).filter(b=>b.id!==id));
+  saveTL();
+  renderTimeline();
+}
+
+function tlScrollToNow(){
+  const wrap = document.getElementById('tlWrap');
+  if(!wrap) return;
+  const d=new Date(), mins=d.getHours()*60+d.getMinutes();
+  const top=(mins/30)*TL_SLOT - wrap.clientHeight/2;
+  wrap.scrollTop = Math.max(0,top);
+}
+
+function tlBuildGrid(){
+  const labelsEl = document.getElementById('tlLabels');
+  const canvas = document.getElementById('tlCanvas');
+  if(!labelsEl || !canvas) return;
+  labelsEl.innerHTML = '';
+  canvas.querySelectorAll('.tl-hour-line').forEach(e=>e.remove());
+  for(let s=0; s<TL_SLOTS; s++){
+    const h=Math.floor(s/2), m=s%2===0?'00':'30';
+    const div=document.createElement('div');
+    div.className='tl-label'+(m==='00'?' tl-label-hour':'');
+    div.textContent = m==='00' ? `${String(h).padStart(2,'0')}:00` : '';
+    labelsEl.appendChild(div);
+  }
+  for(let h=1;h<24;h++){
+    const line=document.createElement('div');
+    line.className='tl-hour-line';
+    line.style.top=(h*TL_SLOT*2)+'px';
+    canvas.appendChild(line);
+  }
+}
+
 // ── Initial render (ต้องอยู่ท้ายสุด เพื่อให้ const ทุกตัวถูก initialize ก่อน) ──
 loadCols();
 renderBoard();
@@ -3870,10 +4180,11 @@ loadFile().then(() => {
   loadFinPM();
   loadFinTags();
   renderFinance();
+  loadTL();
   startAutoRefresh();
   // เปิดแท็บตาม ?tab= ใน URL ถ้ามี (เช่น กลับมาจาก Admin Panel)
   const tabParam = new URLSearchParams(location.search).get('tab');
-  if(['task','daily','tool','finance'].includes(tabParam)) switchTab(tabParam);
+  if(['task','daily','tool','finance','timeline'].includes(tabParam)) switchTab(tabParam);
 });
 // ── Weather Background Animation removed ──────────────────────────────────────
 loadAppVersion();
